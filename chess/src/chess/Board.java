@@ -284,6 +284,9 @@ public class Board extends StackPane{
 				mostRecentMove.destRow == startRow;
 	}
 	
+	public boolean castlingAllowed() {
+		return castlingAllowed;
+	}
 	public boolean enPassantsAllowed() {
 		return enPassantAllowed;
 	}
@@ -412,7 +415,7 @@ public class Board extends StackPane{
 	 *  
 	 *  This method should only be called from the King class.
 	 */
-	boolean castlingAllowed(final boolean pieceColor, final boolean side) {
+	boolean isLegalCastle(final boolean pieceColor, final boolean side) {
 		
 		if(pieceColor == Piece.WHITE) {
 			if(this.orientation == Piece.WHITE) {

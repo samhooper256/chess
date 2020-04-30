@@ -40,12 +40,12 @@ public class King extends Piece{
 			}
 		}
 		
-		if(b.getBoardSize() == Board.DEFAULT_BOARD_SIZE) { //castling is only enabled for size 8 (default) boards.
+		if(b.castlingAllowed()) { //castling is only enabled for size 8 (default) boards.
 			if(!hasMoved()) {
-				if(b.castlingAllowed(getColor(), Board.QUEENSIDE)) {
+				if(b.isLegalCastle(getColor(), Board.QUEENSIDE)) {
 					legalMoves.add(new int[] {row, col == 4 ? 2 : 5});
 				}
-				if(b.castlingAllowed(getColor(), Board.KINGSIDE)) {
+				if(b.isLegalCastle(getColor(), Board.KINGSIDE)) {
 					legalMoves.add(new int[] {row, col == 4 ? 6 : 2});
 				}
 			}

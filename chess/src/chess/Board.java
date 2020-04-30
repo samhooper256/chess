@@ -41,7 +41,7 @@ public class Board extends StackPane{
 	private Tile currentlySelectedTile;
 	private boolean turn;
 	private boolean orientation;
-	
+	private boolean castlingAllowed;
 	private boolean boardInteracitonAllowed = true;
 	
 	//UI Components
@@ -135,7 +135,7 @@ public class Board extends StackPane{
 		enPassantAllowed = true;
 		moveNumber = 0;
 		playNumber = 0;
-		
+		castlingAllowed = true;
 		initGUI();
 		
 		defaultSetup(); //TODO: Change to defaultSetup();
@@ -175,6 +175,7 @@ public class Board extends StackPane{
 		enPassantAllowed = true;
 		moveNumber = 0;
 		playNumber = 0;
+		castlingAllowed = BOARD_SIZE == 8;
 		
 		initGUI();
 		

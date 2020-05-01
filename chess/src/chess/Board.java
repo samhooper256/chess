@@ -5,25 +5,39 @@ import java.util.Arrays;
 import java.util.LinkedList;
 import java.util.Scanner;
 
+import javafx.animation.FillTransition;
 import javafx.application.Platform;
 import javafx.collections.ObservableList;
 import javafx.event.EventHandler;
+import javafx.geometry.HPos;
 import javafx.geometry.Insets;
+import javafx.geometry.Pos;
+import javafx.geometry.VPos;
 import javafx.scene.Node;
+import javafx.scene.control.Button;
 import javafx.scene.control.Control;
+import javafx.scene.control.Label;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.input.MouseEvent;
+import javafx.scene.layout.AnchorPane;
 import javafx.scene.layout.Background;
 import javafx.scene.layout.BackgroundFill;
+import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.ColumnConstraints;
 import javafx.scene.layout.CornerRadii;
 import javafx.scene.layout.GridPane;
+import javafx.scene.layout.HBox;
 import javafx.scene.layout.Priority;
 import javafx.scene.layout.RowConstraints;
 import javafx.scene.layout.StackPane;
 import javafx.scene.paint.Color;
 import javafx.scene.shape.Circle;
+import javafx.scene.text.Font;
+import javafx.scene.text.FontPosture;
+import javafx.scene.text.FontWeight;
+import javafx.scene.text.Text;
+import javafx.util.Duration;
 
 public class Board extends StackPane{
 	public static final int MAX_BOARD_SIZE = 26;
@@ -45,8 +59,14 @@ public class Board extends StackPane{
 	private boolean boardInteracitonAllowed = true;
 	
 	//UI Components
-	private final Tile[][] boardDisplay;
-	private final GridPane grid = new GridPane();
+	private BorderPane boardOverlay;
+	private StackPane boardPopupBox;
+	private GridPane popupMessageArea;
+	private AnchorPane popupMessageOverlay;
+	private Text boardPopupMessage, popupMessageXButton, popupGameOverText;
+	private Button popupResetButton, popupViewBoardButton;
+	private Tile[][] boardDisplay;
+	private GridPane grid;
 	
 	private static Color LIGHT_COLOR = Color.rgb(26, 187, 154, 1);
 	private static Color DARK_COLOR = Color.rgb(44, 61, 79,1);
@@ -57,6 +77,7 @@ public class Board extends StackPane{
 	private static Background dark = new Background(new BackgroundFill(DARK_COLOR, CornerRadii.EMPTY, Insets.EMPTY));
 	private static Background lightSelected = new Background(new BackgroundFill(LIGHT_COLOR_SELECTED, CornerRadii.EMPTY, Insets.EMPTY));
 	private static Background darkSelected = new Background(new BackgroundFill(DARK_COLOR_SELECTED, CornerRadii.EMPTY, Insets.EMPTY));
+	private static Background whiteBackground = new Background(new BackgroundFill(Color.WHITE, CornerRadii.EMPTY, Insets.EMPTY));
 	
 	private EventHandler<? super MouseEvent> tileClickAction = event -> {
 		if(!boardInteracitonAllowed) {
@@ -71,7 +92,7 @@ public class Board extends StackPane{
 			Board.this.makePlay(currentlySelectedTile.row, currentlySelectedTile.col, source.row, source.col);
 		}
 		else if(source.currentPiece != null && source.currentPiece.getColor() == turn) {
-			System.out.println(source.row + ", " + source.col + "; currentSelection = " + source.selected);
+			//System.out.println(source.row + ", " + source.col + "; currentSelection = " + source.selected);
 			source.setSelected(!source.selected);
 		}
 		else if(currentlySelectedTile != null){
@@ -80,6 +101,11 @@ public class Board extends StackPane{
 			currentlySelectedTile = null;
 		}
 	};
+	
+	private EventHandler<? super MouseEvent> popupMessageXButtonClickAction = event -> {
+		this.getChildren().remove(boardOverlay);
+	};
+	
 	
 	public enum CheckStatus{
 		WHITE, BLACK, NONE;
@@ -151,8 +177,12 @@ public class Board extends StackPane{
 				Scanner sc = new Scanner(System.in);
 				while(true) {
 					if(!sc.nextLine().contentEquals("stop!")) {
+						/*
 						System.out.println("flipping");
 						Board.this.flip();
+						*/
+						System.out.println(popupMessageXButton.isVisible());
+						System.out.println(popupMessageXButton.getBoundsInParent());
 					}
 				}
 			}
@@ -183,7 +213,93 @@ public class Board extends StackPane{
 	}
 
 	private void initGUI() {
+		grid = new GridPane();
 		grid.setMinSize(200, 200);
+		
+		boardOverlay = new BorderPane();
+		boardPopupMessage = new Text();
+		boardPopupMessage.setFont(Font.font("Candara", FontWeight.NORMAL, FontPosture.REGULAR, 18));
+		boardPopupBox = new StackPane();
+		boardPopupBox.setMaxWidth(300);
+		boardPopupBox.setMaxHeight(200);
+		popupMessageArea = new GridPane();
+		//popupMessageArea.setGridLinesVisible(true);
+		RowConstraints row1 = new RowConstraints();
+		row1.setValignment(VPos.CENTER);
+		row1.setPercentHeight(25);
+		RowConstraints row2 = new RowConstraints();
+		row2.setValignment(VPos.CENTER);
+		row2.setPercentHeight(25);
+		RowConstraints row3 = new RowConstraints();
+		row3.setValignment(VPos.CENTER);
+		row3.setPercentHeight(50);
+		popupMessageArea.getRowConstraints().addAll(row1, row2, row3);
+		ColumnConstraints col1 = new ColumnConstraints();
+		col1.setHalignment(HPos.CENTER);
+		col1.setPercentWidth(50);
+		ColumnConstraints col2 = new ColumnConstraints();
+		col2.setHalignment(HPos.CENTER);
+		col2.setPercentWidth(50);
+		popupMessageArea.getColumnConstraints().addAll(col1, col2);
+		
+		boardPopupBox.getChildren().add(popupMessageArea);
+		//messageBox.setBackground(whiteBackground);
+		popupMessageArea.setStyle("-fx-effect: dropshadow(gaussian, rgba(0, 0, 0, 0.8), 10, 0.5, 0.0, 0.0);"
+				+ "-fx-background-radius: 12 12 12 12;"
+				+ "-fx-border-radius: 12 12 12 12;"
+				+ "-fx-background-color: #FFFFFF;");
+		popupGameOverText = new Text("Game Over");
+		popupGameOverText.setFont(Font.font("Century Gothic", FontWeight.SEMI_BOLD, FontPosture.REGULAR, 24));
+		popupResetButton = new Button("Reset Board");
+		popupResetButton.setPrefSize(100, 50);
+		popupResetButton.setOnMouseClicked(event -> {
+			removeAllPieces();
+			defaultSetup(); //TODO - the default setup only works on size 8 boards.
+			this.turn = Piece.WHITE;
+			moveList.clear();
+			moveNumber = 0;
+			playNumber = 0;
+			this.getChildren().remove(boardOverlay);
+			calculateAllLegalMoves();
+		});
+		popupViewBoardButton = new Button("View Board");
+		popupViewBoardButton.setPrefSize(100, 50);
+		popupViewBoardButton.setOnMouseClicked(event -> {
+			this.getChildren().remove(boardOverlay);
+		});
+		popupMessageArea.add(popupGameOverText, 0, 0, 2, 1);
+		popupMessageArea.add(boardPopupMessage, 0, 1, 2, 1);
+		popupMessageArea.add(popupResetButton, 0, 2, 1, 1);
+		popupMessageArea.add(popupViewBoardButton, 1, 2, 1, 1);
+		
+		popupMessageOverlay = new AnchorPane();
+		popupMessageOverlay.setPickOnBounds(false);
+		popupMessageXButton = new Text("X");
+		popupMessageXButton.setFill(DARK_COLOR);
+		popupMessageXButton.setOnMouseClicked(popupMessageXButtonClickAction);
+		FillTransition ft = new FillTransition(Duration.millis(100), popupMessageXButton, DARK_COLOR, DARK_COLOR_SELECTED);
+		EventHandler<? super MouseEvent> popupMessageXButtonHoverEnter = event -> {
+			ft.setRate(1.0);
+			ft.play();
+		};
+		EventHandler<? super MouseEvent> popupMessageXButtonHoverExit = event -> {
+			ft.setRate(-1.0);
+			ft.play();
+		};
+		popupMessageXButton.setOnMouseEntered(popupMessageXButtonHoverEnter);
+		popupMessageXButton.setOnMouseExited(popupMessageXButtonHoverExit);
+		
+		popupMessageXButton.setFont(Font.font("Gill Sans MT", FontWeight.BOLD, FontPosture.REGULAR, 20));
+		AnchorPane.setRightAnchor(popupMessageXButton, 5.0);
+		AnchorPane.setTopAnchor(popupMessageXButton, 5.0);
+		popupMessageOverlay.getChildren().add(popupMessageXButton);
+		
+		boardPopupBox.setAlignment(Pos.CENTER);
+		boardPopupBox.getChildren().add(popupMessageOverlay);
+		
+		boardOverlay.setCenter(boardPopupBox);
+		
+		
 		for (int i = 0; i < BOARD_SIZE; i++) {
 			final ColumnConstraints columnConstraints = new ColumnConstraints(Control.USE_PREF_SIZE, Control.USE_COMPUTED_SIZE, Double.MAX_VALUE);
             columnConstraints.setPercentWidth(100.0/BOARD_SIZE);
@@ -212,7 +328,17 @@ public class Board extends StackPane{
 			}
 		}
 		
-		this.getChildren().add(grid);
+		this.getChildren().add(0, grid);
+		
+	}
+	
+	private void removeAllPieces() {
+		for(int i = 0; i < BOARD_SIZE; i++) {
+			for(int j = 0; j < BOARD_SIZE; j++) {
+				board[i][j].setPiece(null);
+				board[i][j].legalMoves = null;
+			}
+		}
 	}
 	
 	private void defaultSetup() {
@@ -353,8 +479,6 @@ public class Board extends StackPane{
 					startCol, destRow, destCol, 
 					Math.min(7 - destCol, destCol) <= 1 ? SpecialMoveFlag.CASTLE_KINGSIDE : SpecialMoveFlag.CASTLE_QUEENSIDE);
 			
-			System.out.println("DIFF = " + Math.abs(destCol - startCol));
-			
 			if(destCol > startCol) {
 				setPieceAt(destRow,destCol, p);
 				Piece rook = board[destRow][7].setPiece(null);
@@ -387,8 +511,6 @@ public class Board extends StackPane{
 		
 		
 		moveList.add(theMove);
-		
-		System.out.println(theMove); //TODO delete
 		
 		p.setHasMoved(true);
 		
@@ -542,8 +664,8 @@ public class Board extends StackPane{
 		board[startRow][startCol].currentPiece = null;
 		board[destRow][destCol].currentPiece = p;
 		
-		System.out.printf("trying move for legality (King) : (%d, %d) -> (%d, %d), piece = %s", startRow,
-				startCol,destRow,destCol,p);
+//		System.out.printf("trying move for legality (King) : (%d, %d) -> (%d, %d), piece = %s", startRow,
+//				startCol,destRow,destCol,p);
 		
 		boolean result = true;
 		boolean attackingColor = p.getColor() == Piece.WHITE ? Piece.BLACK : Piece.WHITE;
@@ -553,7 +675,7 @@ public class Board extends StackPane{
 				if(i == destRow && j == destCol) continue;
 				Piece o = getPieceAt(i, j);
 				if(	
-					o != null && !(o instanceof King) && o.getColor() == attackingColor &&
+					o != null && o.getColor() == attackingColor &&
 					o.canCheck(Board.this, i, j, destRow, destCol)) {
 					result = false;
 					break outer;
@@ -564,7 +686,7 @@ public class Board extends StackPane{
 		board[startRow][startCol].currentPiece = p;
 		board[destRow][destCol].currentPiece = onTile;
 		
-		System.out.println("..." + result);
+		//System.out.println("..." + result);
 		return result;
 	}
 	
@@ -643,10 +765,10 @@ public class Board extends StackPane{
 							}
 						}
 						if(isCheckmate) {
-							System.out.println("Black wins by checkmate."); //TODO
+							endGame("black");
 						}
 						else {
-							System.out.println("Draw by stalemate."); //TODO
+							endGame("stalemate");
 						}
 					}
 				}
@@ -664,10 +786,10 @@ public class Board extends StackPane{
 							}
 						}
 						if(isCheckmate) {
-							System.out.println("White wins by checkmate."); //TODO
+							endGame("white");
 						}
 						else {
-							System.out.println("Draw by stalemate."); //TODO
+							endGame("stalemate");
 						}
 					}
 				}
@@ -676,6 +798,26 @@ public class Board extends StackPane{
 		});
 		t.setPriority(6);
 		t.start();
+	}
+	
+	private void endGame(String result) {
+		Platform.runLater(new Runnable() {
+			public void run() {
+				if("white".equals(result)) {
+					boardPopupMessage.setText("White wins by checkmate");
+					Board.this.getChildren().add(1, boardOverlay);
+				}
+				else if("black".equals(result)) {
+					boardPopupMessage.setText("Black wins by checkmate");
+					Board.this.getChildren().add(1, boardOverlay);
+				}
+				else if("stalemate".equals(result)) {
+					boardPopupMessage.setText("Draw by stalemate");
+					Board.this.getChildren().add(1, boardOverlay);
+				}
+			}
+		});
+		
 	}
 	
 	private int[] convertChessNotation(String chessNotation) {
@@ -767,7 +909,7 @@ public class Board extends StackPane{
 				this.setBackground((row+col) % 2 == 0 ? lightSelected : darkSelected);
 				currentlySelectedTile = this;
 				if(currentPiece != null) {
-					System.out.println("legalMoves : " + legalMoves);
+					//System.out.println("legalMoves : " + legalMoves);
 					for(int[] spot : legalMoves) {
 						board[spot[0]][spot[1]].setShowingLegal(true);
 					}

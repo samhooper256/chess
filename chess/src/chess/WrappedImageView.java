@@ -14,7 +14,7 @@ public class WrappedImageView extends ImageView
     @Override
     public double minWidth(double height)
     {
-        return 40;
+        return 20;
     }
 
     @Override
@@ -34,7 +34,7 @@ public class WrappedImageView extends ImageView
     @Override
     public double minHeight(double width)
     {
-        return 40;
+        return 20;
     }
 
     @Override

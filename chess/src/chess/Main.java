@@ -13,6 +13,7 @@ public class Main extends Application{
 	public void start(Stage primaryStage) throws Exception {
 		// TODO Auto-generated method stub
 		Scene scene = new Scene(new GamePanel(), 800, 600);
+		primaryStage.setMinHeight(400);
 		primaryStage.minWidthProperty().bind(primaryStage.heightProperty());
 		primaryStage.setTitle("Chess!");
 		primaryStage.setScene(scene);

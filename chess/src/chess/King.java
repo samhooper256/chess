@@ -56,7 +56,7 @@ public class King extends Piece{
 
 	@Override
 	public boolean canCheck(Board b, int startRow, int startCol, int destRow, int destCol) {
-		return false;
+		return Math.abs(startRow - destRow) <= 1 && Math.abs(startCol - destCol) <= 1;
 	}
 
 	@Override

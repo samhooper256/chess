@@ -22,13 +22,16 @@ public class Pawn extends Piece{
 	public ArrayList<int[]> getLegalMoves(Board b, int row, int col) {
 		ArrayList<int[]> legalMoves = new ArrayList<>();
 		int nr, nc;
-		boolean ep1 = true, ep2 = true;
+		boolean ep1 = true, ep2 = true, twoHopPotential = true;
 		if(this.getColor() == Piece.WHITE) {
 			nr = row - 1; nc = col;
 			if(b.inBounds(nr, nc)) {
 				Piece p = b.getPieceAt(nr, nc);
 				if(p == null && b.tryMoveForLegality(row, col, nr, nc)) {
 					legalMoves.add(new int[] {nr, nc});
+				}
+				else {
+					twoHopPotential = false;
 				}
 			}
 			nr = row - 1; nc = col - 1;
@@ -47,7 +50,7 @@ public class Pawn extends Piece{
 					ep2 = false;
 				}
 			}
-			if(!this.hasMoved()) {
+			if(twoHopPotential && !this.hasMoved()) {
 				nr = row - 2; nc = col;
 				if(b.inBounds(nr, nc)) {
 					Piece p = b.getPieceAt(nr, nc);
@@ -77,6 +80,9 @@ public class Pawn extends Piece{
 				if(p == null && b.tryMoveForLegality(row, col, nr, nc)) {
 					legalMoves.add(new int[] {nr, nc});
 				}
+				else {
+					twoHopPotential = false;
+				}
 			}
 			nr = row + 1; nc = col - 1;
 			if(b.inBounds(nr, nc)) {
@@ -94,7 +100,7 @@ public class Pawn extends Piece{
 					ep2 = false;
 				}
 			}
-			if(!this.hasMoved()) { 
+			if(twoHopPotential && !this.hasMoved()) { 
 				nr = row + 2; nc = col;
 				if(b.inBounds(nr, nc)) {
 					Piece p = b.getPieceAt(nr, nc);

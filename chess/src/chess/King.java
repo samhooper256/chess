@@ -4,10 +4,13 @@ import java.util.ArrayList;
 
 import javafx.scene.image.Image;
 
+/* *
+ * @author Sam Hooper
+ */
 public class King extends Piece{
 	
-	private static final Image BLACK_IMAGE;
-	private static final Image WHITE_IMAGE;
+	public static final Image BLACK_IMAGE;
+	public static final Image WHITE_IMAGE;
 	private static final int[][] moves;
 	static {
 		BLACK_IMAGE = new Image(Piece.class.getResourceAsStream("/resources/king_black.png"));

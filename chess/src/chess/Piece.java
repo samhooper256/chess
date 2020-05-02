@@ -4,7 +4,12 @@ import java.util.ArrayList;
 
 import javafx.scene.image.Image;
 
+/* *
+ * @author Sam Hooper
+ */
 public abstract class Piece {
+	
+	public static String name;
 	
 	protected boolean color;
 	protected boolean hasMoved;
@@ -12,6 +17,45 @@ public abstract class Piece {
 	public static final boolean WHITE = true;
 	public static final boolean BLACK = false;
 	
+	public static Piece forName(String name) {
+		if(name == null || name.isEmpty()) {
+			return null;
+		}
+		
+		if(name.length() == 1) {
+			throw new IllegalArgumentException("Piece doesn't exist: \"" + name + "\"");
+		}
+		
+		boolean color;
+		if(name.charAt(0) == '+') {
+			color = Piece.WHITE;
+		}
+		else if(name.charAt(0) == '-'){
+			color = Piece.BLACK;
+		}
+		else {
+			throw new IllegalArgumentException("Piece doesn't exist.");
+		}
+		return Piece.forName(name.substring(1), color);
+	}
+	
+	public static Piece forName(String name, boolean color) {
+		if(name == null || name.isEmpty()) {
+			return null;
+		}
+		
+		Piece end;
+		switch(name) {
+		case "Pawn" : end = new Pawn(color); break;
+		case "Knight" : end = new Knight(color); break;
+		case "Bishop" : end = new Bishop(color); break;
+		case "Rook" : end = new Rook(color); break;
+		case "Queen" : end = new Queen(color); break;
+		case "King" : end = new King(color); break;
+		default : end = CustomPiece.forName(name, color); break;
+		}
+		return end;
+	}
 	public Piece(boolean color) {
 		this.color = color;
 		hasMoved = false;
@@ -60,6 +104,14 @@ public abstract class Piece {
 	
 	public abstract Image getImage();
 	
+	public String getPieceName(){
+		return this.getClass().getSimpleName();
+	}
+	
+	public String getFullName() {
+		return (color == Piece.WHITE ? '+' : '-') + getPieceName();
+	}
+	
 	protected String getColorString() {
 		if(this.color == WHITE) {
 			return "White";
@@ -72,5 +124,7 @@ public abstract class Piece {
 	public String toString() {
 		return getColorString() + " Piece";
 	}
+	
+
 }
 

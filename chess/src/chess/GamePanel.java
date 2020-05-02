@@ -10,6 +10,9 @@ import javafx.scene.layout.Priority;
 import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
 
+/* *
+ * @author Sam Hooper
+ */
 public class GamePanel extends HBox{
 	public GamePanel() {
 		final VBox vBox = new VBox();
@@ -17,7 +20,7 @@ public class GamePanel extends HBox{
 	    vBox.alignmentProperty().set(Pos.CENTER);
 	    this.alignmentProperty().set(Pos.CENTER);
 	    
-	    StackPane board = new Board();
+	    StackPane board = Board.defaultBoard();
 	    
 	    final NumberBinding binding = Bindings.min(widthProperty(), heightProperty());
 	    

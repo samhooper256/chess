@@ -17,6 +17,7 @@ import javafx.scene.Node;
 import javafx.scene.control.Button;
 import javafx.scene.control.Control;
 import javafx.scene.control.Label;
+import javafx.scene.control.ScrollPane;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.input.MouseEvent;
@@ -26,11 +27,14 @@ import javafx.scene.layout.BackgroundFill;
 import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.ColumnConstraints;
 import javafx.scene.layout.CornerRadii;
+import javafx.scene.layout.FlowPane;
 import javafx.scene.layout.GridPane;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Priority;
 import javafx.scene.layout.RowConstraints;
 import javafx.scene.layout.StackPane;
+import javafx.scene.layout.TilePane;
+import javafx.scene.layout.VBox;
 import javafx.scene.paint.Color;
 import javafx.scene.shape.Circle;
 import javafx.scene.text.Font;
@@ -39,46 +43,69 @@ import javafx.scene.text.FontWeight;
 import javafx.scene.text.Text;
 import javafx.util.Duration;
 
+/* *
+ * @author Sam Hooper
+ */
 public class Board extends StackPane{
 	public static final int MAX_BOARD_SIZE = 26;
 	public static final int DEFAULT_BOARD_SIZE = 8;
 	public static boolean QUEENSIDE = true;
 	public static boolean KINGSIDE = false;
+	private static BoardPreset defaultBoardPreset;
+	
 	private final int BOARD_SIZE;
-	private final Tile[][] board;
+	private Tile[][] board;
 	private final boolean enPassantAllowed;
 	private int moveNumber;
 	private int playNumber;
-	private CheckStatus checkStatus;
+	private int movesSincePawnOrCapture;
 	private LinkedList<GameMove> moveList;
 	private int[][] kingLocations; //kingLocations[0] is white king, kingLocations[1] is black king
 	private Tile currentlySelectedTile;
+	private BoardPreset preset;
 	private boolean turn;
 	private boolean orientation;
 	private boolean castlingAllowed;
 	private boolean boardInteracitonAllowed = true;
+	private boolean fiftyMoveRule = true;
 	
 	//UI Components
 	private BorderPane boardOverlay;
-	private StackPane boardPopupBox;
+	private StackPane boardPopupBox, promotionBox;
 	private GridPane popupMessageArea;
 	private AnchorPane popupMessageOverlay;
 	private Text boardPopupMessage, popupMessageXButton, popupGameOverText;
 	private Button popupResetButton, popupViewBoardButton;
 	private Tile[][] boardDisplay;
+	private TilePane promotionOptions;
 	private GridPane grid;
 	
-	private static Color LIGHT_COLOR = Color.rgb(26, 187, 154, 1);
-	private static Color DARK_COLOR = Color.rgb(44, 61, 79,1);
-	private static Color LIGHT_COLOR_SELECTED = Color.rgb(56, 232, 196,1);
-	private static Color DARK_COLOR_SELECTED = Color.rgb(69, 87, 107, 1);
+	private static Color LIGHT_COLOR = Color.rgb(26, 187, 154, 1); //#1abb9a
+	private static Color DARK_COLOR = Color.rgb(44, 61, 79,1); //#2c3d4f
+	private static Color LIGHT_COLOR_SELECTED = Color.rgb(56, 232, 196,1); //#38e8c4
+	private static Color DARK_COLOR_SELECTED = Color.rgb(69, 87, 107, 1); //#45576b
 	private static Color LEGAL_MOVE_COLOR = Color.rgb(0, 13, 255, 0.5);
 	private static Background light = new Background(new BackgroundFill(LIGHT_COLOR, CornerRadii.EMPTY, Insets.EMPTY));
 	private static Background dark = new Background(new BackgroundFill(DARK_COLOR, CornerRadii.EMPTY, Insets.EMPTY));
 	private static Background lightSelected = new Background(new BackgroundFill(LIGHT_COLOR_SELECTED, CornerRadii.EMPTY, Insets.EMPTY));
 	private static Background darkSelected = new Background(new BackgroundFill(DARK_COLOR_SELECTED, CornerRadii.EMPTY, Insets.EMPTY));
-	private static Background whiteBackground = new Background(new BackgroundFill(Color.WHITE, CornerRadii.EMPTY, Insets.EMPTY));
 	
+	private static String CASTLE_KINGSIDE = "castlekingside", CASTLE_QUEENSIDE = "castlequeenside", EN_PASSANT = "enpassant",
+			PROMOTION = "promotion";
+	
+	static {
+		defaultBoardPreset = new BoardPreset(DEFAULT_BOARD_SIZE);
+		defaultBoardPreset.setTurn(Piece.WHITE);
+		defaultBoardPreset.setCastlingAllowed(true);
+		defaultBoardPreset.setEnPassantAllowed(true);
+		defaultBoardPreset.setPieces(new String[][] {
+			{"-Rook", "-Knight", "-Bishop", "-Queen", "-King", "-Bishop", "-Knight", "-Rook"},
+			{"-Pawn", "-Pawn", "-Pawn", "-Pawn", "-Pawn", "-Pawn", "-Pawn", "-Pawn"},
+			null, null, null, null,
+			{"+Pawn", "+Pawn", "+Pawn", "+Pawn", "+Pawn", "+Pawn", "+Pawn", "+Pawn"},
+			{"+Rook", "+Knight", "+Bishop", "+Queen", "+King", "+Bishop", "+Knight", "+Rook"}
+		});
+	}
 	private EventHandler<? super MouseEvent> tileClickAction = event -> {
 		if(!boardInteracitonAllowed) {
 			System.out.println("click blocked because board interaction is not allowed.");
@@ -103,17 +130,9 @@ public class Board extends StackPane{
 	};
 	
 	private EventHandler<? super MouseEvent> popupMessageXButtonClickAction = event -> {
-		this.getChildren().remove(boardOverlay);
+		boardOverlay.setCenter(null);
+		boardOverlay.setVisible(false);
 	};
-	
-	
-	public enum CheckStatus{
-		WHITE, BLACK, NONE;
-	}
-	
-	private enum SpecialMoveFlag{
-		EN_PASSANT, CASTLE_QUEENSIDE, CASTLE_KINGSIDE;
-	}
 	
 	private class GameMove{
 		
@@ -121,7 +140,7 @@ public class Board extends StackPane{
 		private Piece captured;
 		private int startRow, startCol;
 		private int destRow, destCol;
-		private SpecialMoveFlag[] flags;
+		private String[] flags;
 		
 		private GameMove(Piece moved, Piece captured, int startRow, int startCol, int destRow, int destCol) {
 			this.moved = moved;
@@ -130,11 +149,11 @@ public class Board extends StackPane{
 			this.startCol = startCol;
 			this.destRow = destRow;
 			this.destCol = destCol;
-			flags = new SpecialMoveFlag[] {};
+			flags = new String[] {};
 		}
 		
 		private GameMove(Piece moved, Piece captured, int startRow, int startCol, int destRow, int destCol,
-				SpecialMoveFlag... flags) {
+				String... flags) {
 			this.moved = moved;
 			this.captured = captured;
 			this.startRow = startRow;
@@ -150,66 +169,65 @@ public class Board extends StackPane{
 		}
 	}
 	
-	public Board() {
-		BOARD_SIZE = DEFAULT_BOARD_SIZE;
-		board = new Tile[BOARD_SIZE][BOARD_SIZE];
-		boardDisplay = new Tile[BOARD_SIZE][BOARD_SIZE];
-		kingLocations = new int[][] {{-1,-1},{-1,-1}};
-		turn = Piece.WHITE;
-		orientation = Piece.WHITE;
-		moveList = new LinkedList<>();
-		enPassantAllowed = true;
-		moveNumber = 0;
-		playNumber = 0;
-		castlingAllowed = true;
-		initGUI();
-		
-		defaultSetup(); //TODO: Change to defaultSetup();
-		
-		calculateAllLegalMoves();
-		
-		//TODO delete!!!
-		
-		new Thread(new Runnable() {
-
-			@Override
-			public void run() {
-				Scanner sc = new Scanner(System.in);
-				while(true) {
-					if(!sc.nextLine().contentEquals("stop!")) {
-						/*
-						System.out.println("flipping");
-						Board.this.flip();
-						*/
-						System.out.println(popupMessageXButton.isVisible());
-						System.out.println(popupMessageXButton.getBoundsInParent());
-					}
-				}
-			}
-			
-		}).start();
-		
+	public static Board emptyBoard() {
+		return new Board(DEFAULT_BOARD_SIZE);
 	}
 	
-	public Board(int size) {
-		if(size > MAX_BOARD_SIZE)
+	public static Board emptyBoard(int size) {
+		return new Board(size);
+	}
+	
+	public static Board defaultBoard() {
+		return new Board(defaultBoardPreset);
+	}
+	
+	public static Board fromPreset(BoardPreset preset) {
+		return new Board(preset);
+	}
+	
+	private Board(int size) {
+		if(size > MAX_BOARD_SIZE) {
 			throw new IllegalArgumentException("Desired board size (" + size + ") is greater " + 
 			"than MAX_BOARD_SIZE (26)");
+		}
+		
 		BOARD_SIZE = size;
+		turn = Piece.WHITE;
+		this.preset = null;
+		enPassantAllowed = true;
+		castlingAllowed = BOARD_SIZE == 8;
+		
+		finishBoardInit();
+		prepareForNextMove();
+	}
+	
+	private Board(BoardPreset preset) {
+		if(preset.getBoardSize() > MAX_BOARD_SIZE) {
+			throw new IllegalArgumentException("Desired board size (" + preset.getBoardSize() + ") is greater " + 
+			"than MAX_BOARD_SIZE (26)");
+		}
+		
+		BOARD_SIZE = preset.getBoardSize();
+		turn = preset.getTurn();
+		enPassantAllowed = preset.getEnPassantAllowed();
+		castlingAllowed = BOARD_SIZE != 8 ? false : preset.getCastlingAllowed();
+		this.preset = preset;
+		
+		finishBoardInit();
+		setupPiecesFromPreset(preset);
+		prepareForNextMove();
+	}
+	
+	private void finishBoardInit() {
 		board = new Tile[BOARD_SIZE][BOARD_SIZE];
 		boardDisplay = new Tile[BOARD_SIZE][BOARD_SIZE];
 		kingLocations = new int[][] {{-1,-1},{-1,-1}};
-		turn = Piece.WHITE;
 		orientation = Piece.WHITE;
 		moveList = new LinkedList<>();
-		enPassantAllowed = true;
-		moveNumber = 0;
-		playNumber = 0;
-		castlingAllowed = BOARD_SIZE == 8;
-		
+		moveNumber = 1;
+		playNumber = 1;
+		movesSincePawnOrCapture = 0;
 		initGUI();
-		
-		calculateAllLegalMoves();
 	}
 
 	private void initGUI() {
@@ -217,11 +235,14 @@ public class Board extends StackPane{
 		grid.setMinSize(200, 200);
 		
 		boardOverlay = new BorderPane();
+		boardOverlay.setVisible(false);
+		boardOverlay.setMaxSize(Control.USE_PREF_SIZE, Control.USE_PREF_SIZE);
+		
 		boardPopupMessage = new Text();
 		boardPopupMessage.setFont(Font.font("Candara", FontWeight.NORMAL, FontPosture.REGULAR, 18));
 		boardPopupBox = new StackPane();
-		boardPopupBox.setMaxWidth(300);
-		boardPopupBox.setMaxHeight(200);
+		boardPopupBox.setMaxSize(300, 200);
+		boardPopupBox.setPrefSize(300, 200);
 		popupMessageArea = new GridPane();
 		//popupMessageArea.setGridLinesVisible(true);
 		RowConstraints row1 = new RowConstraints();
@@ -245,27 +266,54 @@ public class Board extends StackPane{
 		boardPopupBox.getChildren().add(popupMessageArea);
 		//messageBox.setBackground(whiteBackground);
 		popupMessageArea.setStyle("-fx-effect: dropshadow(gaussian, rgba(0, 0, 0, 0.8), 10, 0.5, 0.0, 0.0);"
-				+ "-fx-background-radius: 12 12 12 12;"
-				+ "-fx-border-radius: 12 12 12 12;"
+				+ "-fx-background-radius: 5 5 5 5;"
+				+ "-fx-border-radius: 5 5 5 5;"
 				+ "-fx-background-color: #FFFFFF;");
 		popupGameOverText = new Text("Game Over");
 		popupGameOverText.setFont(Font.font("Century Gothic", FontWeight.SEMI_BOLD, FontPosture.REGULAR, 24));
 		popupResetButton = new Button("Reset Board");
+		popupResetButton.setBackground(light);
+		popupResetButton.getStyleClass().add("button1");
+		/*
+		popupResetButton.setStyle(
+				"-fx-background-radius: 5 5 5 5;"
+				+ "-fx-border-radius: 5 5 5 5;"
+				+ "-fx-background-color: " + toRGBCode(LIGHT_COLOR) + ";");
+		*/
 		popupResetButton.setPrefSize(100, 50);
+		popupResetButton.setOnMouseEntered(event -> {
+			popupResetButton.setStyle("-fx-background-color: " + toRGBCode(LIGHT_COLOR_SELECTED) + ";");
+		});
+		popupResetButton.setOnMouseExited(event -> {
+			popupResetButton.setStyle("-fx-background-color: " + toRGBCode(LIGHT_COLOR) + ";");
+		});
 		popupResetButton.setOnMouseClicked(event -> {
-			removeAllPieces();
-			defaultSetup(); //TODO - the default setup only works on size 8 boards.
-			this.turn = Piece.WHITE;
+			setupPiecesFromPreset(preset);
+			this.turn = preset.getTurn();
 			moveList.clear();
-			moveNumber = 0;
-			playNumber = 0;
-			this.getChildren().remove(boardOverlay);
-			calculateAllLegalMoves();
+			moveNumber = 1;
+			playNumber = 1;
+			movesSincePawnOrCapture = 0;
+			boardOverlay.setCenter(null);
+			boardOverlay.setVisible(false);
+			prepareForNextMove();
 		});
 		popupViewBoardButton = new Button("View Board");
+		popupViewBoardButton.setBackground(light);
+		popupViewBoardButton.setStyle(
+				"-fx-background-radius: 5 5 5 5;"
+				+ "-fx-border-radius: 5 5 5 5;"
+				+ "-fx-background-color: " + toRGBCode(LIGHT_COLOR) + ";");
 		popupViewBoardButton.setPrefSize(100, 50);
+		popupViewBoardButton.setOnMouseEntered(event -> {
+			popupViewBoardButton.setStyle("-fx-background-color: " + toRGBCode(LIGHT_COLOR_SELECTED) + ";");
+		});
+		popupViewBoardButton.setOnMouseExited(event -> {
+			popupViewBoardButton.setStyle("-fx-background-color: " + toRGBCode(LIGHT_COLOR) + ";");
+		});
 		popupViewBoardButton.setOnMouseClicked(event -> {
-			this.getChildren().remove(boardOverlay);
+			boardOverlay.setCenter(null);
+			boardOverlay.setVisible(false);
 		});
 		popupMessageArea.add(popupGameOverText, 0, 0, 2, 1);
 		popupMessageArea.add(boardPopupMessage, 0, 1, 2, 1);
@@ -297,14 +345,11 @@ public class Board extends StackPane{
 		boardPopupBox.setAlignment(Pos.CENTER);
 		boardPopupBox.getChildren().add(popupMessageOverlay);
 		
-		boardOverlay.setCenter(boardPopupBox);
-		
-		
 		for (int i = 0; i < BOARD_SIZE; i++) {
 			final ColumnConstraints columnConstraints = new ColumnConstraints(Control.USE_PREF_SIZE, Control.USE_COMPUTED_SIZE, Double.MAX_VALUE);
             columnConstraints.setPercentWidth(100.0/BOARD_SIZE);
             grid.getColumnConstraints().add(columnConstraints);
-
+            
             final RowConstraints rowConstraints = new RowConstraints(Control.USE_PREF_SIZE, Control.USE_COMPUTED_SIZE, Double.MAX_VALUE);
             rowConstraints.setPercentHeight(100.0/BOARD_SIZE);
             grid.getRowConstraints().add(rowConstraints);
@@ -329,61 +374,125 @@ public class Board extends StackPane{
 		}
 		
 		this.getChildren().add(0, grid);
+		this.getChildren().add(1, boardOverlay);
+		
+		
+		promotionOptions = new TilePane();
+		promotionBox = new StackPane();
+		promotionBox.setStyle("-fx-background-color: #FFFF1F;");
+		
+		
+		promotionBox.getChildren().add(promotionOptions);
+		
+		
 		
 	}
 	
-	private void removeAllPieces() {
-		for(int i = 0; i < BOARD_SIZE; i++) {
-			for(int j = 0; j < BOARD_SIZE; j++) {
-				board[i][j].setPiece(null);
-				board[i][j].legalMoves = null;
+	private GridPane promotionGridPane;
+	private ScrollPane promotionScrollPane;
+	private StackPane promotionStackPane;
+	
+	private void promotion(Piece thePiece, int startRow, int startCol, int destRow, int destCol, Piece... options) {
+		class PromotionIcon extends ImageView{
+			
+			Piece piece;
+			
+			public PromotionIcon(Piece p) {
+				super(p.getImage());
+				this.piece = p;
+				this.setOnMouseClicked(event -> {
+					promotionGridPane.getChildren().clear();
+					setPieceAt(startRow, startCol, null);
+					setPieceAt(destRow, destCol, piece);
+					GameMove theMove = new GameMove(thePiece, getPieceAt(destRow,destCol), startRow, startCol,
+							destRow, destCol, PROMOTION + p.getFullName());
+					wrapUpMove(theMove);
+					boardOverlay.setVisible(false);
+				});
 			}
+		}
+		promotionOptions.getChildren().clear();
+		//promotionOptions.getChildren().add(new WrappedImageView(Knight.WHITE_IMAGE));
+		boardOverlay.setCenter(null);
+		promotionGridPane = new GridPane();
+		promotionGridPane.setGridLinesVisible(true);
+		for(int i = 0; i < options.length; i++) {
+			promotionGridPane.add(new PromotionIcon(options[i]), i % 4, i / 4);
+		}
+		promotionScrollPane = new ScrollPane(promotionGridPane);
+		promotionScrollPane.setFitToWidth(true);
+		promotionStackPane = new StackPane();
+		promotionStackPane.maxHeightProperty().bind(grid.heightProperty().divide(2));
+		promotionStackPane.maxWidthProperty().bind(grid.widthProperty().divide(2));
+		promotionStackPane.setStyle("-fx-background-color : #1FFFFE");
+		promotionStackPane.getChildren().add(promotionScrollPane);
+		boardOverlay.setCenter(promotionStackPane);
+		boardOverlay.setVisible(true);
+		boardOverlay.requestLayout();
+	}
+	
+	
+	
+	private int[] getDisplayTileCoordinates(int row, int col) {
+		if(this.orientation == Piece.WHITE) {
+			return new int[] {row, col};
+		}
+		else {
+			return new int[] {BOARD_SIZE - row - 1, BOARD_SIZE - col - 1};
 		}
 	}
 	
-	private void defaultSetup() {
-		if(BOARD_SIZE != 8) return; //returns silently - this method should never be called when the size != 8.
+	public static String toRGBCode( Color color )
+    {
+        return String.format( "#%02X%02X%02X",
+            (int)( color.getRed() * 255 ),
+            (int)( color.getGreen() * 255 ),
+            (int)( color.getBlue() * 255 ) );
+    }
+	
+	private void setupPiecesFromPreset(BoardPreset preset) {
+		clearPieces();
+		for(int i = 0; i < BOARD_SIZE; i++) {
+			for(int j = 0; j < BOARD_SIZE; j++) {
+				board[i][j].setPiece(Piece.forName(preset.getPieceNameAt(i, j)));
+				if(board[i][j].currentPiece instanceof King) {
+					if(board[i][j].currentPiece.getColor() == Piece.WHITE) {
+						if(kingLocations[0][0] == -1) {
+							kingLocations[0][0] = i;
+							kingLocations[0][1] = j;
+						}
+						else {
+							throw new IllegalArgumentException("Preset has too many white kings!");
+						}
+					}
+					else {
+						if(kingLocations[1][0] == -1) {
+							kingLocations[1][0] = i;
+							kingLocations[1][1] = j;
+						}
+						else {
+							throw new IllegalArgumentException("Preset has too many black kings!");
+						}
+					}
+				}
+			}
+		}
 		
-		board[0][0].setPiece(new Rook(Piece.BLACK));
-		board[0][1].setPiece(new Knight(Piece.BLACK));
-		board[0][2].setPiece(new Bishop(Piece.BLACK));
-		board[0][3].setPiece(new Queen(Piece.BLACK));
-		board[0][4].setPiece(new King(Piece.BLACK));
-		board[0][5].setPiece(new Bishop(Piece.BLACK));
-		board[0][6].setPiece(new Knight(Piece.BLACK));
-		board[0][7].setPiece(new Rook(Piece.BLACK));
-		
-		board[1][0].setPiece(new Pawn(Piece.BLACK));
-		board[1][1].setPiece(new Pawn(Piece.BLACK));
-		board[1][2].setPiece(new Pawn(Piece.BLACK));
-		board[1][3].setPiece(new Pawn(Piece.BLACK));
-		board[1][4].setPiece(new Pawn(Piece.BLACK));
-		board[1][5].setPiece(new Pawn(Piece.BLACK));
-		board[1][6].setPiece(new Pawn(Piece.BLACK));
-		board[1][7].setPiece(new Pawn(Piece.BLACK));
-		
-		board[7][0].setPiece(new Rook(Piece.WHITE));
-		board[7][1].setPiece(new Knight(Piece.WHITE));
-		board[7][2].setPiece(new Bishop(Piece.WHITE));
-		board[7][3].setPiece(new Queen(Piece.WHITE));
-		board[7][4].setPiece(new King(Piece.WHITE));
-		board[7][5].setPiece(new Bishop(Piece.WHITE));
-		board[7][6].setPiece(new Knight(Piece.WHITE));
-		board[7][7].setPiece(new Rook(Piece.WHITE));
-		
-		board[6][0].setPiece(new Pawn(Piece.WHITE));
-		board[6][1].setPiece(new Pawn(Piece.WHITE));
-		board[6][2].setPiece(new Pawn(Piece.WHITE));
-		board[6][3].setPiece(new Pawn(Piece.WHITE));
-		board[6][4].setPiece(new Pawn(Piece.WHITE));
-		board[6][5].setPiece(new Pawn(Piece.WHITE));
-		board[6][6].setPiece(new Pawn(Piece.WHITE));
-		board[6][7].setPiece(new Pawn(Piece.WHITE));
-		
-
-		kingLocations[0] = new int[] {7, 4};
-		kingLocations[1] = new int[] {0, 4};
-		
+		if(kingLocations[0][0] == -1) {
+			throw new IllegalArgumentException("Preset doesn't have a white king!");
+		}
+		if(kingLocations[1][0] == -1) {
+			throw new IllegalArgumentException("Preset doesn't have a black king!");
+		}
+	}
+	
+	private void clearPieces() {
+		for(int i = 0; i < BOARD_SIZE; i++) {
+			for(int j = 0; j < BOARD_SIZE; j++) {
+				board[i][j].setPiece(null);
+			}
+		}
+		kingLocations[0][0] = kingLocations[0][1] = kingLocations[1][0] = kingLocations[1][1] = -1;
 	}
 	
 	//TODO: REMOVE THIS LATER
@@ -425,10 +534,6 @@ public class Board extends StackPane{
 		return orientation;
 	}
 	
-	public CheckStatus getCheckStatus() {
-		return checkStatus;
-	}
-	
 	public Piece getPieceAt(String chessNotation) {
 		int[] location = convertChessNotation(chessNotation);
 		return board[location[0]][location[1]].currentPiece;
@@ -456,6 +561,14 @@ public class Board extends StackPane{
 	public void makePlay(int startRow, int startCol, int destRow, int destCol) {
 		Piece p = getPieceAt(startRow, startCol);
 		
+		p.setHasMoved(true);
+		
+		if(p instanceof Pawn && ((p.color == Piece.WHITE && destRow == 0) || (p.color == Piece.BLACK && destRow == BOARD_SIZE - 1))) {
+			//TODO make this work for any promotion
+			promotion(p, startRow, startCol, destRow, destCol, Piece.forName("Queen", p.color), Piece.forName("Rook", p.color),
+					Piece.forName("Bishop", p.color), Piece.forName("Knight", p.color));
+			return;
+		}
 		
 		//keep track of kings!
 		if(p instanceof King) {
@@ -477,7 +590,7 @@ public class Board extends StackPane{
 			
 			theMove = new GameMove(p, getPieceAt(destRow,destCol), startRow,
 					startCol, destRow, destCol, 
-					Math.min(7 - destCol, destCol) <= 1 ? SpecialMoveFlag.CASTLE_KINGSIDE : SpecialMoveFlag.CASTLE_QUEENSIDE);
+					Math.min(7 - destCol, destCol) <= 1 ? CASTLE_KINGSIDE : CASTLE_QUEENSIDE);
 			
 			if(destCol > startCol) {
 				setPieceAt(destRow,destCol, p);
@@ -495,7 +608,7 @@ public class Board extends StackPane{
 		else if(p instanceof Pawn && destCol != startCol && getPieceAt(destRow, destCol) == null) {
 			//this move is an en passant
 			theMove = new GameMove(p, getPieceAt(startRow,destCol), startRow,
-					startCol, destRow, destCol, SpecialMoveFlag.EN_PASSANT);
+					startCol, destRow, destCol, EN_PASSANT);
 			setPieceAt(startRow, startCol, null);
 			setPieceAt(startRow, destCol, null);
 			setPieceAt(destRow, destCol, p);
@@ -509,26 +622,36 @@ public class Board extends StackPane{
 			setPieceAt(destRow, destCol, p);
 		}
 		
+		wrapUpMove(theMove);
 		
+	}
+	
+	private void wrapUpMove(GameMove theMove) {
 		moveList.add(theMove);
-		
-		p.setHasMoved(true);
-		
-		
-		
+		System.out.println("Wrapping up move, incoming turn = " + turn);
 		if(turn == Piece.WHITE) {
 			turn = Piece.BLACK;
 		}
 		else {
 			turn = Piece.WHITE;
 			moveNumber++;
+			if(fiftyMoveRule) {
+				if(!(theMove.moved instanceof Pawn || theMove.captured != null ||
+					moveList.get(moveList.size() - 2).moved instanceof Pawn ||
+					moveList.get(moveList.size() - 2).captured != null)) {
+					movesSincePawnOrCapture++;
+				}
+				else {
+					movesSincePawnOrCapture = 0;
+				}
+			}
 		}
 		
 		playNumber++;
 			
 		grid.requestLayout();
 		
-		calculateAllLegalMoves();
+		prepareForNextMove();
 	}
 	
 	/* *
@@ -732,13 +855,20 @@ public class Board extends StackPane{
 	/* *
 	 * 
 	 */
-	private void calculateAllLegalMoves() {
+	private void prepareForNextMove() {
 		boardInteracitonAllowed = false;
 		
 		Thread t = new Thread(new Runnable() {
 			public void run() {
+				if(fiftyMoveRule && movesSincePawnOrCapture >= 50) {
+					endGame("fifty");
+					boardInteracitonAllowed = true;
+					return;
+				}
 				boolean anyLegalMovesWhite = false;
 				boolean anyLegalMovesBlack = false;
+				ArrayList<Piece> whitePieces = new ArrayList<>(BOARD_SIZE/2);
+				ArrayList<Piece> blackPieces = new ArrayList<>(BOARD_SIZE/2);
 				for(int i = 0; i < BOARD_SIZE; i++) {
 					for(int j = 0; j < BOARD_SIZE; j++) {
 						if(board[i][j].calculateLegalMoves()) {
@@ -749,8 +879,94 @@ public class Board extends StackPane{
 								anyLegalMovesBlack = true;
 							}
 						}
+						Piece p;
+						if((p = board[i][j].currentPiece) != null) {
+							if(p.getColor() == Piece.WHITE) {
+								whitePieces.add(p);
+							}
+							else {
+								blackPieces.add(p);
+							}
+						}
 					}
 				}
+				//Now check for insufficient material:
+				MATERIAL_CHECK:
+				{
+					int wk = 0, bk = 0, wb = 0, bb = 0;
+					boolean wbc = false, bbc = false;
+					for(int i = 0; i < whitePieces.size(); i++) {
+						Piece p = whitePieces.get(i);
+						if(p instanceof King) {
+							continue;
+						}
+						else if(p instanceof Knight) {
+							wk++;
+							if(wk > 2) {
+								break MATERIAL_CHECK;
+							}
+						}
+						else if(p instanceof Bishop) {
+							wb++;
+							if(wb > 1) {
+								break MATERIAL_CHECK;
+							}
+							else {
+								wbc = p.getColor();
+							}
+						}
+						else {
+							break MATERIAL_CHECK;
+						}
+					}
+					for(int i = 0; i < blackPieces.size(); i++) {
+						Piece p = blackPieces.get(i);
+						if(p instanceof King) {
+							continue;
+						}
+						else if(p instanceof Knight) {
+							bk++;
+							if(bk > 2) {
+								break MATERIAL_CHECK;
+							}
+						}
+						else if(p instanceof Bishop) {
+							bb++;
+							if(bb > 1) {
+								break MATERIAL_CHECK;
+							}
+							else {
+								bbc = p.getColor();
+							}
+						}
+						else {
+							break MATERIAL_CHECK;
+						}
+					}
+					/* *
+					 * ONLY the following conditions will cause an automatic draw:
+					 * 
+					 * King vs king with no other pieces.
+					 * King and bishop vs king.
+					 * King and knight vs king.
+					 * King and bishop vs king and bishop of the same coloured square.
+					 * 
+					 * Although there are other conditions where neither player can FORCE mate,
+					 * those positions are not an automatic draw because a mate could still be
+					 * achieved if one player "helps" the other.
+					 */
+					if(	wk == 0 && bk == 0 && wb == 0 && bb == 0 ||
+						wk == 0 && bk == 0 && (wb == 1 ^ bb == 1) ||
+						(wk == 0 ^ bk == 0) && wb == 0 && bb == 0 ||
+						wk == 0 && bk == 0 && wb == 1 && bb == 1 && wbc == bbc) {
+						endGame("material");
+					}
+					else {
+						break MATERIAL_CHECK;
+					}	
+				}
+				
+				//Now check for checkmate/stalemate:
 				if(Board.this.turn == Piece.WHITE) {
 					if(!anyLegalMovesWhite) {
 						boolean isCheckmate = false;
@@ -805,15 +1021,28 @@ public class Board extends StackPane{
 			public void run() {
 				if("white".equals(result)) {
 					boardPopupMessage.setText("White wins by checkmate");
-					Board.this.getChildren().add(1, boardOverlay);
+					boardOverlay.setCenter(boardPopupBox);
+					boardOverlay.setVisible(true);
 				}
 				else if("black".equals(result)) {
 					boardPopupMessage.setText("Black wins by checkmate");
-					Board.this.getChildren().add(1, boardOverlay);
+					boardOverlay.setCenter(boardPopupBox);
+					boardOverlay.setVisible(true);
 				}
 				else if("stalemate".equals(result)) {
 					boardPopupMessage.setText("Draw by stalemate");
-					Board.this.getChildren().add(1, boardOverlay);
+					boardOverlay.setCenter(boardPopupBox);
+					boardOverlay.setVisible(true);
+				}
+				else if("fifty".equals(result)) {
+					boardPopupMessage.setText("Draw by 50 move-rule");
+					boardOverlay.setCenter(boardPopupBox);
+					boardOverlay.setVisible(true);
+				}
+				else if("material".equals(result)) {
+					boardPopupMessage.setText("Draw by insufficient material");
+					boardOverlay.setCenter(boardPopupBox);
+					boardOverlay.setVisible(true);
 				}
 			}
 		});
@@ -849,6 +1078,7 @@ public class Board extends StackPane{
 		private char boardRank;
 		private int row;
 		private int col;
+		private Background color;
 		private boolean selected;
 		private boolean isShowingLegal;
 		private ArrayList<int[]> legalMoves;
@@ -867,7 +1097,7 @@ public class Board extends StackPane{
 			legalMoveIndicator = new Circle(8);
 			legalMoveIndicator.setFill(LEGAL_MOVE_COLOR);
 			currentImageView = null;
-            this.setBackground((row+col) % 2 == 0 ? light : dark);
+            this.setBackground(color = (row+col) % 2 == 0 ? light : dark);
             this.setOnMouseClicked(tileClickAction);
 		}
 		private ArrayList<int[]> getLegalMoves() {
@@ -890,6 +1120,7 @@ public class Board extends StackPane{
 			if(currentPiece == null) {
 				this.getChildren().remove(currentImageView);
 				currentImageView = null;
+				this.legalMoves = null;
 			}
 			else {
 				this.getChildren().remove(currentImageView);

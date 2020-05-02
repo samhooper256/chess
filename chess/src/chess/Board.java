@@ -273,13 +273,13 @@ public class Board extends StackPane{
 		popupGameOverText.setFont(Font.font("Century Gothic", FontWeight.SEMI_BOLD, FontPosture.REGULAR, 24));
 		popupResetButton = new Button("Reset Board");
 		popupResetButton.setBackground(light);
-		popupResetButton.getStyleClass().add("button1");
-		/*
+		//popupResetButton.getStyleClass().add("button1"); //TODO CSS
+		
 		popupResetButton.setStyle(
 				"-fx-background-radius: 5 5 5 5;"
 				+ "-fx-border-radius: 5 5 5 5;"
 				+ "-fx-background-color: " + toRGBCode(LIGHT_COLOR) + ";");
-		*/
+		
 		popupResetButton.setPrefSize(100, 50);
 		popupResetButton.setOnMouseEntered(event -> {
 			popupResetButton.setStyle("-fx-background-color: " + toRGBCode(LIGHT_COLOR_SELECTED) + ";");

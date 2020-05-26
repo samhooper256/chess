@@ -3,5 +3,6 @@ module chess {
 	requires javafx.controls;
 	requires javafx.base;
 	
-	exports chess;
+	exports chess.base;
+	exports chess.util;
 }

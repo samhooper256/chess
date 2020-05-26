@@ -1,0 +1,80 @@
+.root{
+    -fx-background: rgb(225, 228, 203);
+}
+.popup-button {
+    -fx-font-size: 11pt;
+    -fx-font-family: "Candra";
+    -fx-background-radius: 5 5 5 5;
+    -fx-border-radius: 5 5 5 5;
+    -fx-text-fill: #000000;
+    -fx-background-color: #1abb9a;
+}
+
+.popup-button:hover {
+    -fx-background-color: #38e8c4;
+}
+
+#popup-message{
+    -fx-font-size: 12pt;
+    -fx-font-weight: 400;
+    -fx-font-style: normal;
+    -fx-font-family: "Candra";
+}
+
+#popup-x{
+    -fx-fill: #2c3d4f;
+    -fx-font-size: 24pt;
+    -fx-font-weight: 700;
+    -fx-font-style: normal;
+    -fx-font-family: "Gill Sans MT";
+}
+
+#popup-x:hover {
+    -fx-fill: #45576b;
+}
+
+#popup-message-area{
+    -fx-effect: dropshadow(gaussian, rgba(0, 0, 0, 0.8), 10, 0.5, 0.0, 0.0);
+    -fx-background-radius: 5 5 5 5;
+    -fx-border-radius: 5 5 5 5;
+    -fx-background-color: #FFFFFF;
+}
+
+#game-over-text{
+    -fx-font-size: 24pt;
+    -fx-font-weight: 600;
+    -fx-font-style: normal;
+    -fx-font-family: "Century Gothic";
+}
+
+#action-options-display{
+    -fx-background-color: #FFFFFF;
+}
+
+.move-and-capture {
+    -fx-fill: #000dff;
+    -fx-opacity: 0.5;
+}
+.capture {
+    -fx-fill: #ff0000;
+    -fx-opacity: 0.5;
+}
+.other-move-and-capture {
+    -fx-fill: #00022c;
+    -fx-opacity: 0.5;
+}
+
+.promotion {
+    -fx-fill: #ad00cf;
+    -fx-opacity: 0.5;
+}
+
+.summon {
+    -fx-fill: #156b00;
+    -fx-opacity: 0.5;
+}
+
+.multi {
+    -fx-fill: #ff9900;
+    -fx-opacity: 0.5;
+}

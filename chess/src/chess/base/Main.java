@@ -4,9 +4,6 @@ import javafx.application.Application;
 import javafx.scene.Scene;
 import javafx.stage.Stage;
 
-import chess.util.*;
-
-
 
 //TODO DELETE UNUSED IMPORTS (chess.util.*)
 /* *
@@ -19,13 +16,15 @@ public class Main extends Application{
 
 	@Override
 	public void start(Stage primaryStage) throws Exception {
+		GamePanel gp = new GamePanel();
+		Scene scene = new Scene(gp, 800, 600);
 		
-		Scene scene = new Scene(new GamePanel(), 800, 600);
 		scene.getStylesheets().add(Main.class.getResource("style.css").toExternalForm());
 		primaryStage.setMinHeight(400);
 		primaryStage.minWidthProperty().bind(primaryStage.heightProperty());
 		primaryStage.setTitle("Chess!");
 		primaryStage.setScene(scene);
+		primaryStage.sizeToScene();
 		primaryStage.show();
 	}
 }

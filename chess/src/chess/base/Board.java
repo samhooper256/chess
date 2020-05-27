@@ -60,7 +60,6 @@ public class Board extends StackPane{
 	private final ReadOnlyIntAttribute BOARD_SIZE;
 	private Tile[][] board;
 	private int moveNumber, playNumber, movesSincePawnOrCapture;
-	private LinkedList<BoardPlay> moveList;
 	private int[][] kingLocations; //kingLocations[0] is white king, kingLocations[1] is black king
 	private Tile currentlySelectedTile;
 	private BoardPreset preset;
@@ -155,7 +154,9 @@ public class Board extends StackPane{
 							System.out.println("\t>>> done waiting on lock1; " + Thread.currentThread().getName());	
 							
 							System.out.println("----------starting select-and-making");
-							Board.this.moveMaker.selectAndMake(row, col, plays); //TODO
+							synchronized(board) {
+								Board.this.moveMaker.selectAndMake(row, col, plays);
+							}
 							System.out.println("----------done select-and-making");
 							
 							System.out.println("BIT = true :: from CH");
@@ -237,7 +238,12 @@ public class Board extends StackPane{
 						}
 					}
 					catch(Throwable t) {
-						t.printStackTrace();
+						if(!(t instanceof InterruptedException && isCancelled())) {
+							t.printStackTrace();
+						}
+						else {
+							boardInteractionAllowed = true;
+						}
 					}
 					finally {
 						lock2.unlock();
@@ -267,7 +273,9 @@ public class Board extends StackPane{
 
 				@Override
 				protected Void call() {
-					prepareForNextMove();
+					synchronized(board) {
+						prepareForNextMove();
+					}
 					return null;
 				}
 				
@@ -760,6 +768,10 @@ public class Board extends StackPane{
 			logList.add(play);
 			return play;
 		}
+		
+		public void clear() {
+			logList.clear();
+		}
 	}
 	
 	private BoardLog log = new BoardLog();
@@ -850,7 +862,6 @@ public class Board extends StackPane{
 		boardDisplay = new Tile[BOARD_SIZE.getAsInt()][BOARD_SIZE.getAsInt()];
 		kingLocations = new int[][] {{-1,-1},{-1,-1}};
 		orientation = Piece.WHITE;
-		moveList = new LinkedList<>();
 		moveNumber = 1;
 		playNumber = 1;
 		movesSincePawnOrCapture = 0;
@@ -930,17 +941,7 @@ public class Board extends StackPane{
 		popupResetButton = new Button("Reset Board");
 		popupResetButton.getStyleClass().add("popup-button");
 		popupResetButton.setPrefSize(100, 50);
-		popupResetButton.setOnMouseClicked(event -> {
-			setupPiecesFromPreset(preset);
-			this.turn = preset.getTurn();
-			moveList.clear();
-			moveNumber = 1;
-			playNumber = 1;
-			movesSincePawnOrCapture = 0;
-			boardOverlay.setCenter(null);
-			boardOverlay.setVisible(false);
-			movePreparerForFXThread.prepare();
-		});
+		popupResetButton.setOnMouseClicked(event -> Board.this.reset());
 		
 		popupViewBoardButton = new Button("View Board");
 		popupViewBoardButton.getStyleClass().add("popup-button");
@@ -1692,6 +1693,22 @@ public class Board extends StackPane{
 				boardOverlay.setVisible(true);
 			}
 		});	
+	}
+	
+	public void reset() {
+		clickHandler.cancel();
+		synchronized(board) {
+			setupPiecesFromPreset(preset);
+			Board.this.turn = preset.getTurn();
+			Board.this.log.clear();
+			moveNumber = 1;
+			playNumber = 1;
+			movesSincePawnOrCapture = 0;
+			actionOptionsDisplay.setVisible(false);
+			boardOverlay.setCenter(null);
+			boardOverlay.setVisible(false);
+			movePreparerForFXThread.prepare();
+		}
 	}
 
 	public Piece setPieceAt(int row, int col, Piece p) {

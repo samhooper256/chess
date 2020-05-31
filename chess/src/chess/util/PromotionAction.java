@@ -35,16 +35,5 @@ public abstract class PromotionAction extends Action{
 				return Collections.emptySet();
 			}
 		}
-		
-		/*
-		@Override
-		public LegalPromotion next(Board b, int startRow, int startCol) {
-			if(!this.checkConditions(b, startRow, startCol, startRow, startCol)) {
-				return null;
-			}
-			return new LegalPromotion(startRow, startCol, options);
-		}
-		*/
-		
 	}
 }

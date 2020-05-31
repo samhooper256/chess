@@ -58,6 +58,6 @@ public abstract class OtherMoveAndCaptureAction extends chess.util.Action{
 	}
 	
 	/* *
-	 * Note that there are no line-based OtherMoveAndCaptureActions.
+	 * Note that there are no line- or radius-based OtherMoveAndCaptureActions.
 	 */
 }

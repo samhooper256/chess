@@ -1,10 +1,13 @@
 package chess.base;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 
 import chess.util.ActionTree;
+import chess.util.CaptureAction;
 import chess.util.Condition;
 import chess.util.MoveAndCaptureAction;
+import chess.util.SummonAction;
 import javafx.beans.binding.Bindings;
 import javafx.beans.binding.NumberBinding;
 import javafx.geometry.Insets;
@@ -30,6 +33,7 @@ import javafx.scene.layout.Pane;
 import javafx.scene.layout.Priority;
 import javafx.scene.layout.RowConstraints;
 import javafx.scene.layout.StackPane;
+import javafx.scene.layout.TilePane;
 import javafx.scene.layout.VBox;
 import javafx.scene.paint.Color;
 
@@ -47,6 +51,7 @@ public class GamePanel extends StackPane{
 	private VBox boardBox;
 	private Board board;
 	private Settings settingsMenu;
+	private TilePane piecePicker;
 	
 	public GamePanel() {
 		hBox = new HBox();
@@ -78,6 +83,7 @@ public class GamePanel extends StackPane{
 				new ActionTree.Node(MoveAndCaptureAction.relLine(3, 4, 0, 1)),
 				new ActionTree.Node(MoveAndCaptureAction.relLine(4, 3, 1, 0))
 			)*/
+				/*
 			new ActionTree.Node(MoveAndCaptureAction.segment(0, 1, 0, 1, 2).stops(Condition.POD),
 				new ActionTree.Node(MoveAndCaptureAction.relLine(0, 2, 1, 0)),
 				new ActionTree.Node(MoveAndCaptureAction.relLine(0, 2, -1, 0))
@@ -93,7 +99,10 @@ public class GamePanel extends StackPane{
 			new ActionTree.Node(MoveAndCaptureAction.segment(-1, 0, -1, 0, 2).stops(Condition.POD),
 				new ActionTree.Node(MoveAndCaptureAction.relLine(-2, 0, 0, 1)),
 				new ActionTree.Node(MoveAndCaptureAction.relLine(-2, 0, 0, -1))
-			)
+			)*/
+			new ActionTree.Node(CaptureAction.radius(3, false, false)),
+			new ActionTree.Node(MoveAndCaptureAction.radius(2, true, false)),
+			new ActionTree.Node(SummonAction.radius(1, true, false, new ArrayList<String>(Arrays.asList("Bishop")), Condition.DIE))
 		));
 		
 		CustomPiece.defineNewPiece(ghostData);
@@ -140,6 +149,13 @@ public class GamePanel extends StackPane{
 	    AnchorPane.setRightAnchor(resetButton, 10d);
 	    AnchorPane.setBottomAnchor(resetButton, 10d);
 	    rightAnchor.setBorder(new Border(new BorderStroke(Color.DARKGREEN, BorderStrokeStyle.SOLID, CornerRadii.EMPTY, new BorderWidths(1))));
+	    
+	    piecePicker = new Pane();
+	    piecePicker.setBorder(new Border(new BorderStroke(Color.DEEPPINK, BorderStrokeStyle.SOLID, CornerRadii.EMPTY, new BorderWidths(1))));
+	    AnchorPane.setTopAnchor(piecePicker, 50d);
+	    AnchorPane.setLeftAnchor(piecePicker, 10d);
+	    AnchorPane.setRightAnchor(piecePicker, 10d);
+	    rightAnchor.getChildren().add(piecePicker);
 	    
 	    iRight.getChildren().add(rightAnchor);
 	    /////////////////////////
@@ -215,6 +231,26 @@ public class GamePanel extends StackPane{
         hBox.getChildren().addAll(leftPanel, boardBox, rightPanel);
         this.getChildren().addAll(hBox, settingsMenu);
         //HBox.setHgrow(this, Priority.ALWAYS);
+	}
+	
+	private enum Mode{
+		FREEPLAY, PLAY;
+	}
+	
+	public void changeMode(Mode mode) {
+		if(mode == Mode.FREEPLAY) {
+			
+		}
+		else if(mode == Mode.PLAY) {
+			
+		}
+		else {
+			throw new IllegalArgumentException(mode + " is not supported");
+		}
+	}
+	
+	private void setToFreeplay() {
+		
 	}
 	
 	public Board getBoard() { return board; }

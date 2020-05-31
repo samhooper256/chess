@@ -64,13 +64,13 @@ public class Pawn extends Piece{
 					new ArrayList<>(Arrays.asList(
 						new ActionTree.Node(MultiAction.relative(-1, -1)
 							.addAction(MoveAndCaptureAction.relative(-1, -1, Condition.DIE))
-							.addAction(CaptureAction.jumpRelative(0, -1, Condition.EOD,
+							.addAction(CaptureAction.relative(0, -1, Condition.EOD,
 							Condition.onDest().call("getPiece").toObj().referenceEquals(Condition.onBoard().call("lastPlay").call("getPiece").toObj())	
 							))
 						),
 						new ActionTree.Node(MultiAction.relative(-1, 1)
 							.addAction(MoveAndCaptureAction.relative(-1, 1, Condition.DIE))
-							.addAction(CaptureAction.jumpRelative(0, 1, Condition.EOD,
+							.addAction(CaptureAction.relative(0, 1, Condition.EOD,
 							Condition.onDest().call("getPiece").toObj().referenceEquals(Condition.onBoard().call("lastPlay").call("getPiece").toObj())	
 							))
 						)

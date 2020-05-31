@@ -1,5 +1,7 @@
 package chess.util;
 
-public interface LineAction {
-	public LineAction stops(Condition... cons);
+import java.util.Collection;
+
+public interface LineAction extends StoppableAction {
+	
 }

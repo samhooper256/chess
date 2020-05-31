@@ -32,5 +32,39 @@ public abstract class Action {
 		return true;
 	}
 	
+	protected static final int manhattanDist(int row, int col, Board b) {
+		if(b.inBounds(row, col)) {
+			return 0;
+		}
+		
+		final int size = b.getBoardSizeAsInt();
+		
+		int rowDist, colDist;
+		
+		if(row < 0) {
+			rowDist = -row;
+		}
+		else if(row >= size) {
+			rowDist = row - size + 1;
+		}
+		else {
+			rowDist = 0;
+		}
+
+		if(col < 0) {
+			colDist = -col;
+		}
+		else if(col >= size){
+			colDist = col - size + 1;
+		}
+		else {
+			colDist = 0;
+		}
+		
+		//System.out.printf("mDist returning %d+%d for (%d,%d)%n", rowDist,colDist,row,col);
+		return rowDist + colDist;
+		
+	}
+	
 	public abstract Set<? extends LegalAction> getLegals(Board b, int startRow, int startCol);
 }

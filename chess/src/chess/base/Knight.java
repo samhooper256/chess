@@ -44,7 +44,7 @@ public class Knight extends Piece{
 			
 			new ActionTree.Node(MoveAndCaptureAction.relative(-1, 0)),
 			new ActionTree.Node(SummonAction.relative(-1, 0, new ArrayList<>(Arrays.asList("Rook","Queen")))),
-			new ActionTree.Node(CaptureAction.jumpRelative(-1, 0)),
+			new ActionTree.Node(CaptureAction.relative(-1, 0)),
 			new ActionTree.Node(MultiAction.relative(-1, 0).addAction(PromotionAction.withOptions(
 					new ArrayList<>(Arrays.asList("Ghost")))))
 		));

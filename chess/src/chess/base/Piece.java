@@ -1,5 +1,8 @@
 package chess.base;
 
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collection;
 import java.util.Set;
 
 import javafx.scene.image.Image;
@@ -124,6 +127,19 @@ public abstract class Piece {
 	}
 	
 	public abstract int getPointValue();
-
+	
+	public static final Collection<Piece> getInstancesOfAllPieces(){
+		ArrayList<Piece> end = new ArrayList<>(10 + CustomPiece.getDefinedPieceCount() * 2);
+		end.addAll(Arrays.asList(
+				new Pawn(Piece.WHITE), new Pawn(Piece.BLACK),
+				new Knight(Piece.WHITE), new Knight(Piece.BLACK),
+				new Bishop(Piece.WHITE), new Bishop(Piece.BLACK),
+				new Rook(Piece.WHITE), new Rook(Piece.BLACK),
+				new Queen(Piece.WHITE), new Queen(Piece.BLACK),
+				new King(Piece.WHITE), new King(Piece.BLACK)
+		));
+		end.addAll(CustomPiece.getInstancesOfDefinedPieces());
+		return end;
+	}
 }
 

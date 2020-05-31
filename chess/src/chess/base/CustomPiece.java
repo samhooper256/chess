@@ -1,6 +1,9 @@
 package chess.base;
 
+import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashMap;
+import java.util.Map;
 import java.util.Set;
 
 import chess.util.ActionTree;
@@ -28,6 +31,10 @@ public class CustomPiece extends Piece{
 		else {
 			return factory.make(color);
 		}
+	}
+	
+	public static int getDefinedPieceCount(){
+		return definedPieces.size();
 	}
 	
 	private CustomPiece(PieceData data, boolean color) {
@@ -88,5 +95,14 @@ public class CustomPiece extends Piece{
 	@Override
 	public String getPieceName(){
 		return name;
+	}
+	
+	public static Collection<Piece> getInstancesOfDefinedPieces(){
+		ArrayList<Piece> end = new ArrayList<>(getDefinedPieceCount()*2);
+		for(CPFactory factory : definedPieces.values()) {
+			end.add(factory.make(Piece.WHITE));
+			end.add(factory.make(Piece.BLACK));
+		}
+		return end;
 	}
 }

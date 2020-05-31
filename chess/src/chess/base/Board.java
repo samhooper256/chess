@@ -1,7 +1,9 @@
 package chess.base;
 
 import java.io.PrintStream;
+import java.io.Serializable;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -12,6 +14,7 @@ import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 
 import javafx.application.Platform;
+import javafx.beans.property.SimpleObjectProperty;
 import javafx.concurrent.Service;
 import javafx.concurrent.Task;
 import javafx.event.EventHandler;
@@ -21,8 +24,14 @@ import javafx.geometry.VPos;
 import javafx.scene.control.Button;
 import javafx.scene.control.Control;
 import javafx.scene.control.ScrollPane;
+import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
+import javafx.scene.input.ClipboardContent;
+import javafx.scene.input.DataFormat;
+import javafx.scene.input.DragEvent;
+import javafx.scene.input.Dragboard;
 import javafx.scene.input.MouseEvent;
+import javafx.scene.input.TransferMode;
 import javafx.scene.layout.AnchorPane;
 import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.ColumnConstraints;
@@ -196,14 +205,7 @@ public class Board extends StackPane{
 								@Override
 								public void run() {
 									synchronized(lock1) {
-										if(currentlySelectedTile == null) {
-											//do nothing
-										}
-										else {
-											currentlySelectedTile.hideLegalMovesAndDepopulate();
-											currentlySelectedTile.setHighlighted(false);
-											currentlySelectedTile = null;
-										}
+										Board.this.deselect();
 										lock1.notifyAll();
 										flag = true;
 									}
@@ -242,9 +244,17 @@ public class Board extends StackPane{
 		
 	}
 	
+	void deselect() {
+		if(currentlySelectedTile != null) {
+			currentlySelectedTile.hideLegalMovesAndDepopulate();
+			currentlySelectedTile.setHighlighted(false);
+			currentlySelectedTile = null;
+		}
+	}
+	
 	private ClickHandler clickHandler = new ClickHandler();
 	
-	private class MovePreparer extends Service<Void>{
+	class MovePreparer extends Service<Void>{
 		
 		public void prepare() {
 			if(!isRunning()) {
@@ -275,7 +285,7 @@ public class Board extends StackPane{
 		
 	}
 	
-	private MovePreparer movePreparerForFXThread = new MovePreparer();
+	MovePreparer movePreparerForFXThread = new MovePreparer();
 	
 	class MoveMaker{
 		public MoveMaker() {}
@@ -405,10 +415,10 @@ public class Board extends StackPane{
 		
 		private void wrapUpPlay(){
 			if(turn == Piece.WHITE) {
-				turn = Piece.BLACK;
+				setTurn(Piece.BLACK);
 			}
 			else {
-				turn = Piece.WHITE;
+				setTurn(Piece.WHITE);
 				moveNumber++;
 				movesSincePawnOrCapture = 0;
 			}
@@ -423,25 +433,42 @@ public class Board extends StackPane{
 		}
 	}
 	
+	private void setTurn(boolean color) {
+		Board.this.turn = color;
+		
+		Platform.runLater(new Runnable() {
+			public void run() {
+				if(color == Piece.WHITE) {
+					Board.this.associatedGP.setTurnText(GamePanel.WHITE_TO_MOVE_TEXT);
+				}
+				else {
+					Board.this.associatedGP.setTurnText(GamePanel.BLACK_TO_MOVE_TEXT);
+				}
+			}
+		});
+	}
+	
 	protected MoveMaker moveMaker = new MoveMaker();
 	
 	private EventHandler<? super MouseEvent> tileClickAction = event -> {
-		if(!boardInteractionAllowed) {
-			System.out.println("tile click blocked because board interaction is not allowed.");
-			return;
-		}
-		
-		if(!clickHandler.isRunning()) {
-			if(lock2.tryLock()) {
-				clickHandler.handle(event);
+		if(Board.this.associatedGP.getMode() == GamePanel.Mode.PLAY) {
+			if(!boardInteractionAllowed) {
+				System.out.println("tile click blocked because board interaction is not allowed.");
+				return;
 			}
-			else {
-				System.out.println("cucked! tryLock failed :(");
+			
+			if(!clickHandler.isRunning()) {
+				if(lock2.tryLock()) {
+					clickHandler.handle(event);
+				}
+				else {
+					System.out.println("cucked! tryLock failed :(");
+				}
 			}
 		}
-		
-		
-		
+		else {
+			System.out.println("Interaction blocked because GamePanel mode is not Mode.PLAY");
+		}
 	};
 	
 	private EventHandler<? super MouseEvent> popupMessageXButtonClickAction = event -> {
@@ -450,8 +477,69 @@ public class Board extends StackPane{
 	};
 	
 	
+	private EventHandler<DragEvent> tileOnDragOver = dragEvent -> {
+		
+		Dragboard db = dragEvent.getDragboard();
+        if (db.hasString()) {
+        	dragEvent.acceptTransferModes(TransferMode.COPY_OR_MOVE);
+        }
+        
+        dragEvent.consume();
+	};
 	
-	public class Tile extends StackPane{
+	private EventHandler<DragEvent> tileOnDragDropped = dragEvent -> {
+		System.out.println("DRAG DROPPED");
+		Tile eventSource = (Tile) dragEvent.getSource();
+		Dragboard db = dragEvent.getDragboard();
+        boolean success = false;
+        if (db.hasString()) {
+        	Set<TransferMode> transferModes = db.getTransferModes();
+        	if(transferModes.size() == 1) {
+        		TransferMode tmode = transferModes.iterator().next();
+        		if(tmode == TransferMode.COPY) {
+        			String pieceName = db.getString();
+                    System.out.println("Dropped " + pieceName + " on " + eventSource);
+                    eventSource.setPiece(Piece.forName(pieceName));
+                    success = true;
+        		}
+        		else if(tmode == TransferMode.MOVE) {
+        			String text = db.getString();
+        			int commaIndex = text.indexOf(',');
+        			if(commaIndex > 0) {
+        				int row = Integer.parseInt(text.substring(0, commaIndex));
+        				int col = Integer.parseInt(text.substring(commaIndex + 1));
+        				Tile pieceSource = Board.this.getTileAt(row, col);
+        	        	Piece pieceToMove = pieceSource.getPiece();
+        	        	pieceSource.setPiece(null);
+        	        	eventSource.setPiece(pieceToMove);
+        	        	success = true;
+        			}
+        			
+        		}
+        		
+        	}
+
+    		
+        }
+        if(success) {
+        	Board.this.associatedGP.finishDrag();
+        }
+        dragEvent.setDropCompleted(success);
+        dragEvent.consume();
+	};
+	
+	
+	private EventHandler<? super DragEvent> tileOnDragDone = dragEvent -> {
+		Board.this.associatedGP.finishDrag();
+	};
+	
+	
+	public class Tile extends StackPane implements Serializable{
+		/**
+		 * 
+		 */
+		private static final long serialVersionUID = 3545241631659415039L;
+
 		class ColorBox extends Pane{
 			private ArrayList<Shape> indicators;
 			private int MAX_INDICATORS = 20;
@@ -543,6 +631,26 @@ public class Board extends StackPane{
 			this.getChildren().add(colorBox);
 			this.setStyle("-fx-background-color: " + ((row+col) % 2 == 0 ? LIGHT_COLOR : DARK_COLOR) + ";");
 	        this.setOnMouseClicked(tileClickAction);
+	        this.setOnDragOver(tileOnDragOver);
+	        this.setOnDragDropped(tileOnDragDropped);
+	        this.setOnDragDetected(dragEvent -> {
+	        	if(Board.this.associatedGP.getMode() == GamePanel.Mode.FREEPLAY) {
+	    			Tile source = (Tile) dragEvent.getSource();
+	    			if(source.isOccupied()) {
+	    				Dragboard db = startDragAndDrop(TransferMode.MOVE);
+	    				Image dragViewImage = source.getPiece().getImage();
+	    				db.setDragView(dragViewImage, dragViewImage.getWidth()/2, dragViewImage.getHeight()/2);
+	    				System.out.println("started dnd");
+	    				ClipboardContent content = new ClipboardContent();
+	    		        content.putString(source.getRow() + "," + source.getCol());
+	    		        db.setContent(content);
+	    		        Board.this.associatedGP.startDrag(dragEvent, currentPiece);
+	    		        dragEvent.consume();
+	    			}
+	    		}
+	        });
+	        this.setOnDragDone(tileOnDragDone);
+	        
 		}
 		public void showLegalMovesAndPopulate() {
 			if(legalActions != null) {
@@ -577,7 +685,7 @@ public class Board extends StackPane{
 		/* *
 		 * Interacts with scene graph. MUST BE CALLED FROM FX APPLICATION THREAD.
 		 */
-		private Piece setPiece(Piece p) {
+		Piece setPiece(Piece p) {
 			if(p == null && currentPiece == null) return null;
 			Piece temp = currentPiece;
 			currentPiece = p;
@@ -664,6 +772,9 @@ public class Board extends StackPane{
 		public String toString() {
 			return String.format("[Tile %d,%d]", row,col);
 		}
+		
+		public int getRow() { return row; }
+		public int getCol() { return col; }
 		
 		public boolean isCheckableBy(boolean myColor) {
 			boolean attackingColor = !myColor;
@@ -1037,6 +1148,8 @@ public class Board extends StackPane{
 			System.out.println("prep 10% complete");
 			boolean anyLegalMovesWhite = false;
 			boolean anyLegalMovesBlack = false;
+			int whiteKingCount = 0;
+			int blackKingCount = 0;
 			ArrayList<Tile> whitePieces = new ArrayList<>(BOARD_SIZE/2);
 			ArrayList<Tile> blackPieces = new ArrayList<>(BOARD_SIZE/2);
 			for(int i = 0; i < BOARD_SIZE; i++) {
@@ -1054,12 +1167,19 @@ public class Board extends StackPane{
 					if((p = board[i][j].currentPiece) != null) {
 						if(p.getColor() == Piece.WHITE) {
 							whitePieces.add(board[i][j]);
+							if(p instanceof King) { whiteKingCount++; }
 						}
 						else {
 							blackPieces.add(board[i][j]);
+							if(p instanceof King) { blackKingCount++; }
 						}
 					}
 				}
+			}
+			
+			if(whiteKingCount > 1 || blackKingCount > 1) {
+				endGameWithMessage("There are too many kings on the board!");
+				break PREP;
 			}
 			
 			
@@ -1734,6 +1854,18 @@ public class Board extends StackPane{
 	
 	public GamePanel gamePanel() {
 		return associatedGP;
+	}
+	
+	public void updateKingLocations() {
+		this.kingLocations = findKings();
+	}
+	
+	public void clearBoard() {
+		for(int i = 0; i < BOARD_SIZE; i++) {
+			for(int j = 0; j < BOARD_SIZE; j++) {
+				board[i][j].setPiece(null);
+			}
+		}
 	}
 	
 	public void printPieces() {

@@ -2,7 +2,10 @@ package chess.base;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
+import java.util.Set;
 
+import chess.base.Board.Tile;
 import chess.util.ActionTree;
 import chess.util.CaptureAction;
 import chess.util.Condition;
@@ -10,16 +13,24 @@ import chess.util.MoveAndCaptureAction;
 import chess.util.SummonAction;
 import javafx.beans.binding.Bindings;
 import javafx.beans.binding.NumberBinding;
+import javafx.event.EventHandler;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
+import javafx.scene.Cursor;
+import javafx.scene.Node;
 import javafx.scene.control.Button;
 import javafx.scene.control.CheckBox;
 import javafx.scene.control.Control;
+import javafx.scene.control.Label;
 import javafx.scene.control.ScrollPane;
 import javafx.scene.control.Tooltip;
 import javafx.scene.effect.ColorAdjust;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
+import javafx.scene.input.ClipboardContent;
+import javafx.scene.input.Dragboard;
+import javafx.scene.input.MouseEvent;
+import javafx.scene.input.TransferMode;
 import javafx.scene.layout.AnchorPane;
 import javafx.scene.layout.Border;
 import javafx.scene.layout.BorderStroke;
@@ -47,11 +58,18 @@ public class GamePanel extends StackPane{
 	private StackPane iLeft, iRight;
 	private AnchorPane rightAnchor, leftAnchor;
 	private VBox leftVBox;
-	private Button modeButton, resetButton;
+	private Button modeButton, resetButton, clearBoardButton;
 	private VBox boardBox;
 	private Board board;
 	private Settings settingsMenu;
 	private TilePane piecePicker;
+	private ScrollPane piecePickerWrap;
+	private ImageView cancelPieceIcon;
+	private Pane cancelPieceIconWrap;
+	Label turnLabel;
+	private static final String PLAY_TEXT = "Play Mode", FREEPLAY_TEXT = "Freeplay Mode";
+	public static final String WHITE_TO_MOVE_TEXT = "White to Move", BLACK_TO_MOVE_TEXT = "Black to Move";
+	private Mode mode;
 	
 	public GamePanel() {
 		hBox = new HBox();
@@ -108,8 +126,8 @@ public class GamePanel extends StackPane{
 		CustomPiece.defineNewPiece(ghostData);
 	    
 		//TODO UNCOMMENT AND DELETE STUFF
-		board = Board.fromPreset(this, pre);
 		//board = Board.fromPreset(this, pre);
+		board = Board.defaultBoard(this);
 	    
 	    boardBox = new VBox();
 	    boardBox.alignmentProperty().set(Pos.CENTER); 
@@ -128,6 +146,7 @@ public class GamePanel extends StackPane{
 	    leftPanel = new Pane();
 	    rightPanel = new Pane();
 	    iLeft = new StackPane();
+	    //iLeft.setBorder(new Border(new BorderStroke(Color.DARKGREEN, BorderStrokeStyle.SOLID, CornerRadii.EMPTY, new BorderWidths(1))));
 	    iRight = new StackPane();
 	    rightPanel.setPrefWidth(0);
 	    leftPanel.setPrefWidth(0);
@@ -136,7 +155,15 @@ public class GamePanel extends StackPane{
 	    
 	    //Make right half:
 	    rightAnchor = new AnchorPane();
-	    modeButton = new Button("Play Mode");
+	    modeButton = new Button(FREEPLAY_TEXT);
+	    modeButton.setOnMouseClicked(mouseEvent -> {
+	    	if(modeButton.getText().equals(FREEPLAY_TEXT)) {
+	    		GamePanel.this.setToFreeplay();
+	    	}
+	    	else if(modeButton.getText().equals(PLAY_TEXT)) {
+	    		GamePanel.this.setToPlay();
+	    	}
+	    });
 	    resetButton = new Button("Reset Board");
 	    resetButton.setOnMouseClicked(x -> board.reset());
 	    //modeButton.setFocusTraversable(false);
@@ -148,15 +175,37 @@ public class GamePanel extends StackPane{
 	    AnchorPane.setLeftAnchor(resetButton, 10d);
 	    AnchorPane.setRightAnchor(resetButton, 10d);
 	    AnchorPane.setBottomAnchor(resetButton, 10d);
-	    rightAnchor.setBorder(new Border(new BorderStroke(Color.DARKGREEN, BorderStrokeStyle.SOLID, CornerRadii.EMPTY, new BorderWidths(1))));
 	    
-	    piecePicker = new Pane();
-	    piecePicker.setBorder(new Border(new BorderStroke(Color.DEEPPINK, BorderStrokeStyle.SOLID, CornerRadii.EMPTY, new BorderWidths(1))));
-	    AnchorPane.setTopAnchor(piecePicker, 50d);
-	    AnchorPane.setLeftAnchor(piecePicker, 10d);
-	    AnchorPane.setRightAnchor(piecePicker, 10d);
-	    rightAnchor.getChildren().add(piecePicker);
+	    piecePicker = new TilePane();
 	    
+	    Collection<Piece> pieceInstances = Piece.getInstancesOfAllPieces();
+	    Collection<PickIcon> pickIcons = new ArrayList<>(pieceInstances.size());
+	    for(Piece p : pieceInstances) {
+	    	pickIcons.add(new PickIcon(p));
+	    }
+	    piecePicker.getChildren().addAll(pickIcons);
+	    
+	    piecePickerWrap = new ScrollPane(piecePicker);
+	    piecePickerWrap.setFitToWidth(true);
+	    piecePickerWrap.setVisible(false);
+	    
+	    AnchorPane.setTopAnchor(piecePickerWrap, 50d);
+	    AnchorPane.setLeftAnchor(piecePickerWrap, 10d);
+	    AnchorPane.setRightAnchor(piecePickerWrap, 10d);
+	    AnchorPane.setBottomAnchor(piecePickerWrap, 50d);
+	    
+	    
+	    turnLabel = new Label("White to move");
+	    turnLabel.setWrapText(true);
+	    turnLabel.setAlignment(Pos.CENTER);
+	    AnchorPane.setLeftAnchor(turnLabel, 10d);
+	    AnchorPane.setRightAnchor(turnLabel, 10d);
+	    AnchorPane.setTopAnchor(turnLabel, 50d);
+	    AnchorPane.setBottomAnchor(turnLabel, 50d);
+	    
+	    
+	    
+	    rightAnchor.getChildren().addAll(piecePickerWrap, turnLabel);
 	    iRight.getChildren().add(rightAnchor);
 	    /////////////////////////
 	    //Make left half:
@@ -180,6 +229,9 @@ public class GamePanel extends StackPane{
 	    
 	    leftVBox.getChildren().addAll(turnWrap, boardWrap);
 	    
+	    AnchorPane leftTopAnchor = new AnchorPane();
+	    AnchorPane.setRightAnchor(leftVBox, 20d);
+	    leftTopAnchor.getChildren().add(leftVBox);
 	    iLeft.getChildren().add(leftVBox);
 	    
 	    flipBoardImage.setOnMouseClicked(x -> board.flip());
@@ -199,12 +251,93 @@ public class GamePanel extends StackPane{
         settingsWheel.fitHeightProperty().bind(boardBox.heightProperty().divide(16));
         settingsWheel.setPickOnBounds(true);
         leftAnchor = new AnchorPane();
+        //leftAnchor.setBorder(new Border(new BorderStroke(Color.DARKBLUE, BorderStrokeStyle.SOLID, CornerRadii.EMPTY, new BorderWidths(1))));
         leftAnchor.getChildren().add(settingsWheel);
         leftAnchor.setPickOnBounds(false);
         AnchorPane.setLeftAnchor(settingsWheel, 10d);
         AnchorPane.setTopAnchor(settingsWheel, 10d);
         settingsWheel.setOnMouseEntered(x -> settingsWheel.setEffect(ca));
         settingsWheel.setOnMouseExited(x -> settingsWheel.setEffect(null));
+        
+        cancelPieceIcon = new ImageView(new Image(GamePanel.class.getResourceAsStream("/resources/cancel.png")));
+        cancelPieceIcon.setPreserveRatio(true);
+        cancelPieceIcon.fitHeightProperty().bind(boardBox.heightProperty().divide(12));
+        cancelPieceIcon.setPickOnBounds(true);
+        cancelPieceIcon.setVisible(false);
+        cancelPieceIconWrap = new Pane();
+        cancelPieceIconWrap.getChildren().add(cancelPieceIcon);
+        leftAnchor.getChildren().add(cancelPieceIconWrap);
+        AnchorPane.setRightAnchor(cancelPieceIconWrap, 10d);
+        AnchorPane.setTopAnchor(cancelPieceIconWrap, 10d);
+        
+        ColorAdjust cancelPieceButtonCA = new ColorAdjust();
+        cancelPieceButtonCA.setBrightness(0.15);
+        cancelPieceIcon.setOnDragEntered(dragEvent -> {
+        	cancelPieceIcon.setEffect(cancelPieceButtonCA);
+        });
+        cancelPieceIcon.setOnDragExited(dragEvent -> {
+        	cancelPieceIcon.setEffect(null);
+        });
+        
+        cancelPieceIcon.setOnDragOver(dragEvent -> {
+        	Dragboard db = dragEvent.getDragboard();
+            if (db.hasString()) {
+            	dragEvent.acceptTransferModes(TransferMode.COPY_OR_MOVE);
+            }
+            
+            dragEvent.consume();
+        });
+        cancelPieceIcon.setOnDragDropped(dragEvent -> {
+    		Dragboard db = dragEvent.getDragboard();
+            boolean success = false;
+            if (db.hasString()) {
+            	Set<TransferMode> transferModes = db.getTransferModes();
+            	if(transferModes.size() == 1) {
+            		TransferMode tmode = transferModes.iterator().next();
+            		if(tmode == TransferMode.MOVE) {
+            			String text = db.getString();
+            			int commaIndex = text.indexOf(',');
+            			if(commaIndex > 0) {
+            				int row = Integer.parseInt(text.substring(0, commaIndex));
+            				int col = Integer.parseInt(text.substring(commaIndex + 1));
+            				board.getTileAt(row, col).setPiece(null);
+            				
+            	        	success = true;
+            			}
+            		}
+            		else if(tmode == TransferMode.COPY) {
+            			success = true;
+            		}
+            			
+            	}
+            		
+            }
+            if(success) {
+            	finishDrag();
+            }
+            
+            dragEvent.setDropCompleted(success);
+            dragEvent.consume();
+        });
+        
+        clearBoardButton = new Button("Clear\nBoard");
+        clearBoardButton.setStyle(
+        	"-fx-background-color: rgba(255, 0, 0, 0.25);" +
+        	"-fx-font-size: 18pt;" + 
+        	"-fx-font-weight: 500;" + 
+        	"-fx-font-style: normal;" + 
+        	"-fx-font-family: \"Century Gothic\";"
+        );
+        AnchorPane.setRightAnchor(clearBoardButton, 10d);
+        AnchorPane.setLeftAnchor(clearBoardButton, 10d);
+        AnchorPane.setBottomAnchor(clearBoardButton, 10d);
+        leftAnchor.getChildren().add(clearBoardButton);
+        clearBoardButton.setOnMouseClicked(mouseEvent -> {
+        	board.clearBoard();
+        });
+        clearBoardButton.setVisible(false);
+        //clearBoardButton.maxWidthProperty().bind(iLeft.widthProperty());
+        //clearBoardButton.setWrapText(true);
         
         iLeft.getChildren().add(leftAnchor);
         
@@ -222,6 +355,9 @@ public class GamePanel extends StackPane{
         rightAnchor.prefHeightProperty().bind(boardBox.heightProperty());
         rightAnchor.prefWidthProperty().bind(rightPanel.widthProperty());
         
+        leftAnchor.prefHeightProperty().bind(boardBox.heightProperty());
+        leftAnchor.prefWidthProperty().bind(rightPanel.widthProperty());
+        
         leftVBox.prefHeightProperty().bind(boardBox.heightProperty());
         leftVBox.prefWidthProperty().bind(leftPanel.widthProperty());
         
@@ -231,9 +367,13 @@ public class GamePanel extends StackPane{
         hBox.getChildren().addAll(leftPanel, boardBox, rightPanel);
         this.getChildren().addAll(hBox, settingsMenu);
         //HBox.setHgrow(this, Priority.ALWAYS);
+        
+        mode = Mode.PLAY;
+        
+        
 	}
 	
-	private enum Mode{
+	public enum Mode{
 		FREEPLAY, PLAY;
 	}
 	
@@ -250,12 +390,73 @@ public class GamePanel extends StackPane{
 	}
 	
 	private void setToFreeplay() {
-		
+		turnLabel.setVisible(false);
+	    piecePickerWrap.setVisible(true);
+	    clearBoardButton.setVisible(true);
+		modeButton.setText(PLAY_TEXT);
+		board.deselect();
+		mode = Mode.FREEPLAY;
 	}
+	
+	private void setToPlay() {
+	    piecePickerWrap.setVisible(false);
+	    clearBoardButton.setVisible(false);
+		turnLabel.setVisible(true);
+		modeButton.setText(FREEPLAY_TEXT);
+		board.updateKingLocations();
+		board.movePreparerForFXThread.prepare();
+		mode = Mode.PLAY;
+	}
+	
+	void setCancelVisibility(boolean vis) {
+		cancelPieceIcon.setVisible(vis);
+	}
+	
+	public Mode getMode() { return mode; }
 	
 	public Board getBoard() { return board; }
 	
 	public Settings settings() { return settingsMenu;}
+	
+	void setTurnText(String text) {
+		turnLabel.setText(text);
+	}
+	
+	public void finishDrag() {
+		setCancelVisibility(false);
+	}
+	
+	public void startDrag(MouseEvent m, Piece p) {
+		//((Node) m.getSource()).getScene().setCursor(Cursor.CLOSED_HAND);
+		setCancelVisibility(true);
+	}
+	class PickIcon extends StackPane{
+		Piece myPiece;
+		private WrappedImageView im;
+		private EventHandler<? super MouseEvent> onDragDetected = dragEvent -> {
+			PickIcon source = (PickIcon) dragEvent.getSource();
+			Dragboard db = startDragAndDrop(TransferMode.COPY);
+			Image dragViewImage = source.myPiece.getImage();
+			db.setDragView(dragViewImage, dragViewImage.getWidth()/2, dragViewImage.getHeight()/2);
+			ClipboardContent content = new ClipboardContent();
+	        content.putString(myPiece.getFullName());
+	        db.setContent(content);
+	        startDrag(dragEvent, myPiece);
+	        dragEvent.consume();
+		};
+		public PickIcon(Piece p) {
+			myPiece = p;
+			this.prefWidthProperty().bind(GamePanel.this.heightProperty().divide(8));
+			this.prefHeightProperty().bind(this.prefWidthProperty());
+			im = new WrappedImageView(p.getImage());
+			im.setPreserveRatio(true);
+			this.getChildren().add(im);
+			this.setOnDragDetected(onDragDetected);
+			this.setOnDragDone(dragEvent -> {
+	        	GamePanel.this.finishDrag();
+	        });
+		};
+	}
 	
 	public class Settings extends StackPane{
 		ColorAdjust darken;
@@ -291,7 +492,7 @@ public class GamePanel extends StackPane{
 			
 			autoFlipCheckBox = new CheckBox("Auto-flip");
 			Tooltip.install(autoFlipCheckBox, new Tooltip("When enabled, the board will automatically be rotated so that the pieces of the player"
-					+ " whose turn it is appear at the bottom."));
+					+ " whose turn it is appears at the bottom."));
 			autoFlipCheckBox.setSelected(true);
 			autoFlip = true;
 			

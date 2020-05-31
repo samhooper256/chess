@@ -21,7 +21,7 @@ public class Main extends Application{
 		
 		scene.getStylesheets().add(Main.class.getResource("style.css").toExternalForm());
 		primaryStage.setMinHeight(400);
-		primaryStage.minWidthProperty().bind(primaryStage.heightProperty());
+		primaryStage.minWidthProperty().bind(primaryStage.heightProperty().multiply(1.5));
 		primaryStage.setTitle("chess++");
 		primaryStage.setScene(scene);
 		primaryStage.sizeToScene();

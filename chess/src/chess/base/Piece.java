@@ -1,6 +1,5 @@
 package chess.base;
 
-import java.util.ArrayList;
 import java.util.Set;
 
 import javafx.scene.image.Image;
@@ -9,8 +8,6 @@ import javafx.scene.image.Image;
  * @author Sam Hooper
  */
 public abstract class Piece {
-	
-	public static String name;
 	
 	protected boolean color;
 	protected boolean hasMoved;

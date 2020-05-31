@@ -20,39 +20,6 @@ public class RelativeMultiAction extends MultiAction {
 		this.relCol = relCol;
 		this.addAllConditions(cons);
 	}
-	
-	/*
-	@Override
-	public LegalMulti next(Board b, int startRow, int startCol){
-		int m = b.getPieceAt(startRow, startCol).getColor() == Piece.WHITE ? 1 : -1;
-		if(!this.checkConditions(b, startRow, startCol, startRow + m*relRow, startCol + m*relCol)) {
-			return null;
-		}
-		Collection<LegalAction> validActions = new ArrayList<>();
-		
-		for(Map.Entry<Action, Boolean> e : actions.entrySet()) {
-			LegalAction ac = e.getKey().next(b, startRow, startCol);
-			if(ac != null) {
-				validActions.add(ac);
-				startRow = ac.destRow();
-				startCol = ac.destCol();
-			}
-			else {
-				if(e.getValue()) {
-					return null;
-				}
-			}
-		}
-		
-		if(validActions.isEmpty()) {
-			return null;
-		}
-		else {
-			return new LegalMulti(startRow + m*relRow, startCol + m*relCol, validActions);
-		}
-	}
-	*/
-	
 
 	@Override
 	public Set<? extends LegalAction> getLegals(Board b, int startRow, int startCol) {
@@ -83,20 +50,23 @@ public class RelativeMultiAction extends MultiAction {
 				Set<LegalMulti> end = new HashSet<>();
 				for(LegalAction leg : mnc.getLegals(b, startRow, startCol)) {
 					legals.add(leg);
+					//LegalMulti's constructor copies the "legals" ArrayList, so it's okay to reuse it.
 					end.add(new LegalMulti(finalDestRow, finalDestCol, legals));
 					legals.remove(legals.size() - 1);
 				}
-				//System.out.println(" and returned " + end);
 				return end;
 			}
 			else {
-				Set<? extends LegalAction> s = Collections.singleton(new LegalMulti(finalDestRow, finalDestCol, legals));
-				//System.out.println(" and returned " + s);
-				return s;
+				if(legals.isEmpty()) {
+					return Collections.emptySet();
+				}
+				else {
+					Set<? extends LegalAction> s = Collections.singleton(new LegalMulti(finalDestRow, finalDestCol, legals));
+					return s;
+				}
 			}
 		}
 		else {
-			//System.out.println(" and returned an empty set!");
 			return Collections.emptySet();
 		}
 		

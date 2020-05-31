@@ -2,8 +2,6 @@ package chess.base;
 
 import java.util.Arrays;
 
-import chess.util.ReadOnlyIntAttribute;
-
 /* *
  * Mutable class representing a board preset.
  * The only immutable property is the board size.
@@ -11,22 +9,22 @@ import chess.util.ReadOnlyIntAttribute;
  * @author 	Sam Hooper
  */
 public class BoardPreset {
-	private final ReadOnlyIntAttribute size;
+	private final int size;
 	private boolean turn, fiftyMoveRule;
 	private String[][] pieceNames;
 	
 	public BoardPreset() {
-		size = new ReadOnlyIntAttribute(8);
+		size = 8;
 		turn = Piece.WHITE;
 		fiftyMoveRule = true;
-		pieceNames = new String[size.getAsInt()][size.getAsInt()];
+		pieceNames = new String[size][size];
 	}
 	
 	public BoardPreset(int size) {
-		this.size = new ReadOnlyIntAttribute(size);
+		this.size = size;
 		turn = Piece.WHITE;
 		fiftyMoveRule = true;
-		pieceNames = new String[this.size.getAsInt()][this.size.getAsInt()];
+		pieceNames = new String[this.size][this.size];
 	}
 	
 	public void setTurn(boolean color) {
@@ -45,8 +43,8 @@ public class BoardPreset {
 		return pieceNames[row][col];
 	}
 	
-	public int getBoardSizeAsInt() {
-		return size.getAsInt();
+	public int getBoardSize() {
+		return size;
 	}
 	
 	public void setFiftyMoveRule(boolean fiftyMoveRule) {
@@ -68,23 +66,23 @@ public class BoardPreset {
 	 * NOTE: This method does not ensure that the given piece names are valid.
 	 */
 	public void setPieces(String[]... pieceNamesInit) {
-		if(pieceNamesInit.length != size.getAsInt()) {
+		if(pieceNamesInit.length != size) {
 			throw new IllegalArgumentException("Invalid number of rows (" + pieceNamesInit.length + "), should be " + size);
 		}
-		for(int i = 0; i < size.getAsInt(); i++) {
+		for(int i = 0; i < size; i++) {
 			if(pieceNamesInit[i] == null) {
-				pieceNames[i] = new String[size.getAsInt()];
+				pieceNames[i] = new String[size];
 			}
 			else {
-				pieceNames[i] = Arrays.copyOf(pieceNamesInit[i], size.getAsInt());
+				pieceNames[i] = Arrays.copyOf(pieceNamesInit[i], size);
 			}
 		}
 	}
 	
 	public String[][] getPieces() {
-		String[][] end = new String[size.getAsInt()][size.getAsInt()];
-		for(int i = 0; i < size.getAsInt(); i++) {
-			end[i] = Arrays.copyOf(pieceNames[i], size.getAsInt());
+		String[][] end = new String[size][size];
+		for(int i = 0; i < size; i++) {
+			end[i] = Arrays.copyOf(pieceNames[i], size);
 		}
 		return end;
 	}

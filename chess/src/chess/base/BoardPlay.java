@@ -1,7 +1,5 @@
 package chess.base;
 
-import java.util.Arrays;
-
 public class BoardPlay{
 	
 	private Piece piece;

@@ -6,8 +6,8 @@ import java.lang.reflect.Method;
 import java.util.ArrayList;
 
 import chess.base.Board;
-import chess.base.Piece;
 import chess.base.Board.Tile;
+import chess.base.Piece;
 
 public class ConditionBuilder{
 	Object base;

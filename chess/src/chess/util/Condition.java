@@ -1,16 +1,13 @@
 package chess.util;
 
-import java.util.Objects;
-import java.util.ArrayList;
-import java.lang.reflect.Member;
-import java.lang.reflect.Method;
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Member;
+import java.lang.reflect.Method;
+import java.util.ArrayList;
 
 import chess.base.Board;
-import chess.base.Pawn;
 import chess.base.Piece;
-import chess.base.Board.Tile;
 
 /*
 
@@ -49,6 +46,13 @@ enum Flag{
 }
 public abstract class Condition{
 	
+	/////////////////////////////////////////////////////////////////////////////
+	/* Common Conditions have been made as public static final variables below.*/
+	/* ALL OF THESE CONDITIONS COULD BE MADE ON THEIR OWN. They provide no new */
+	/* functionality, although they are more efficient than ones created by    */
+	/* hand.																   */
+	/////////////////////////////////////////////////////////////////////////////
+	
 	/*EOE = "Enemy or Empty." Standard MoveAndCapture and Capture condition.
 	 * Destination tile must be either empty or have a piece of the opposite color.*/
 	public static final Condition EOE = new Condition() {
@@ -66,11 +70,34 @@ public abstract class Condition{
 		}
 	};
 	
+	/* *
+	 * POS = "Piece on Start". Evals to true if there is a piece of any color on the start tile.
+	 * This condition is only useful for OtherMoveAndCaptures - for all other actions, there is
+	 * guaranteed to be a piece on the start.
+	 */
+	public static final Condition POS = new Condition() {
+		public boolean eval(Board b, int startRow, int startCol, int destRow, int destCol) {
+			Piece p = b.getPieceAt(startRow, startCol);
+			return p != null;
+		}
+	};
+	
 	/*DIE = "Destination is Empty." Evals to true if there is NOT a piece of any color on the destination.
 	 * It is the inverse of POD. It has a very nice acronym :) */
 	public static final Condition DIE = new Condition() {
 		public boolean eval(Board b, int startRow, int startCol, int destRow, int destCol) {
 			Piece p = b.getPieceAt(destRow, destCol);
+			return p == null;
+		}
+	};
+	
+	/* *
+	 * SIE = "Start is Empty." For the same reason as POS, this is only useful for
+	 * OtherMoveAndCaptures.
+	 */
+	public static final Condition SIE = new Condition() {
+		public boolean eval(Board b, int startRow, int startCol, int destRow, int destCol) {
+			Piece p = b.getPieceAt(startRow, startCol);
 			return p == null;
 		}
 	};
@@ -91,7 +118,23 @@ public abstract class Condition{
 		}
 	};
 	
+	//////////////////////////////
+	/* End of common conditions */
+	//////////////////////////////
 	
+	//this will be returned if evaluating the condition throws an exception.
+	boolean defaultValue;
+	
+	public boolean getDefault() { return defaultValue; }
+	
+	public void setDefault(boolean newDV) {
+		this.defaultValue = newDV;
+	}	
+	
+	/* *
+	 * THIS CONDITION MUST ONLY BE USED ON KINGS,
+	 * or paradoxical loops (StackOverflow Errors) will occur.
+	 */
 	public static Condition onStartRelativeCheckable(int relRow, int relCol) {
 		return new Condition() {
 			@Override
@@ -103,7 +146,40 @@ public abstract class Condition{
 		};
 	}
 	
-	public abstract boolean eval(Board b, int startRow, int startCol, int destRow, int destCol);
+	protected abstract boolean eval(Board b, int startRow, int startCol, int destRow, int destCol);
+	
+	protected boolean evalOrFalse(Board b, int startRow, int startCol, int destRow, int destCol) {
+		boolean result;
+		try {
+			result = this.eval(b, startRow, startCol, destRow, destCol);
+		}
+		catch(Exception e) {
+			return false;
+		}
+		return result;
+	}
+	
+	public boolean calc(Board b, int startRow, int startCol, int destRow, int destCol) {
+		boolean result;
+		try {
+			result = this.eval(b, startRow, startCol, destRow, destCol);
+		}
+		catch(Exception e) {
+			return defaultValue;
+		}
+		return result;
+		
+	}
+	protected boolean evalOrTrue(Board b, int startRow, int startCol, int destRow, int destCol) {
+		boolean result;
+		try {
+			result = this.eval(b, startRow, startCol, destRow, destCol);
+		}
+		catch(Exception e) {
+			return true;
+		}
+		return result;
+	}
 	
 	public static ConditionBuilder onDest() {
 		return new ConditionBuilder(Flag.DESTINATION);
@@ -464,8 +540,8 @@ class ANDCondition extends Condition{
 	
 	@Override
 	public boolean eval(Board b, int startRow, int startCol, int destRow, int destCol) {
-		return 	c1.eval(b, startRow, startCol, destRow, destCol) &&
-				c2.eval(b, startRow, startCol, destRow, destCol);
+		return 	c1.calc(b, startRow, startCol, destRow, destCol) &&
+				c2.calc(b, startRow, startCol, destRow, destCol);
 				
 	}
 }
@@ -480,8 +556,8 @@ class ORCondition extends Condition{
 	
 	@Override
 	public boolean eval(Board b, int startRow, int startCol, int destRow, int destCol) {
-		return 	c1.eval(b, startRow, startCol, destRow, destCol) ||
-				c2.eval(b, startRow, startCol, destRow, destCol);
+		return 	c1.calc(b, startRow, startCol, destRow, destCol) ||
+				c2.calc(b, startRow, startCol, destRow, destCol);
 				
 	}
 }
@@ -496,8 +572,8 @@ class XORCondition extends Condition{
 	
 	@Override
 	public boolean eval(Board b, int startRow, int startCol, int destRow, int destCol) {
-		return 	c1.eval(b, startRow, startCol, destRow, destCol) ^
-				c2.eval(b, startRow, startCol, destRow, destCol);
+		return 	c1.calc(b, startRow, startCol, destRow, destCol) ^
+				c2.calc(b, startRow, startCol, destRow, destCol);
 				
 	}
 }
@@ -511,7 +587,7 @@ class NOTCondition extends Condition{
 	
 	@Override
 	public boolean eval(Board b, int startRow, int startCol, int destRow, int destCol) {
-		return 	!c1.eval(b, startRow, startCol, destRow, destCol);
+		return 	!c1.calc(b, startRow, startCol, destRow, destCol);
 	}
 }
 

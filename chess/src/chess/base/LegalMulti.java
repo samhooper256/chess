@@ -1,12 +1,7 @@
 package chess.base;
 
 import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collection;
 
-import chess.util.MoveAndCaptureAction;
-import chess.util.PromotionAction;
-import javafx.scene.paint.Color;
 import javafx.scene.shape.Circle;
 import javafx.scene.shape.Shape;
 

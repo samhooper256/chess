@@ -2,31 +2,22 @@ package chess.base;
 
 import java.io.PrintStream;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.Iterator;
-import java.util.LinkedList;
 import java.util.List;
 import java.util.Scanner;
 import java.util.Set;
-import java.util.concurrent.CountDownLatch;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
-import java.util.concurrent.Executor;
 
-import chess.util.ReadOnlyIntAttribute;
 import javafx.application.Platform;
-import javafx.collections.ObservableList;
 import javafx.concurrent.Service;
 import javafx.concurrent.Task;
 import javafx.event.EventHandler;
 import javafx.geometry.HPos;
 import javafx.geometry.Pos;
 import javafx.geometry.VPos;
-import javafx.scene.Node;
 import javafx.scene.control.Button;
 import javafx.scene.control.Control;
 import javafx.scene.control.ScrollPane;
@@ -37,13 +28,8 @@ import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.ColumnConstraints;
 import javafx.scene.layout.GridPane;
 import javafx.scene.layout.Pane;
-import javafx.scene.layout.Region;
 import javafx.scene.layout.RowConstraints;
 import javafx.scene.layout.StackPane;
-import javafx.scene.paint.Color;
-import javafx.scene.shape.Circle;
-import javafx.scene.shape.Polygon;
-import javafx.scene.shape.Rectangle;
 import javafx.scene.shape.Shape;
 import javafx.scene.text.Text;
 
@@ -53,19 +39,19 @@ import javafx.scene.text.Text;
 public class Board extends StackPane{
 	public static final int MAX_BOARD_SIZE = 26;
 	public static final int DEFAULT_BOARD_SIZE = 8;
-	public static boolean QUEENSIDE = true;
-	public static boolean KINGSIDE = false;
 	private static BoardPreset defaultBoardPreset;
 	
-	private final ReadOnlyIntAttribute BOARD_SIZE;
+	private final int BOARD_SIZE;
 	private Tile[][] board;
 	private int moveNumber, playNumber, movesSincePawnOrCapture;
 	private int[][] kingLocations; //kingLocations[0] is white king, kingLocations[1] is black king
 	private Tile currentlySelectedTile;
 	private BoardPreset preset;
-	private boolean turn, orientation, fiftyMoveRule;
+	private boolean turn, fiftyMoveRule;
 	private volatile boolean boardInteractionAllowed = true;
+	private volatile boolean orientation;
 	//UI Components
+	private GamePanel associatedGP;
 	private BorderPane boardOverlay;
 	private StackPane boardPopupBox, promotionStackPane;
 	private GridPane grid, promotionGridPane, popupMessageArea;
@@ -82,7 +68,6 @@ public class Board extends StackPane{
 	private static String DARK_COLOR = "#2c3d4f";
 	private static String LIGHT_COLOR_SELECTED = "#38e8c4";
 	private static String DARK_COLOR_SELECTED = "#45576b";
-	private static String LEGAL_MOVE_COLOR = "#000dff";
 	
 	static {
 		defaultBoardPreset = new BoardPreset(DEFAULT_BOARD_SIZE);
@@ -273,8 +258,14 @@ public class Board extends StackPane{
 
 				@Override
 				protected Void call() {
-					synchronized(board) {
-						prepareForNextMove();
+					try {
+						synchronized(board) {
+							System.out.println("$$$Move preparing prepping:");
+							prepareForNextMove();
+						}
+					}
+					catch(Throwable t) {
+						t.printStackTrace();
 					}
 					return null;
 				}
@@ -412,24 +403,6 @@ public class Board extends StackPane{
 			
 		}
 		
-		
-		public void makePlay(int startRow, int startCol, LegalCapture play, boolean wrap) {
-			int destRow = play.destRow();
-			int destCol = play.destCol();
-			
-			Platform.runLater(new Runnable() {
-		
-				@Override
-				public void run() {
-					// TODO Auto-generated method stub
-					setPieceAt(destRow, destCol, null);
-				}
-				
-			});
-			
-			
-		}
-		
 		private void wrapUpPlay(){
 			if(turn == Piece.WHITE) {
 				turn = Piece.BLACK;
@@ -442,37 +415,11 @@ public class Board extends StackPane{
 			
 			playNumber++;
 			
+			if(Board.this.associatedGP.settings().getAutoFlip()) {
+				setOrientation(turn);
+			}
+			
 			prepareForNextMove();
-		}
-		private void wrapUpPlay(BoardPlay theMove) {
-			throw new UnsupportedOperationException("incomplete methdod (what even is this?)");
-			/*
-			moveList.add(theMove);
-			System.out.println("Wrapping up move, incoming turn = " + turn);
-			if(turn == Piece.WHITE) {
-				turn = Piece.BLACK;
-			}
-			else {
-				turn = Piece.WHITE;
-				moveNumber++;
-				if(fiftyMoveRule) {
-					if(!(theMove.moved instanceof Pawn || theMove.captured != null ||
-						moveList.get(moveList.size() - 2).moved instanceof Pawn ||
-						moveList.get(moveList.size() - 2).captured != null)) {
-						movesSincePawnOrCapture++;
-					}
-					else {
-						movesSincePawnOrCapture = 0;
-					}
-				}
-			}
-			
-			playNumber++;
-				
-			grid.requestLayout();
-			
-			movePreparerForFXThread.prepare();
-			*/
 		}
 	}
 	
@@ -577,7 +524,6 @@ public class Board extends StackPane{
 		private int row;
 		private int col;
 		private boolean isHighlighted;
-		private boolean selected;
 		private boolean isShowingLegal;
 		private Set<LegalAction> legalActions;
 		private Set<LegalAction> legalMovesShowing;
@@ -590,7 +536,6 @@ public class Board extends StackPane{
 			this.col = col;
 			this.legalMovesShowing = new HashSet<>();
 			isHighlighted = false;
-			selected = false;
 			isShowingLegal = false;
 			currentPiece = null;
 			currentImageView = null;
@@ -722,8 +667,8 @@ public class Board extends StackPane{
 		
 		public boolean isCheckableBy(boolean myColor) {
 			boolean attackingColor = !myColor;
-			for(int i = 0; i < BOARD_SIZE.getAsInt(); i++) {
-				for(int j = 0; j < BOARD_SIZE.getAsInt(); j++) {
+			for(int i = 0; i < BOARD_SIZE; i++) {
+				for(int j = 0; j < BOARD_SIZE; j++) {
 					/*this is NECESSARY! otherwise you get a stackOverflow because
 					a king tries to see if it can check itself, but in order to know whether it can
 					check itself it has to know what its legal moves are, and in order to know
@@ -742,7 +687,14 @@ public class Board extends StackPane{
 		}
 		
 		public int enemyLineDistance(boolean color) {
-			return color == Piece.WHITE ? row + 1 : BOARD_SIZE.getAsInt() - row;
+			return color == Piece.WHITE ? row + 1 : BOARD_SIZE - row;
+		}
+		
+		/* *
+		 * Returns TRUE if this is a light square, false if it's a dark square.
+		 */
+		public boolean tileColor() {
+			return (row+col) % 2 == 0;
 		}
 		
 	}
@@ -788,29 +740,29 @@ public class Board extends StackPane{
 		return log.playCount() > 0;
 	}
 	
-	public static Board emptyBoard() {
-		return new Board(DEFAULT_BOARD_SIZE);
+	public static Board emptyBoard(GamePanel panel) {
+		return new Board(panel, DEFAULT_BOARD_SIZE);
 	}
 	
-	public static Board emptyBoard(int size) {
-		return new Board(size);
+	public static Board emptyBoard(GamePanel panel, int size) {
+		return new Board(panel, size);
 	}
 	
-	public static Board defaultBoard() {
-		return new Board(defaultBoardPreset);
+	public static Board defaultBoard(GamePanel panel) {
+		return new Board(panel, defaultBoardPreset);
 	}
 	
-	public static Board fromPreset(BoardPreset preset) {
-		return new Board(preset);
+	public static Board fromPreset(GamePanel panel, BoardPreset preset) {
+		return new Board(panel, preset);
 	}
 	
-	private Board(int size) {
+	private Board(GamePanel panel, int size) {
 		if(size > MAX_BOARD_SIZE) {
 			throw new IllegalArgumentException("Desired board size (" + size + ") is greater " + 
 			"than MAX_BOARD_SIZE (26)");
 		}
-		
-		BOARD_SIZE = new ReadOnlyIntAttribute(size);
+		this.associatedGP = panel;
+		BOARD_SIZE = size;
 		turn = Piece.WHITE;
 		fiftyMoveRule = true;
 		this.preset = null;
@@ -819,13 +771,14 @@ public class Board extends StackPane{
 		movePreparerForFXThread.prepare();
 	}
 	
-	private Board(BoardPreset preset) {
-		if(preset.getBoardSizeAsInt() > MAX_BOARD_SIZE) {
-			throw new IllegalArgumentException("Desired board size (" + preset.getBoardSizeAsInt() + ") is greater " + 
+	private Board(GamePanel panel, BoardPreset preset) {
+		if(preset.getBoardSize() > MAX_BOARD_SIZE) {
+			throw new IllegalArgumentException("Desired board size (" + preset.getBoardSize() + ") is greater " + 
 			"than MAX_BOARD_SIZE (26)");
 		}
+		this.associatedGP = panel;
 		
-		BOARD_SIZE = new ReadOnlyIntAttribute(preset.getBoardSizeAsInt());
+		BOARD_SIZE = preset.getBoardSize();
 		turn = preset.getTurn();
 		fiftyMoveRule = preset.getFiftyMoveRule();
 		this.preset = preset;
@@ -858,8 +811,8 @@ public class Board extends StackPane{
 	}
 	
 	private void finishBoardInit() {
-		board = new Tile[BOARD_SIZE.getAsInt()][BOARD_SIZE.getAsInt()];
-		boardDisplay = new Tile[BOARD_SIZE.getAsInt()][BOARD_SIZE.getAsInt()];
+		board = new Tile[BOARD_SIZE][BOARD_SIZE];
+		boardDisplay = new Tile[BOARD_SIZE][BOARD_SIZE];
 		kingLocations = new int[][] {{-1,-1},{-1,-1}};
 		orientation = Piece.WHITE;
 		moveNumber = 1;
@@ -873,20 +826,20 @@ public class Board extends StackPane{
 		grid = new GridPane();
 		grid.setMinSize(200, 200);
 		
-		for (int i = 0; i < BOARD_SIZE.getAsInt(); i++) {
+		for (int i = 0; i < BOARD_SIZE; i++) {
 			final ColumnConstraints columnConstraints = new ColumnConstraints(Control.USE_PREF_SIZE, Control.USE_COMPUTED_SIZE, Double.MAX_VALUE);
-            columnConstraints.setPercentWidth(100.0/BOARD_SIZE.getAsInt());
+            columnConstraints.setPercentWidth(100.0/BOARD_SIZE);
             grid.getColumnConstraints().add(columnConstraints);
             
             final RowConstraints rowConstraints = new RowConstraints(Control.USE_PREF_SIZE, Control.USE_COMPUTED_SIZE, Double.MAX_VALUE);
-            rowConstraints.setPercentHeight(100.0/BOARD_SIZE.getAsInt());
+            rowConstraints.setPercentHeight(100.0/BOARD_SIZE);
             grid.getRowConstraints().add(rowConstraints);
         }
 		
 		
 		
-		for (int i = 0; i < BOARD_SIZE.getAsInt(); i++) {
-            for (int j = 0; j < BOARD_SIZE.getAsInt(); j++) {
+		for (int i = 0; i < BOARD_SIZE; i++) {
+            for (int j = 0; j < BOARD_SIZE; j++) {
             	Tile child = new Tile(i, j);
 	            board[i][j] = boardDisplay[i][j] = child;
                 GridPane.setRowIndex(child, i);
@@ -1000,8 +953,8 @@ public class Board extends StackPane{
 	
 	private void setupPiecesFromPreset(BoardPreset preset) {
 		clearPieces(); //this sets all values in kingLocations to -1.
-		for(int i = 0; i < BOARD_SIZE.getAsInt(); i++) {
-			for(int j = 0; j < BOARD_SIZE.getAsInt(); j++) {
+		for(int i = 0; i < BOARD_SIZE; i++) {
+			for(int j = 0; j < BOARD_SIZE; j++) {
 				board[i][j].setPiece(Piece.forName(preset.getPieceNameAt(i, j)));
 				if(board[i][j].currentPiece instanceof King) {
 					if(board[i][j].currentPiece.getColor() == Piece.WHITE) {
@@ -1035,8 +988,8 @@ public class Board extends StackPane{
 	}
 
 	private void clearPieces() {
-		for(int i = 0; i < BOARD_SIZE.getAsInt(); i++) {
-			for(int j = 0; j < BOARD_SIZE.getAsInt(); j++) {
+		for(int i = 0; i < BOARD_SIZE; i++) {
+			for(int j = 0; j < BOARD_SIZE; j++) {
 				board[i][j].setPiece(null);
 			}
 		}
@@ -1055,193 +1008,210 @@ public class Board extends StackPane{
 		printPieces();
 		System.out.println("--------------------");
 		*/
-		System.out.println("BIT = false :: from PFNM");
-		
-		boardInteractionAllowed = false;
-		
-		System.out.println("starting prep");
-		if(fiftyMoveRule && movesSincePawnOrCapture >= 50) {
-			endGame("fifty");
-			System.out.println("BIT = true :: from PFNM");
-			boardInteractionAllowed = true;
-			return;
-		}
-		System.out.println("prep 10% complete");
-		boolean anyLegalMovesWhite = false;
-		boolean anyLegalMovesBlack = false;
-		ArrayList<Piece> whitePieces = new ArrayList<>(BOARD_SIZE.getAsInt()/2);
-		ArrayList<Piece> blackPieces = new ArrayList<>(BOARD_SIZE.getAsInt()/2);
-		for(int i = 0; i < BOARD_SIZE.getAsInt(); i++) {
-			for(int j = 0; j < BOARD_SIZE.getAsInt(); j++) {
-				board[i][j].legalMovesShowing.clear();
-				if(board[i][j].calculateLegalActions()) {
-					if(board[i][j].currentPiece.getColor() == Piece.WHITE) {
-						anyLegalMovesWhite = true;
-					}
-					else {
-						anyLegalMovesBlack = true;
-					}
+		System.out.println("Starting prep!");
+		long start_time = System.nanoTime();
+		PREP:
+		{
+			boardInteractionAllowed = false;
+			
+			if(kingLocations[0][0] == -1 || kingLocations[0][1] == -1) {
+				if(kingLocations[1][0] == -1 || kingLocations[1][1] == -1) {
+					endGameWithMessage("Neither player has a king on the board.");
+					break PREP;
 				}
-				Piece p;
-				if((p = board[i][j].currentPiece) != null) {
-					if(p.getColor() == Piece.WHITE) {
-						whitePieces.add(p);
+				else {
+					endGameWithMessage("Black wins because white does not have a king.");
+					break PREP;
+				}
+			}
+			else if(kingLocations[1][0] == -1 || kingLocations[1][1] == -1) {
+				endGameWithMessage("White wins because black does not have a king.");
+				break PREP;
+			}
+			
+			if(fiftyMoveRule && movesSincePawnOrCapture >= 50) {
+				endGame("fifty");
+				System.out.println("BIT = true :: from PFNM");
+				break PREP;
+			}
+			System.out.println("prep 10% complete");
+			boolean anyLegalMovesWhite = false;
+			boolean anyLegalMovesBlack = false;
+			ArrayList<Tile> whitePieces = new ArrayList<>(BOARD_SIZE/2);
+			ArrayList<Tile> blackPieces = new ArrayList<>(BOARD_SIZE/2);
+			for(int i = 0; i < BOARD_SIZE; i++) {
+				for(int j = 0; j < BOARD_SIZE; j++) {
+					board[i][j].legalMovesShowing.clear();
+					if(board[i][j].calculateLegalActions()) {
+						if(board[i][j].currentPiece.getColor() == Piece.WHITE) {
+							anyLegalMovesWhite = true;
+						}
+						else {
+							anyLegalMovesBlack = true;
+						}
 					}
-					else {
-						blackPieces.add(p);
+					Piece p;
+					if((p = board[i][j].currentPiece) != null) {
+						if(p.getColor() == Piece.WHITE) {
+							whitePieces.add(board[i][j]);
+						}
+						else {
+							blackPieces.add(board[i][j]);
+						}
 					}
 				}
 			}
-		}
-		
-		
-		System.out.println("prep 99% complete");
-		//Now check for insufficient material:
-		
-		/*//TODO UNCOMMENT
-				MATERIAL_CHECK:
-				{
-					int wk = 0, bk = 0, wb = 0, bb = 0; //White Knights, Black Knights, White Bishops, Black Bishops
-					boolean wbc = false, bbc = false; //White Bishop Color, Black Bishop Color
-					for(int i = 0; i < whitePieces.size(); i++) {
-						Piece p = whitePieces.get(i);
-						if(p instanceof King) {
-							continue;
-						}
-						else if(p instanceof Knight) {
-							wk++;
-							if(wk > 2) {
-								break MATERIAL_CHECK;
-							}
-						}
-						else if(p instanceof Bishop) {
-							wb++;
-							if(wb > 1) {
-								break MATERIAL_CHECK;
-							}
-							else {
-								wbc = p.getColor();
-							}
-						}
-						else {
+			
+			
+			System.out.println("prep 99% complete");
+			
+			//Now check for insufficient material:
+			MATERIAL_CHECK:
+			{
+				int wk = 0, bk = 0, wb = 0, bb = 0; //White Knights, Black Knights, White Bishops, Black Bishops
+				boolean wbc = false, bbc = false; //White Bishop Color, Black Bishop Color (as in light or dark square)
+				for(int i = 0; i < whitePieces.size(); i++) {
+					Piece p = whitePieces.get(i).getPiece();
+					if(p instanceof King) {
+						continue;
+					}
+					else if(p instanceof Knight) {
+						wk++;
+						if(wk > 2) {
 							break MATERIAL_CHECK;
 						}
 					}
-					for(int i = 0; i < blackPieces.size(); i++) {
-						Piece p = blackPieces.get(i);
-						if(p instanceof King) {
-							continue;
-						}
-						else if(p instanceof Knight) {
-							bk++;
-							if(bk > 2) {
-								break MATERIAL_CHECK;
-							}
-						}
-						else if(p instanceof Bishop) {
-							bb++;
-							if(bb > 1) {
-								break MATERIAL_CHECK;
-							}
-							else {
-								bbc = p.getColor();
-							}
-						}
-						else {
+					else if(p instanceof Bishop) {
+						wb++;
+						if(wb > 1) {
 							break MATERIAL_CHECK;
 						}
-					}
-					
-//					 * ONLY the following conditions will cause an automatic draw:
-//					 * 
-//					 * King vs king with no other pieces.
-//					 * King and bishop vs king.
-//					 * King and knight vs king.
-//					 * King and bishop vs king and bishop of the same coloured square.
-//					 * 
-//					 * Although there are other conditions where neither player can FORCE mate,
-//					 * those positions are not an automatic draw because a mate could still be
-//					 * achieved if one player "helps" the other.
-					 
-					if(	wk == 0 && bk == 0 && wb == 0 && bb == 0 ||
-						wk == 0 && bk == 0 && (wb == 1 ^ bb == 1) ||
-						(wk == 0 ^ bk == 0) && wb == 0 && bb == 0 ||
-						wk == 0 && bk == 0 && wb == 1 && bb == 1 && wbc == bbc) {
-						endGame("material");
+						else {
+							wbc = whitePieces.get(i).tileColor();
+						}
 					}
 					else {
 						break MATERIAL_CHECK;
 					}
 				}
-				*/
-		
-		//Now check for checkmate/stalemate:
-		
-		if(Board.this.turn == Piece.WHITE) {
-			if(!anyLegalMovesWhite) {
-				boolean isCheckmate = false;
-				OUTER:
-				for(int i = 0; i < BOARD_SIZE.getAsInt(); i++) {
-					for(int j = 0; j < BOARD_SIZE.getAsInt(); j++) {
-						Piece p = board[i][j].currentPiece;
-						if(p != null && p.getColor() == Piece.BLACK && p.canCheck(Board.this, i, j, kingLocations[0][0], kingLocations[0][1])){
-							isCheckmate = true;
-							break OUTER;
+				for(int i = 0; i < blackPieces.size(); i++) {
+					Piece p = blackPieces.get(i).getPiece();
+					if(p instanceof King) {
+						continue;
+					}
+					else if(p instanceof Knight) {
+						bk++;
+						if(bk > 2) {
+							break MATERIAL_CHECK;
 						}
 					}
+					else if(p instanceof Bishop) {
+						bb++;
+						if(bb > 1) {
+							break MATERIAL_CHECK;
+						}
+						else {
+							bbc = blackPieces.get(i).tileColor();
+						}
+					}
+					else {
+						break MATERIAL_CHECK;
+					}
 				}
-				if(isCheckmate) {
-					endGame("black");
+				/*
+				 * ONLY the following conditions will cause an automatic draw:
+				 * 
+				 * King vs king with no other pieces.
+				 * King and bishop vs king.
+				 * King and knight vs king.
+				 * King and bishop vs king and bishop of the same colored square.
+				 * 
+				 * Although there are other conditions where neither player can FORCE mate,
+				 * those positions are not an automatic draw because a mate could still be
+				 * achieved if one player "helps" the other.
+				 * */
+				 
+				if(	wk == 0 && bk == 0 && wb == 0 && bb == 0 ||
+					wk == 0 && bk == 0 && (wb == 1 ^ bb == 1) ||
+					(wk == 0 ^ bk == 0) && wb == 0 && bb == 0 ||
+					wk == 0 && bk == 0 && wb == 1 && bb == 1 && wbc == bbc) {
+					endGame("material");
+					break PREP;
 				}
 				else {
-					endGame("stalemate");
+					break MATERIAL_CHECK;
+				}
+			}
+					
+			
+			//Now check for checkmate/stalemate:
+			
+			if(Board.this.turn == Piece.WHITE) {
+				if(!anyLegalMovesWhite) {
+					boolean isCheckmate = false;
+					OUTER:
+					for(int i = 0; i < BOARD_SIZE; i++) {
+						for(int j = 0; j < BOARD_SIZE; j++) {
+							Piece p = board[i][j].currentPiece;
+							if(p != null && p.getColor() == Piece.BLACK && p.canCheck(Board.this, i, j, kingLocations[0][0], kingLocations[0][1])){
+								isCheckmate = true;
+								break OUTER;
+							}
+						}
+					}
+					if(isCheckmate) {
+						endGame("black");
+						break PREP;
+					}
+					else {
+						endGame("stalemate");
+						break PREP;
+					}
+				}
+			}
+			else {
+				if(!anyLegalMovesBlack) {
+					boolean isCheckmate = false;
+					OUTER:
+					for(int i = 0; i < BOARD_SIZE; i++) {
+						for(int j = 0; j < BOARD_SIZE; j++) {
+							Piece p = board[i][j].currentPiece;
+							if(p != null && p.getColor() == Piece.WHITE && p.canCheck(Board.this, i, j, kingLocations[1][0], kingLocations[1][1])){
+								isCheckmate = true;
+								break OUTER;
+							}
+						}
+					}
+					if(isCheckmate) {
+						endGame("white");
+						break PREP;
+					}
+					else {
+						endGame("stalemate");
+						break PREP;
+					}
 				}
 			}
 		}
-		else {
-			if(!anyLegalMovesBlack) {
-				boolean isCheckmate = false;
-				OUTER:
-				for(int i = 0; i < BOARD_SIZE.getAsInt(); i++) {
-					for(int j = 0; j < BOARD_SIZE.getAsInt(); j++) {
-						Piece p = board[i][j].currentPiece;
-						if(p != null && p.getColor() == Piece.WHITE && p.canCheck(Board.this, i, j, kingLocations[1][0], kingLocations[1][1])){
-							isCheckmate = true;
-							break OUTER;
-						}
-					}
-				}
-				if(isCheckmate) {
-					endGame("white");
-				}
-				else {
-					endGame("stalemate");
-				}
-			}
-		}
-		System.out.println("BIT = true :: from PFNM");
+		
+		System.out.println("Prep took " + (System.nanoTime() - start_time));
 		boardInteractionAllowed = true;
 	}
-	
-	private void undoMove() {
-		//TODO
-	}
 
-	private void flip() {
+	void flip() {
 		Platform.runLater(new Runnable() {
 			public void run() {
-				Board.this.orientation = !Board.this.orientation;
-				
-				if(orientation == Piece.BLACK) {
-					for(int i = 0; i < BOARD_SIZE.getAsInt(); i++) {
-						for(int j = 0; j < BOARD_SIZE.getAsInt(); j++) {
-							boardDisplay[i][j] = board[BOARD_SIZE.getAsInt() - i - 1][BOARD_SIZE.getAsInt() - j - 1];
+				boolean newOrientation = !Board.this.orientation;
+				if(newOrientation == Piece.BLACK) {
+					for(int i = 0; i < BOARD_SIZE; i++) {
+						for(int j = 0; j < BOARD_SIZE; j++) {
+							boardDisplay[i][j] = board[BOARD_SIZE - i - 1][BOARD_SIZE - j - 1];
 						}
 					}
 				}
 				else {
-					for(int i = 0; i < BOARD_SIZE.getAsInt(); i++) {
-						for(int j = 0; j < BOARD_SIZE.getAsInt(); j++) {
+					for(int i = 0; i < BOARD_SIZE; i++) {
+						for(int j = 0; j < BOARD_SIZE; j++) {
 							boardDisplay[i][j] = board[i][j];
 						}
 					}
@@ -1249,17 +1219,27 @@ public class Board extends StackPane{
 				
 				
 				grid.getChildren().clear();
-				for (int i = 0; i < BOARD_SIZE.getAsInt(); i++) {
-		            for (int j = 0; j < BOARD_SIZE.getAsInt(); j++) {
+				for (int i = 0; i < BOARD_SIZE; i++) {
+		            for (int j = 0; j < BOARD_SIZE; j++) {
 		            	Tile child = boardDisplay[i][j];
 		                GridPane.setRowIndex(child, i);
 		                GridPane.setColumnIndex(child, j);
 		                grid.getChildren().add(child);
 		            }
 		        }
+				Board.this.orientation = newOrientation;
 			}
 		});
 		
+	}
+	
+	void flipTurn() {
+		this.turn = !this.turn;
+		if(currentlySelectedTile != null) {
+			currentlySelectedTile.hideLegalMovesAndDepopulate();
+			currentlySelectedTile.setHighlighted(false);
+			currentlySelectedTile = null;
+		}
 	}
 
 	boolean tryMoveForLegality(int startRow, int startCol, LegalAction action) {
@@ -1283,7 +1263,7 @@ public class Board extends StackPane{
 		}
 		
 		if(!result) {
-			System.out.printf("Invalidated (%d,%d) -> %s", startRow, startCol, action.toString());
+			System.out.printf("Invalidated (%d,%d) -> %s%n", startRow, startCol, action.toString());
 		}
 		return result;
 	}
@@ -1312,8 +1292,8 @@ public class Board extends StackPane{
 		boolean result = true;
 		
 		outer:
-		for(int i = 0; i < BOARD_SIZE.getAsInt(); i++) {
-			for(int j = 0; j < BOARD_SIZE.getAsInt(); j++) {
+		for(int i = 0; i < BOARD_SIZE; i++) {
+			for(int j = 0; j < BOARD_SIZE; j++) {
 				if(i == destRow && j == destCol) continue;
 				Piece o = getPieceAt(i, j);
 				if(	/*if this breaks down, it's because I removed the condition "!(o instanceof King)*/
@@ -1341,8 +1321,8 @@ public class Board extends StackPane{
 		boolean result = true;
 		
 		outer:
-		for(int i = 0; i < BOARD_SIZE.getAsInt(); i++) {
-			for(int j = 0; j < BOARD_SIZE.getAsInt(); j++) {
+		for(int i = 0; i < BOARD_SIZE; i++) {
+			for(int j = 0; j < BOARD_SIZE; j++) {
 				if(i == destRow && j == destCol) continue;
 				Piece o = getPieceAt(i, j);
 				if(	
@@ -1362,6 +1342,13 @@ public class Board extends StackPane{
 
 	//PRECONDITION: rows & cols are valid, startRow/startCol represents a NON-KING piece.
 	private boolean tryMoveForLegalityNonKing(int startRow, int startCol, LegalAction action) {
+		if(action instanceof LegalMoveAndCapture) {
+			return tryMoveForLegalityMNCNonKing(startRow, startCol, action.destRow(), action.destCol());
+		}
+		else if(action instanceof LegalOtherMoveAndCapture) {
+			LegalOtherMoveAndCapture act = (LegalOtherMoveAndCapture) action;
+			return tryMoveForLegalityMNCNonKing(act.startRow(), act.startCol(), act.destRow(), act.destCol());
+		}
 		int destRow = action.destRow(), destCol = action.destCol();
 		Piece p = getPieceAt(startRow, startCol);
 		Piece onTile = getPieceAt(destRow, destCol);
@@ -1369,39 +1356,13 @@ public class Board extends StackPane{
 		boolean myColor = p.getColor();
 		boolean attackingColor = myColor == Piece.WHITE ? Piece.BLACK : Piece.WHITE;
 		
-		if(action instanceof LegalMoveAndCapture) {
-			//System.out.printf("trying MNC for legality: {(%d,%d), %s}...", startRow, startCol, action);
-			board[startRow][startCol].currentPiece = null;
-			board[destRow][destCol].currentPiece = p;
-			boolean result = true;
-			
-			outer:
-			for(int i = 0; i < BOARD_SIZE.getAsInt(); i++) {
-				for(int j = 0; j < BOARD_SIZE.getAsInt(); j++) {
-					if(i == destRow && j == destCol) continue;
-					Piece o = getPieceAt(i, j);
-					if(	/*if this breaks down, it's because I removed the condition "!(o instanceof King)*/
-						o != null && o.getColor() == attackingColor &&
-						o.canCheck(Board.this, i, j, kingSpot[0], kingSpot[1])) {
-						result = false;
-						break outer;
-					}
-				}
-			}
-			
-			board[startRow][startCol].currentPiece = p;
-			board[destRow][destCol].currentPiece = onTile;
-			
-			//System.out.println(result);
-			return result;
-		}
-		else if(action instanceof LegalCapture) {
+		if(action instanceof LegalCapture) {
 			board[destRow][destCol].currentPiece = null;
 			boolean result = true;
 			
 			outer:
-			for(int i = 0; i < BOARD_SIZE.getAsInt(); i++) {
-				for(int j = 0; j < BOARD_SIZE.getAsInt(); j++) {
+			for(int i = 0; i < BOARD_SIZE; i++) {
+				for(int j = 0; j < BOARD_SIZE; j++) {
 					if(i == destRow && j == destCol) continue;
 					Piece o = getPieceAt(i, j);
 					if(	/*if this breaks down, it's because I removed the condition "!(o instanceof King)*/
@@ -1426,8 +1387,8 @@ public class Board extends StackPane{
 				board[startRow][startCol].currentPiece = Piece.forName(itr.next(), myColor);
 				boolean result = true;
 				outer:
-				for(int i = 0; i < BOARD_SIZE.getAsInt(); i++) {
-					for(int j = 0; j < BOARD_SIZE.getAsInt(); j++) {
+				for(int i = 0; i < BOARD_SIZE; i++) {
+					for(int j = 0; j < BOARD_SIZE; j++) {
 						if(i == destRow && j == destCol) continue;
 						Piece o = getPieceAt(i, j);
 						if(	/*if this breaks down, it's because I removed the condition "!(o instanceof King)*/
@@ -1463,8 +1424,8 @@ public class Board extends StackPane{
 				board[destRow][destCol].currentPiece = Piece.forName(itr.next(), myColor);
 				boolean result = true;
 				outer:
-				for(int i = 0; i < BOARD_SIZE.getAsInt(); i++) {
-					for(int j = 0; j < BOARD_SIZE.getAsInt(); j++) {
+				for(int i = 0; i < BOARD_SIZE; i++) {
+					for(int j = 0; j < BOARD_SIZE; j++) {
 						if(i == destRow && j == destCol) continue;
 						Piece o = getPieceAt(i, j);
 						if(	/*if this breaks down, it's because I removed the condition "!(o instanceof King)*/
@@ -1512,8 +1473,8 @@ public class Board extends StackPane{
 			boolean result = true;
 			
 			outer:
-			for(int i = 0; i < BOARD_SIZE.getAsInt(); i++) {
-				for(int j = 0; j < BOARD_SIZE.getAsInt(); j++) {
+			for(int i = 0; i < BOARD_SIZE; i++) {
+				for(int j = 0; j < BOARD_SIZE; j++) {
 					if(i == destRow && j == destCol) continue;
 					Piece o = getPieceAt(i, j);
 					if(	
@@ -1643,8 +1604,8 @@ public class Board extends StackPane{
 	 * */
 	private boolean isCurrentStateLegalFor(boolean color) {
 		int[] kings = findKings()[color == Piece.WHITE ? 0 : 1];
-		for(int i = 0; i < BOARD_SIZE.getAsInt(); i++) {
-			for(int j = 0; j < BOARD_SIZE.getAsInt(); j++) {
+		for(int i = 0; i < BOARD_SIZE; i++) {
+			for(int j = 0; j < BOARD_SIZE; j++) {
 				Piece o = getPieceAt(i, j);
 				if(o != null) {
 					if(o.getColor() != color) {
@@ -1660,21 +1621,31 @@ public class Board extends StackPane{
 	
 	private int[][] findKings(){
 		int[][] kings = new int[2][2];
-		for(int i = 0; i < BOARD_SIZE.getAsInt(); i++) {
-			for(int j = 0; j < BOARD_SIZE.getAsInt(); j++) {
+		boolean whiteFound = false, blackFound = false;
+		for(int i = 0; i < BOARD_SIZE; i++) {
+			for(int j = 0; j < BOARD_SIZE; j++) {
 				Piece o = getPieceAt(i, j);
 				if(o instanceof King) {
 					if(o.getColor() == Piece.WHITE) {
 						kings[0][0] = i;
 						kings[0][1] = j;
+						whiteFound = true;
 					}
 					else {
 						kings[1][0] = i;
 						kings[1][1] = j;
+						blackFound = true;
 					}
 				}
 			}
 		}
+		if(!whiteFound) {
+			kings[0][0] = kings[0][1] = -1;
+		}
+		if(!blackFound) {
+			kings[1][0] = kings[1][1] = -1;
+		}
+		
 		return kings;
 	}
 
@@ -1688,16 +1659,35 @@ public class Board extends StackPane{
 				case "stalemate": boardPopupMessage.setText("Draw by stalemate"); break;
 				case "fifty": boardPopupMessage.setText("Draw by 50 move-rule"); break;
 				case "material": boardPopupMessage.setText("Draw by insufficient material"); break;
+				default: boardPopupMessage.setText("???"); break;
 				}
 				boardOverlay.setCenter(boardPopupBox);
 				boardOverlay.setVisible(true);
 			}
-		});	
+		});
 	}
 	
+	private void endGameWithMessage(String message) {
+		Platform.runLater(new Runnable() {
+			public void run() {
+				boardPopupMessage.setText(message);
+				boardOverlay.setCenter(boardPopupBox);
+				boardOverlay.setVisible(true);
+			}
+		});
+	}
+	
+	/*
+	 * MUST BE CALLED FROM FX THREAD.
+	 * */
 	public void reset() {
 		clickHandler.cancel();
 		synchronized(board) {
+			if(currentlySelectedTile != null) {
+				currentlySelectedTile.hideLegalMovesAndDepopulate();
+				currentlySelectedTile.setHighlighted(false);
+				currentlySelectedTile = null;
+			}
 			setupPiecesFromPreset(preset);
 			Board.this.turn = preset.getTurn();
 			Board.this.log.clear();
@@ -1708,6 +1698,13 @@ public class Board extends StackPane{
 			boardOverlay.setCenter(null);
 			boardOverlay.setVisible(false);
 			movePreparerForFXThread.prepare();
+			setOrientation(turn);
+		}
+	}
+	
+	public void setOrientation(boolean newOrientation) {
+		if(orientation != newOrientation) {
+			flip(); //flip updates the orientation for us
 		}
 	}
 
@@ -1716,11 +1713,11 @@ public class Board extends StackPane{
 	}
 
 	public boolean inBounds(int row, int col) {
-		return row >= 0 && col >= 0 && row < BOARD_SIZE.getAsInt() && col < BOARD_SIZE.getAsInt();
+		return row >= 0 && col >= 0 && row < BOARD_SIZE && col < BOARD_SIZE;
 	}
 	
 	public int getBoardSizeAsInt() {
-		return BOARD_SIZE.getAsInt();
+		return BOARD_SIZE;
 	}
 	
 	public boolean getBoardOrientation() {
@@ -1735,9 +1732,13 @@ public class Board extends StackPane{
 		return board[row][col];
 	}
 	
+	public GamePanel gamePanel() {
+		return associatedGP;
+	}
+	
 	public void printPieces() {
-		for(int i = 0; i < BOARD_SIZE.getAsInt(); i++) {
-			for(int j = 0; j < BOARD_SIZE.getAsInt(); j++) {
+		for(int i = 0; i < BOARD_SIZE; i++) {
+			for(int j = 0; j < BOARD_SIZE; j++) {
 				System.out.print(board[i][j].currentPiece);
 			}
 			System.out.println();

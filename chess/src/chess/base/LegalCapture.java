@@ -1,7 +1,6 @@
 package chess.base;
 
 import javafx.application.Platform;
-import javafx.scene.paint.Color;
 import javafx.scene.shape.Circle;
 import javafx.scene.shape.Shape;
 
@@ -66,6 +65,6 @@ public class LegalCapture extends LegalAction{
 
 	@Override
 	public String getDescription() {
-		return "Capture on tile (%d, %d)".formatted(destRow,destCol);
+		return String.format("Capture on tile (%d, %d)", destRow, destCol);
 	}
 }

@@ -1,7 +1,6 @@
 package chess.util;
 
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.Set;
@@ -9,9 +8,7 @@ import java.util.Set;
 import chess.base.Board;
 import chess.base.LegalAction;
 import chess.base.LegalCapture;
-import chess.base.LegalMoveAndCapture;
 import chess.base.Piece;
-import chess.util.MoveAndCaptureAction.LineMoveAndCaptureAction;
 
 public abstract class CaptureAction extends chess.util.Action{
 	private CaptureAction() {}
@@ -41,9 +38,16 @@ public abstract class CaptureAction extends chess.util.Action{
 			return this;
 		}
 		
+		/* *
+		 * Returns true if we should stop, false otherwise.
+		 */
 		private boolean checkStops(Board b, int startRow, int startCol, int destRow, int destCol) {
+			if(stopConditions.size() == 0) {
+				return false;
+			}
+		
 			for(int i = 0; i < stopConditions.size(); i++) {
-				if(stopConditions.get(i).eval(b, startRow, startCol, destRow, destCol)) {
+				if(stopConditions.get(i).calc(b, startRow, startCol, destRow, destCol)) {
 					return true;
 				}
 			}

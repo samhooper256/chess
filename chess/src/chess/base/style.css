@@ -1,5 +1,5 @@
 .root{
-    -fx-background: rgb(225, 228, 203);
+    -fx-background: rgb(226, 252, 255);
 }
 .popup-button {
     -fx-font-size: 11pt;
@@ -49,6 +49,12 @@
 
 #action-options-display{
     -fx-background-color: #FFFFFF;
+}
+
+#settings-grid-pane{
+    -fx-background-color: #FFFFFF;
+    -fx-border-radius: 10 10 10 10;
+    -fx-background-radius: 10 10 10 10;
 }
 
 .move-and-capture {

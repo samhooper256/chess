@@ -7,6 +7,8 @@ import java.util.Set;
 import chess.util.ActionTree;
 import chess.util.Condition;
 import chess.util.MoveAndCaptureAction;
+import chess.util.MultiAction;
+import chess.util.PromotionAction;
 import javafx.scene.image.Image;
 
 /* *
@@ -28,7 +30,11 @@ public class Rook extends Piece {
 			new ActionTree.Node(MoveAndCaptureAction.line(-1, 0, Condition.EOE).stops(Condition.POD)),
 			new ActionTree.Node(MoveAndCaptureAction.line(1, 0, Condition.EOE).stops(Condition.POD)),
 			new ActionTree.Node(MoveAndCaptureAction.line(0, -1, Condition.EOE).stops(Condition.POD)),
-			new ActionTree.Node(MoveAndCaptureAction.line(0, 1, Condition.EOE).stops(Condition.POD))
+			new ActionTree.Node(MoveAndCaptureAction.line(0, 1, Condition.EOE).stops(Condition.POD)),
+			new ActionTree.Node(MultiAction.relative(-1, 1)
+					.addAction(MoveAndCaptureAction.relative(-1, 1), false)
+					.addAction(PromotionAction.withOptions(new ArrayList<>(Arrays.asList("Queen")), Condition.SIE), false)
+			)
 		));
 	}
 	

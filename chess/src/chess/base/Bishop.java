@@ -1,13 +1,13 @@
 package chess.base;
 
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Set;
 
 import chess.util.ActionTree;
 import chess.util.Condition;
 import chess.util.MoveAndCaptureAction;
-import chess.util.SummonAction;
+import chess.util.MultiAction;
+import chess.util.OtherMoveAndCaptureAction;
 import javafx.scene.image.Image;
 
 /* *
@@ -28,7 +28,12 @@ public class Bishop extends Piece {
 			new ActionTree.Node(MoveAndCaptureAction.line(1, 1, Condition.EOE).stops(Condition.POD)),
 			new ActionTree.Node(MoveAndCaptureAction.line(1, -1, Condition.EOE).stops(Condition.POD)),
 			new ActionTree.Node(MoveAndCaptureAction.line(-1, 1, Condition.EOE).stops(Condition.POD)),
-			new ActionTree.Node(MoveAndCaptureAction.line(-1, -1, Condition.EOE).stops(Condition.POD))
+			new ActionTree.Node(MoveAndCaptureAction.line(-1, -1, Condition.EOE).stops(Condition.POD)),
+			new ActionTree.Node(
+				MultiAction.relative(-2, 0)
+				.addAction(OtherMoveAndCaptureAction.relative(0, -1, -2, -1, Condition.POS), false)
+				.addAction(OtherMoveAndCaptureAction.relative(0, 1, -2, 1, Condition.POS), false)
+			)
 		));
 	}
 	

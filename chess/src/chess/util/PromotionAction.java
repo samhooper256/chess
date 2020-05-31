@@ -1,15 +1,12 @@
 package chess.util;
 
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.Collections;
-import java.util.List;
 import java.util.Set;
 
 import chess.base.Board;
 import chess.base.LegalAction;
 import chess.base.LegalPromotion;
-import chess.base.Piece;
 
 public abstract class PromotionAction extends Action{
 	

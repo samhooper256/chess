@@ -1,11 +1,8 @@
 package chess.base;
 
 import java.util.ArrayList;
-import java.util.Collection;
-import java.util.List;
 
 import javafx.application.Platform;
-import javafx.scene.paint.Color;
 import javafx.scene.shape.Circle;
 import javafx.scene.shape.Shape;
 
@@ -36,8 +33,13 @@ public class LegalPromotion extends LegalAction{
 		
 		handleHelper = false;
 		Object lock1 = new Object();
-		
-		Piece endingPiece = b.moveMaker.selectPiece(startingPiece.getColor(), options);
+		Piece endingPiece;
+		if(options.size() == 1) {
+			endingPiece = Piece.forName(options.get(0), startingPiece.getColor());
+		}
+		else {
+			endingPiece = b.moveMaker.selectPiece(startingPiece.getColor(), options);
+		}
 		Platform.runLater(new Runnable() {
 
 			@Override
@@ -75,11 +77,16 @@ public class LegalPromotion extends LegalAction{
 
 	@Override
 	public String getDescription() {
-		StringBuilder optionsString = new StringBuilder();
-		for(int i = 0; i < options.size() - 1; i++) {
-			optionsString.append(options.get(i)).append(", ");
+		if(options.size() == 1) {
+			return "Promotes the acting piece to a " + options.get(0);
 		}
-		optionsString.append(options.get(options.size() - 1));
-		return "Promotes the acting piece to a choice of one of the following: %s".formatted(optionsString.toString());
+		else {
+			StringBuilder optionsString = new StringBuilder();
+			for(int i = 0; i < options.size() - 1; i++) {
+				optionsString.append(options.get(i)).append(", ");
+			}
+			optionsString.append(options.get(options.size() - 1));
+			return String.format("Promotes the acting piece to a choice of one of the following: %s", optionsString.toString());
+		}
 	}
 }

@@ -8,6 +8,7 @@ import chess.base.LegalAction;
 import chess.base.LegalOtherMoveAndCapture;
 import chess.base.Piece;
 
+
 public abstract class OtherMoveAndCaptureAction extends chess.util.Action{
 	public static RelativeOtherMoveAndCaptureAction relative(int otherRelStartRow,
 			int otherRelStartCol, int otherRelDestRow, int otherRelDestCol, Condition... cons) {
@@ -15,7 +16,7 @@ public abstract class OtherMoveAndCaptureAction extends chess.util.Action{
 				otherRelDestRow, otherRelDestCol, cons);
 	}
 	
-	public static class RelativeOtherMoveAndCaptureAction extends OtherMoveAndCaptureAction{
+	public static class RelativeOtherMoveAndCaptureAction extends OtherMoveAndCaptureAction implements RelativeJumpAction{
 		int relStartRow, relStartCol, relDestRow, relDestCol;
 		public RelativeOtherMoveAndCaptureAction(int otherRelStartRow,
 			int otherRelStartCol, int otherRelDestRow, int otherRelDestCol, Condition... cons) {
@@ -25,14 +26,26 @@ public abstract class OtherMoveAndCaptureAction extends chess.util.Action{
 			this.relDestCol = otherRelDestCol;
 			this.addAllConditions(cons);
 		}
+		
+		/* *
+		 * IMPORTANT:
+		 * OtherMoveAndCapture using the startRow/Col of the piece it's moving as the startRow/Col
+		 * passed to checkConditions. So, for example, in the castling move, the startRow/Col
+		 * passed to checkConditions are the coordinates of the Rook, not the King. Likewise,
+		 * the destRow/Col are the destination of the piece to be moved (aka the tile the Rook
+		 * lands on)
+		 * 
+		 * ALSO IMPORTANT: OtherMoveAndCapture REQUIRES there to be a piece on the starting tile
+		 * of the OtherMoveAndCapture.
+		 */
 		@Override
 		public Set<? extends LegalAction> getLegals(Board b, int startRow, int startCol) {
-			int m = b.getPieceAt(startRow, startCol).getColor() == Piece.WHITE ? 1 : -1;
+			Piece actingPiece = b.getPieceAt(startRow, startCol);
+			int m = actingPiece.getColor() == Piece.WHITE ? 1 : -1;
 			int sr = startRow + m*relStartRow, sc = startCol + m*relStartCol,
 				dr = startRow + m*relDestRow, dc = startCol + m*relDestCol;
-//			System.out.printf("^^^ getLegals on OMNC<%d,%d>: (%d,%d) -> (%d,%d)%n^^^ relatives = (%d,%d), (%d,%d)%n",
-//					startRow,startCol,sr,sc,dr,dc,relStartRow,relStartCol,relDestRow,relDestCol);
-			if(b.inBounds(sr, sc) && b.inBounds(dr, dc) && checkConditions(b, sr, sc, dr, dc)) {
+			
+			if(b.inBounds(sr, sc) && b.inBounds(dr, dc) && b.getPieceAt(sr, sc) != null && checkConditions(b, sr, sc, dr, dc)) {
 				Set<? extends LegalAction> s = Collections.singleton(new LegalOtherMoveAndCapture(sr,sc,dr,dc));
 //				System.out.println("\treturning " + s);
 				return s;
@@ -43,4 +56,8 @@ public abstract class OtherMoveAndCaptureAction extends chess.util.Action{
 			}
 		}
 	}
+	
+	/* *
+	 * Note that there are no line-based OtherMoveAndCaptureActions.
+	 */
 }

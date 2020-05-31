@@ -60,6 +60,11 @@ public class ActionTree {
 		}
 	}
 	
+	@Override
+	public String toString() {
+		return root.toString();
+	}
+	
 	public static class Node extends TreeNode{
 		Action action;
 		
@@ -88,16 +93,25 @@ public class ActionTree {
 				legals.addAll(action.getLegals(b, startRow, startCol));
 			}
 			
-			boolean childrenAllowed = action == null;
-			if(action instanceof RelativeJumpAction) {
-				childrenAllowed = legals.size() != 0;
+			boolean childrenAllowed = false;
+			if(action == null) {
+				childrenAllowed = true;
 			}
-			else if(action instanceof RelativeSegmentAction) {
-				throw new IllegalArgumentException("unfinished code");
+			else {
+				if(action instanceof RelativeJumpAction) {
+					childrenAllowed = legals.size() != 0;
+				}
+				else if(action instanceof RelativeSegmentAction) {
+					childrenAllowed = ((RelativeSegmentAction) action).reachedEndOfSegment(b, startRow, startCol, legals);
+					//System.out.println("children = " +this.getChildren());
+					//System.out.println("children.getlegals = " + this.getChildren().get(0).getLegals(b, startRow, startCol));
+					//System.out.println("childrenallowed = " + childrenAllowed);
+				}
 			}
 			if(childrenAllowed) {
 				for(int i = 0; i < children.size(); i++) {
 					legals.addAll(getLegalsOnNode(children.get(i), b, startRow, startCol));
+					//System.out.println(legals);
 				}
 			}
 			return legals;
@@ -141,6 +155,11 @@ public class ActionTree {
 		public Action getAction() {
 			return action;
 		}
+		
+		@Override
+		public String toString() {
+			return String.format("[Node (%s), (%s)]", action, children); 
+		}
 	}
 	
 	public static class Choke extends TreeNode{
@@ -155,7 +174,7 @@ public class ActionTree {
 			Set<LegalAction> legals = new HashSet<>();
 			
 			for(int i = 0; i < conditions.size(); i++) {
-				if(!conditions.get(i).eval(b, startRow, startCol, -1, -1)) {
+				if(!conditions.get(i).calc(b, startRow, startCol, -1, -1)) {
 					return legals;
 				}
 			}
@@ -169,7 +188,7 @@ public class ActionTree {
 		@Override
 		public boolean canCheck(Board b, int startRow, int startCol, int destRow, int destCol) {
 			for(int i = 0; i < conditions.size(); i++) {
-				if(!conditions.get(i).eval(b, startRow, startCol, -1, -1)) {
+				if(!conditions.get(i).calc(b, startRow, startCol, -1, -1)) {
 					return false;
 				}
 			}

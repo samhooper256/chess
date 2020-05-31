@@ -1,7 +1,6 @@
 package chess.base;
 
 import javafx.application.Platform;
-import javafx.scene.paint.Color;
 import javafx.scene.shape.Circle;
 import javafx.scene.shape.Shape;
 
@@ -41,6 +40,9 @@ public class LegalOtherMoveAndCapture extends LegalAction{
 		System.out.printf("~~~~Handling OMNC (start of calling piece = (%d,%d))~~~~%n", startRow, startCol);
 		
 		Piece p = b.getPieceAt(LegalOtherMoveAndCapture.this.startRow, LegalOtherMoveAndCapture.this.startCol);
+		if(p != null) {
+			p.setHasMoved(true);
+		}
 		int destRow = this.destRow();
 		int destCol = this.destCol();
 		
@@ -84,6 +86,6 @@ public class LegalOtherMoveAndCapture extends LegalAction{
 
 	@Override
 	public String getDescription() {
-		return "Moves the piece on tile (%d, %d) to (%d, %d)".formatted(startRow, startCol, destRow, destCol);
+		return String.format("Moves the piece on tile (%d, %d) to (%d, %d)", startRow, startCol, destRow, destCol);
 	}
 }

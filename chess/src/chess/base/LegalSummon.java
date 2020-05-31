@@ -1,11 +1,8 @@
 package chess.base;
 
 import java.util.ArrayList;
-import java.util.Set;
 
-import chess.util.Action;
 import javafx.application.Platform;
-import javafx.scene.paint.Color;
 import javafx.scene.shape.Circle;
 import javafx.scene.shape.Shape;
 
@@ -36,7 +33,14 @@ public class LegalSummon extends LegalAction{
 		
 		handleHelper = false;
 		Object lock1 = new Object();
-		Piece endingPiece = b.moveMaker.selectPiece(startingPiece.getColor(), options);
+		Piece endingPiece;
+		if(options.size() == 1) {
+			endingPiece = Piece.forName(options.get(0), startingPiece.getColor());
+		}
+		else {
+			endingPiece = b.moveMaker.selectPiece(startingPiece.getColor(), options);
+		}
+		
 		Platform.runLater(new Runnable() {
 
 			@Override
@@ -74,11 +78,16 @@ public class LegalSummon extends LegalAction{
 
 	@Override
 	public String getDescription() {
-		StringBuilder optionsString = new StringBuilder();
-		for(int i = 0; i < options.size() - 1; i++) {
-			optionsString.append(options.get(i)).append(", ");
+		if(options.size() == 1) {
+			return String.format("Summons a %s on tile (%d, %d)", options.get(0), destRow, destCol);
 		}
-		optionsString.append(options.get(options.size() - 1));
-		return String.format("Summons on tile (%d, %d) a choice of one of the following: %s", destRow, destCol, optionsString.toString());
+		else {
+			StringBuilder optionsString = new StringBuilder();
+			for(int i = 0; i < options.size() - 1; i++) {
+				optionsString.append(options.get(i)).append(", ");
+			}
+			optionsString.append(options.get(options.size() - 1));
+			return String.format("Summons on tile (%d, %d) a choice of one of the following: %s", destRow, destCol, optionsString.toString());
+		}
 	}
 }

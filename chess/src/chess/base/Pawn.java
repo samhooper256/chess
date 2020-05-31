@@ -10,8 +10,8 @@ import chess.util.Condition;
 import chess.util.IntegerPath;
 import chess.util.MoveAndCaptureAction;
 import chess.util.MultiAction;
-import chess.util.OtherMoveAndCaptureAction;
 import chess.util.PromotionAction;
+import chess.util.SummonAction;
 import javafx.scene.image.Image;
 
 /* *
@@ -33,25 +33,25 @@ public class Pawn extends Piece{
 			Arrays.asList(
 				new ActionTree.Choke(Arrays.asList(IntegerPath.fromStartEnemyDist.greaterThan(new IntegerPath(2))),
 					Arrays.asList(
-						new ActionTree.Node(MoveAndCaptureAction.jumpRelative(-1, 0, Condition.DIE),
-							new ActionTree.Node(MoveAndCaptureAction.jumpRelative(-2, 0, Condition.DIE,
+						new ActionTree.Node(MoveAndCaptureAction.relative(-1, 0, Condition.DIE),
+							new ActionTree.Node(MoveAndCaptureAction.relative(-2, 0, Condition.DIE,
 							Condition.onSelf().call("hasMoved").toBool().invert().toCond()))),
-						new ActionTree.Node(MoveAndCaptureAction.jumpRelative(-1, 1, Condition.EOD)),
-						new ActionTree.Node(MoveAndCaptureAction.jumpRelative(-1, -1, Condition.EOD))
+						new ActionTree.Node(MoveAndCaptureAction.relative(-1, 1, Condition.EOD)),
+						new ActionTree.Node(MoveAndCaptureAction.relative(-1, -1, Condition.EOD))
 					)
 				),
 				new ActionTree.Choke(Arrays.asList(IntegerPath.fromStartEnemyDist.isEquals(new IntegerPath(2))),
 						Arrays.asList(
-							new ActionTree.Node(MultiAction.relativeDisplay(-1, 0, Condition.DIE)
-								.addAction(MoveAndCaptureAction.jumpRelative(-1, 0))
+							new ActionTree.Node(MultiAction.relative(-1, 0, Condition.DIE)
+								.addAction(MoveAndCaptureAction.relative(-1, 0))
 								.addAction(PromotionAction.withOptions(new ArrayList<>(Arrays.asList("Queen","Rook","Bishop","Knight"))))
 							),
-							new ActionTree.Node(MultiAction.relativeDisplay(-1, 1, Condition.EOD)
-								.addAction(MoveAndCaptureAction.jumpRelative(-1, 1))
+							new ActionTree.Node(MultiAction.relative(-1, 1, Condition.EOD)
+								.addAction(MoveAndCaptureAction.relative(-1, 1))
 								.addAction(PromotionAction.withOptions(new ArrayList<>(Arrays.asList("Queen","Rook","Bishop","Knight"))))
 							),
-							new ActionTree.Node(MultiAction.relativeDisplay(-1, -1, Condition.EOD)
-								.addAction(MoveAndCaptureAction.jumpRelative(-1, -1))
+							new ActionTree.Node(MultiAction.relative(-1, -1, Condition.EOD)
+								.addAction(MoveAndCaptureAction.relative(-1, -1))
 								.addAction(PromotionAction.withOptions(new ArrayList<>(Arrays.asList("Queen","Rook","Bishop","Knight"))))
 							)
 						)
@@ -62,20 +62,21 @@ public class Pawn extends Piece{
 						Condition.onBoard().call("lastPlay").call("getPiece").toObj().instanceOf(Pawn.class),
 						Condition.onBoard().call("lastPlay").call("getPlay").toObj().instanceOf(LegalMoveAndCapture.class)),
 					new ArrayList<>(Arrays.asList(
-						new ActionTree.Node(MultiAction.relativeDisplay(-1, -1)
-							.addAction(MoveAndCaptureAction.jumpRelative(-1, -1, Condition.DIE))
+						new ActionTree.Node(MultiAction.relative(-1, -1)
+							.addAction(MoveAndCaptureAction.relative(-1, -1, Condition.DIE))
 							.addAction(CaptureAction.jumpRelative(0, -1, Condition.EOD,
 							Condition.onDest().call("getPiece").toObj().referenceEquals(Condition.onBoard().call("lastPlay").call("getPiece").toObj())	
 							))
 						),
-						new ActionTree.Node(MultiAction.relativeDisplay(-1, 1)
-							.addAction(MoveAndCaptureAction.jumpRelative(-1, 1, Condition.DIE))
+						new ActionTree.Node(MultiAction.relative(-1, 1)
+							.addAction(MoveAndCaptureAction.relative(-1, 1, Condition.DIE))
 							.addAction(CaptureAction.jumpRelative(0, 1, Condition.EOD,
 							Condition.onDest().call("getPiece").toObj().referenceEquals(Condition.onBoard().call("lastPlay").call("getPiece").toObj())	
 							))
 						)
 					))
-				)
+				),
+				new ActionTree.Node(SummonAction.line(-1, 0, new ArrayList<>(Arrays.asList("Knight")), Condition.DIE).stops(Condition.POD))
 				
 			)
 		);

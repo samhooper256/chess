@@ -70,13 +70,6 @@ public class ActionOptionsDisplay extends StackPane{
 		this.getChildren().add(vBox);
 		
 		anchor = new AnchorPane();
-		Label xButton = new Label("X");
-		xButton.setOnMouseClicked(x -> {
-			this.setVisible(false);
-		});
-		AnchorPane.setTopAnchor(xButton, 10.);
-		AnchorPane.setRightAnchor(xButton, 10.);
-		anchor.getChildren().add(xButton);
 		anchor.setPickOnBounds(false);
 		this.getChildren().add(anchor);
 		
@@ -96,12 +89,13 @@ public class ActionOptionsDisplay extends StackPane{
 	public void setMessage(String message) {
 		text.setText(message);
 	}
-	
+
 	/* *
 	 * MUST BE CALLED FROM FX THREAD.
 	 */
 	public void choose(Object notifyWhenDone, Collection<LegalAction> options) {
 		toNotify = notifyWhenDone;
+		confirm.setDisable(true);
 		accordion.getPanes().clear();
 		for(Iterator<LegalAction> itr = options.iterator(); itr.hasNext();) {
 			LegalAction act = itr.next();

@@ -1,7 +1,6 @@
 package chess.util;
 
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.Set;
 
 import chess.base.Board;
@@ -26,7 +25,7 @@ public abstract class Action {
 	
 	public boolean checkConditions(Board b, int startRow, int startCol, int destRow, int destCol) {
 		for(int i = 0; i < conditions.size(); i++) {
-			if(conditions.get(i).eval(b, startRow, startCol, destRow, destCol) == false) {
+			if(conditions.get(i).calc(b, startRow, startCol, destRow, destCol) == false) {
 				return false;
 			}
 		}

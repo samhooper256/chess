@@ -5,7 +5,6 @@ import java.util.Arrays;
 import java.util.Set;
 
 import chess.util.ActionTree;
-import chess.util.CaptureAction;
 import chess.util.Condition;
 import chess.util.MoveAndCaptureAction;
 import chess.util.MultiAction;
@@ -28,22 +27,75 @@ public class King extends Piece{
 		BLACK_IMAGE = new Image(Piece.class.getResourceAsStream("/resources/king_black.png"));
 		WHITE_IMAGE = new Image(Piece.class.getResourceAsStream("/resources/king_white.png"));
 		
+		/* *
+		 * The king's action tree is set up so that he can castle with a rook that is 3 or 4 spaces
+		 * away on his left OR right. This behaves correctly for a standard chess game with the normal
+		 * starting setup, but it is important to note that he can castle with a rook 3 or 4 spaces
+		 * away in EITHER direction.
+		 */
 		tree = new ActionTree(Arrays.asList(
 				
-			new ActionTree.Node(MoveAndCaptureAction.jumpRelative(0, 1, Condition.EOE)),
-			new ActionTree.Node(MoveAndCaptureAction.jumpRelative(1, 1, Condition.EOE)),
-			new ActionTree.Node(MoveAndCaptureAction.jumpRelative(1, 0, Condition.EOE)),
-			new ActionTree.Node(MoveAndCaptureAction.jumpRelative(1, -1, Condition.EOE)),
-			new ActionTree.Node(MoveAndCaptureAction.jumpRelative(0, -1, Condition.EOE)),
-			new ActionTree.Node(MoveAndCaptureAction.jumpRelative(-1, -1, Condition.EOE)),
-			new ActionTree.Node(MoveAndCaptureAction.jumpRelative(-1, 0, Condition.EOE)),
-			new ActionTree.Node(MoveAndCaptureAction.jumpRelative(-1, 1, Condition.EOE)),
-			new ActionTree.Node(MultiAction.relativeDisplay(0, 2, Condition.DIE, Condition.onStartRelative(0, 1).call("getPiece").toObj().isNull(),
-					Condition.onSelf().call("hasMoved").toBool().invert().toCond(),
-					Condition.onStartRelativeCheckable(0, 1).not()
-					).addAction(MoveAndCaptureAction.jumpRelative(0, 2))
-					.addAction(OtherMoveAndCaptureAction.relative(0,3,0,1)))
-			
+			new ActionTree.Node(MoveAndCaptureAction.relative(0, 1, Condition.EOE)),
+			new ActionTree.Node(MoveAndCaptureAction.relative(1, 1, Condition.EOE)),
+			new ActionTree.Node(MoveAndCaptureAction.relative(1, 0, Condition.EOE)),
+			new ActionTree.Node(MoveAndCaptureAction.relative(1, -1, Condition.EOE)),
+			new ActionTree.Node(MoveAndCaptureAction.relative(0, -1, Condition.EOE)),
+			new ActionTree.Node(MoveAndCaptureAction.relative(-1, -1, Condition.EOE)),
+			new ActionTree.Node(MoveAndCaptureAction.relative(-1, 0, Condition.EOE)),
+			new ActionTree.Node(MoveAndCaptureAction.relative(-1, 1, Condition.EOE)),
+			new ActionTree.Choke(
+				new ArrayList<>(Arrays.asList(
+					Condition.onSelf().call("hasMoved").toBool().invert().toCond()
+				)),
+				new ArrayList<>(Arrays.asList(
+					new ActionTree.Choke(
+						new ArrayList<>(Arrays.asList(
+							Condition.onStartRelative(0, 1).call("isEmpty").toBool().toCond(),
+							Condition.onStartRelativeCheckable(0, 1).not()
+						)),
+						new ArrayList<>(Arrays.asList(
+							new ActionTree.Node(MultiAction.relative(0, 2,
+								Condition.DIE,
+								Condition.onStartRelative(0, 3).call("getPiece").toObj().instanceOf(Rook.class),
+								Condition.onStartRelative(0, 3).call("getPiece").call("hasMoved").toBool().invert().toCond()
+								).addAction(MoveAndCaptureAction.relative(0, 2))
+								.addAction(OtherMoveAndCaptureAction.relative(0,3,0,1))
+							),
+							new ActionTree.Node(MultiAction.relative(0, 2,
+								Condition.DIE,
+								Condition.onStartRelative(0, 3).call("isEmpty").toBool().toCond(),
+								Condition.onStartRelative(0, 4).call("getPiece").toObj().instanceOf(Rook.class),
+								Condition.onStartRelative(0, 4).call("getPiece").call("hasMoved").toBool().invert().toCond()
+								).addAction(MoveAndCaptureAction.relative(0, 2))
+								.addAction(OtherMoveAndCaptureAction.relative(0,4,0,1))
+							)
+						))
+					),
+					new ActionTree.Choke(
+						new ArrayList<>(Arrays.asList(
+							Condition.onStartRelative(0, -1).call("isEmpty").toBool().toCond(),
+							Condition.onStartRelativeCheckable(0, -1).not()
+						)),
+						new ArrayList<>(Arrays.asList(
+							new ActionTree.Node(MultiAction.relative(0, -2,
+								Condition.DIE,
+								Condition.onStartRelative(0, -3).call("getPiece").toObj().instanceOf(Rook.class),
+								Condition.onStartRelative(0, -3).call("getPiece").call("hasMoved").toBool().invert().toCond()
+								).addAction(MoveAndCaptureAction.relative(0, -2))
+								.addAction(OtherMoveAndCaptureAction.relative(0,-3,0,-1))
+							),
+							new ActionTree.Node(MultiAction.relative(0, -2,
+								Condition.DIE,
+								Condition.onStartRelative(0, -3).call("isEmpty").toBool().toCond(),
+								Condition.onStartRelative(0, -4).call("getPiece").toObj().instanceOf(Rook.class),
+								Condition.onStartRelative(0, -4).call("getPiece").call("hasMoved").toBool().invert().toCond()
+								).addAction(MoveAndCaptureAction.relative(0, -2))
+								.addAction(OtherMoveAndCaptureAction.relative(0,-4,0,-1))
+							)
+						))
+					)
+				))
+			)
 		));
 	}
 	
@@ -53,7 +105,15 @@ public class King extends Piece{
 
 	@Override
 	public boolean canCheck(Board b, int startRow, int startCol, int destRow, int destCol) {
-		return tree.canCheck(b, startRow, startCol, destRow, destCol);
+		/*This is the ONLY time we don't defer this to the tree.
+		 * The reason we have to make this exception is because kings cannot move to areas
+		 * that can be checked. So, in order for a king to check if he can check a tile,
+		 * he has to know if he can move there - which entails finding out where all the other
+		 * pieces can attack, which entails finding out where the OTHER king can attack, when then
+		 * calls the OTHER king's canCheck method, which then eventually (by the same process of steps)
+		 * calls this method again and thus it repeats forever... 
+		 */
+		return Math.abs(destRow-startRow) <= 1 && Math.abs(destCol-startCol) <= 1;
 	}
 
 	@Override

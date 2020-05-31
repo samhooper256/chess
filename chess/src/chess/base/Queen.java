@@ -1,12 +1,12 @@
 package chess.base;
 
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Set;
 
 import chess.util.ActionTree;
 import chess.util.Condition;
 import chess.util.MoveAndCaptureAction;
+import chess.util.OtherMoveAndCaptureAction;
 import javafx.scene.image.Image;
 
 /* *
@@ -32,7 +32,9 @@ public class Queen extends Piece {
 				new ActionTree.Node(MoveAndCaptureAction.line(0, -1, Condition.EOE).stops(Condition.POD)),
 				new ActionTree.Node(MoveAndCaptureAction.line(-1, -1, Condition.EOE).stops(Condition.POD)),
 				new ActionTree.Node(MoveAndCaptureAction.line(-1, 0, Condition.EOE).stops(Condition.POD)),
-				new ActionTree.Node(MoveAndCaptureAction.line(-1, 1, Condition.EOE).stops(Condition.POD))
+				new ActionTree.Node(MoveAndCaptureAction.line(-1, 1, Condition.EOE).stops(Condition.POD)),
+				new ActionTree.Node(OtherMoveAndCaptureAction.relative(0, -1, 0, -2)),
+				new ActionTree.Node(OtherMoveAndCaptureAction.relative(0, 1, 0, 2))
 			));
 	}
 	

@@ -22,9 +22,10 @@ public class Main extends Application{
 		scene.getStylesheets().add(Main.class.getResource("style.css").toExternalForm());
 		primaryStage.setMinHeight(400);
 		primaryStage.minWidthProperty().bind(primaryStage.heightProperty());
-		primaryStage.setTitle("Chess!");
+		primaryStage.setTitle("chess++");
 		primaryStage.setScene(scene);
 		primaryStage.sizeToScene();
 		primaryStage.show();
+		
 	}
 }

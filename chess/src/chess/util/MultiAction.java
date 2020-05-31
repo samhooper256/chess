@@ -1,32 +1,23 @@
 package chess.util;
 
 import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.HashSet;
-import java.util.LinkedHashMap;
-import java.util.Map;
-import java.util.Set;
-
-import chess.base.Board;
-import chess.base.LegalAction;
-import chess.base.LegalMulti;
-import chess.base.Piece;
 
 public abstract class MultiAction extends chess.util.Action{
 	
-	/*
-	 * Keys are the various actions that are part of this MultiActon.
-	 * The Values (booleans) represent whether the corresponding action
-	 * MUST be legal for the whole MultiAction to be legal.
-	 * */
 	protected ArrayList<Action> actions;
 	protected ArrayList<Boolean> states;
 	boolean hasMoveAndCapture = false;
 	boolean hasCapture = false;
 	boolean hasPromotion = false;
-	public static RelativeMultiAction relativeDisplay(int relDispRow, int relDispCol, Condition... cons) {
+	public static RelativeMultiAction relative(int relDispRow, int relDispCol, Condition... cons) {
 		return new RelativeMultiAction(relDispRow, relDispCol, cons);
+	}
+	
+	/* *
+	 * Equivalent to addAction(action, true)
+	 */
+	public MultiAction addAction(Action action) {
+		return addAction(action, true);
 	}
 	
 	/* 
@@ -36,8 +27,16 @@ public abstract class MultiAction extends chess.util.Action{
 	 * 
 	 * You many not 'nest' MultiActions; that is, you may not add a MultiAction
 	 * to another MultiAction's list of actions.
+	 * 
+	 * the "state" parameter determines whether or not this action MUST
+	 * be legal for the entire MultiAction to be legal (true means it does
+	 * need to be legal, false means it doesn't).
+	 * 
+	 * If no actions are legal, the MultiAction will not be legal, regardless of
+	 * states.
 	 * */
-	public MultiAction addAction(Action action) {
+	
+	public MultiAction addAction(Action action, boolean state) {
 		if(action instanceof MultiAction) {
 			throw new IllegalArgumentException("You may not add a MultiAction to another MultiAction's list of actions");
 		}
@@ -49,7 +48,7 @@ public abstract class MultiAction extends chess.util.Action{
 				hasPromotion = true;
 			}
 			actions.add(0, action);
-			states.add(0, true);
+			states.add(0, state);
 			return this;
 		}
 		else {
@@ -68,10 +67,9 @@ public abstract class MultiAction extends chess.util.Action{
 				}
 			}
 			actions.add(action);
-			states.add(0, true);
+			states.add(0, state);
 			return this;
 		}
-		
 	}
 	
 	

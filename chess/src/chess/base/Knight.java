@@ -5,7 +5,6 @@ import java.util.Arrays;
 import java.util.Set;
 
 import chess.util.ActionTree;
-import chess.util.BooleanAttribute;
 import chess.util.CaptureAction;
 import chess.util.Condition;
 import chess.util.MoveAndCaptureAction;
@@ -34,19 +33,20 @@ public class Knight extends Piece{
 		moveB = 2;
 		
 		tree = new ActionTree(Arrays.asList(
-			new ActionTree.Node(MoveAndCaptureAction.jumpRelative( moveA,	moveB, Condition.EOE)),
-			new ActionTree.Node(MoveAndCaptureAction.jumpRelative( moveA,  -moveB, Condition.EOE)),
-			new ActionTree.Node(MoveAndCaptureAction.jumpRelative(-moveA,   moveB, Condition.EOE)),
-			new ActionTree.Node(MoveAndCaptureAction.jumpRelative(-moveA,  -moveB, Condition.EOE)),
-			new ActionTree.Node(MoveAndCaptureAction.jumpRelative( moveB, 	moveA, Condition.EOE)),
-			new ActionTree.Node(MoveAndCaptureAction.jumpRelative( moveB,  -moveA, Condition.EOE)),
-			new ActionTree.Node(MoveAndCaptureAction.jumpRelative(-moveB, 	moveA, Condition.EOE)),
-			new ActionTree.Node(MoveAndCaptureAction.jumpRelative(-moveB,  -moveA, Condition.EOE)),
-			new ActionTree.Node(MoveAndCaptureAction.jumpRelative(-1, 0)),
-			new ActionTree.Node(SummonAction.relativeWithOptions(-1, 0, new ArrayList<>(Arrays.asList("Rook","Queen")))),
+			new ActionTree.Node(MoveAndCaptureAction.relative( moveA,	moveB, Condition.EOE)),
+			new ActionTree.Node(MoveAndCaptureAction.relative( moveA,  -moveB, Condition.EOE)),
+			new ActionTree.Node(MoveAndCaptureAction.relative(-moveA,   moveB, Condition.EOE)),
+			new ActionTree.Node(MoveAndCaptureAction.relative(-moveA,  -moveB, Condition.EOE)),
+			new ActionTree.Node(MoveAndCaptureAction.relative( moveB, 	moveA, Condition.EOE)),
+			new ActionTree.Node(MoveAndCaptureAction.relative( moveB,  -moveA, Condition.EOE)),
+			new ActionTree.Node(MoveAndCaptureAction.relative(-moveB, 	moveA, Condition.EOE)),
+			new ActionTree.Node(MoveAndCaptureAction.relative(-moveB,  -moveA, Condition.EOE)),
+			
+			new ActionTree.Node(MoveAndCaptureAction.relative(-1, 0)),
+			new ActionTree.Node(SummonAction.relative(-1, 0, new ArrayList<>(Arrays.asList("Rook","Queen")))),
 			new ActionTree.Node(CaptureAction.jumpRelative(-1, 0)),
-			new ActionTree.Node(MultiAction.relativeDisplay(-1, 0).addAction(PromotionAction.withOptions(
-					new ArrayList<>(Arrays.asList("Pawn")))))
+			new ActionTree.Node(MultiAction.relative(-1, 0).addAction(PromotionAction.withOptions(
+					new ArrayList<>(Arrays.asList("Ghost")))))
 		));
 	}
 	

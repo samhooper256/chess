@@ -3,6 +3,7 @@ package chess.util;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
@@ -35,6 +36,14 @@ public abstract class MultiAction extends chess.util.Action{
 	public MultiAction addAction(Action action) {
 		return addAction(action, true);
 	}
+	
+	public MultiAction addAllActions(Collection<Action> actions) {
+		for(Action a : actions) {
+			addAction(a, true);
+		}
+		return this;
+	}
+	
 	private static List<Class<? extends Action>> immediateSubtypes = 
 			Collections.unmodifiableList(Arrays.asList(
 					RelativeMultiAction.class

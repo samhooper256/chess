@@ -13,6 +13,7 @@ import chess.util.Action;
 import chess.util.ActionTree;
 import chess.util.Condition;
 import chess.util.MoveAndCaptureAction;
+import chess.util.MultiAction;
 import chess.util.RelativeJumpAction;
 import chess.util.User;
 import javafx.collections.ObservableList;
@@ -71,8 +72,14 @@ public class ActionTreeBuilder extends StackPane implements InputVerification{
 	}
 	
 	private void setupAddActionButton(MenuButton button, ObservableList<Node> whereToAddActionTPs) {
+		setupAddActionButton(button, whereToAddActionTPs, true, true);
+	}
+	private void setupAddActionButton(MenuButton button, ObservableList<Node> whereToAddActionTPs, boolean multisAllowed, boolean childrenPossible) {
 		ObservableList<MenuItem> items = button.getItems();
 		for(Class<? extends Action> actionType : actionTypes) {
+			if(!multisAllowed && actionType == MultiAction.class) {
+				continue;
+			}
 			String actionName = null;
 			List<Class<? extends Action>> subActionTypes = null;
 			try {
@@ -96,14 +103,14 @@ public class ActionTreeBuilder extends StackPane implements InputVerification{
 					e.printStackTrace();
 				}
 				MenuItem subMi = new MenuItem(actionVariant);
-				subMi.setOnAction(actionEvent -> addActionTo(whereToAddActionTPs, subActionType));
+				subMi.setOnAction(actionEvent -> addActionTo(whereToAddActionTPs, subActionType, childrenPossible));
 				subItems.add(subMi);
 			}
 			items.add(mi);
 		}
 	}
 	
-	private void addActionTo(ObservableList<Node> children, Class<? extends Action> clazz) {
+	private void addActionTo(ObservableList<Node> children, Class<? extends Action> clazz, boolean childrenPossible) {
 		String title = "???";
 		try {
 			title = 
@@ -124,9 +131,13 @@ public class ActionTreeBuilder extends StackPane implements InputVerification{
 			e.printStackTrace();
 		}
 		VBox vBox = new VBox(4);
-		ActionTP newActionTP = new ActionTP(title, vBox, creationMethod);
-		
-		
+		ActionTP newActionTP;
+		if(MultiAction.class.isAssignableFrom(clazz)) {
+			newActionTP = new MultiActionTP(title, vBox, creationMethod);
+		}
+		else {
+			newActionTP = new ActionTP(title, vBox, creationMethod, childrenPossible);
+		}
 		children.add(children.size() - 1, newActionTP);
 	}
 	
@@ -179,7 +190,7 @@ public class ActionTreeBuilder extends StackPane implements InputVerification{
 		protected Parameter[] params;
 		protected ChildTP childPane;
 		protected Button deleteActionButton;
-		public ActionTP(String name, VBox content, Method creationMethod) {
+		public ActionTP(String name, VBox content, Method creationMethod, boolean childrenPossible) {
 			super();
 			this.setText(name);
 			this.vBox = content;
@@ -220,7 +231,7 @@ public class ActionTreeBuilder extends StackPane implements InputVerification{
 					
 				}
 			}
-			if(ActionTree.supportsChildren((Class<? extends Action>) creationMethod.getReturnType())) {
+			if(childrenPossible && ActionTree.supportsChildren((Class<? extends Action>) creationMethod.getReturnType())) {
 				childPane = new ChildTP();
 				vBox.getChildren().add(childPane);
 			}
@@ -258,6 +269,18 @@ public class ActionTreeBuilder extends StackPane implements InputVerification{
 		}
 		
 		public ActionTree.Node build() {
+			Action action = buildAction();
+			
+			//System.out.println("action = " + action);
+			ActionTree.Node atNode = new ActionTree.Node(action);
+			if(childPane != null) {
+				atNode.addAllChildren(childPane.build());
+			}
+			
+			return atNode;
+		}
+		
+		public Action buildAction() {
 			Object[] actualParams = new Object[creationMethod.getParameterCount()];
 			int apIndex = 0;
 			for(Node n : vBox.getChildren()) {
@@ -291,14 +314,74 @@ public class ActionTreeBuilder extends StackPane implements InputVerification{
 				// TODO Auto-generated catch block
 				e.printStackTrace();
 			}
-			
-			//System.out.println("action = " + action);
-			ActionTree.Node atNode = new ActionTree.Node(action);
-			if(childPane != null) {
-				atNode.addAllChildren(childPane.build());
+			return action;
+		}
+	}
+	
+	private class MultiActionTP extends ActionTP{
+		protected SubActionTP subTP;
+		public MultiActionTP(String name, VBox content, Method creationMethod) {
+			super(name, content, creationMethod, true);
+			subTP = new SubActionTP();
+			ObservableList<Node> children = super.vBox.getChildren();
+			int ctpindex = children.indexOf(childPane);
+			if(ctpindex >= 0) {
+				children.add(ctpindex, subTP);
 			}
-			
+			else {
+				children.add(children.size() - 1, subTP);
+			}
+		}
+		
+		@Override 
+		public ActionTree.Node build(){
+			ActionTree.Node atNode = super.build();
+			MultiAction action = (MultiAction) atNode.getAction();
+			Pair<List<Action>, List<Boolean>> subs = subTP.build();
+			action.addAllActions(subs.get1());
 			return atNode;
+		}
+	}
+	
+	private class SubActionTP extends TitledPane implements InputVerification{
+		private VBox vBox;
+		private MenuButton addActionButton;
+		public SubActionTP() {
+			super();
+			vBox = new VBox(10);
+			addActionButton = new MenuButton("Add action");
+			setupAddActionButton(addActionButton, vBox.getChildren(), false, false);
+			vBox.getChildren().add(addActionButton);
+			this.setText("Sub-Actions");
+			this.setContent(vBox);
+			this.setExpanded(false);
+		}
+
+		@Override
+		public boolean verifyInput() {
+			boolean result = true;
+			for(Node fxNode : vBox.getChildren()) {
+				if(fxNode instanceof InputVerification) {
+					if(!((InputVerification) fxNode).verifyInput()) {
+						result = false;
+					}
+				}
+			}
+			return result;
+		}
+		
+		/* *
+		 * Returns ActionTree.Node instead of ActionTree.TreeNode because
+		 * it is guaranteed that these will all be ActionTree.Nodes.
+		 */
+		public Pair<List<Action>, List<Boolean>> build(){
+			List<Action> end = new ArrayList<>();
+			for(Node fxNode : vBox.getChildren()) {
+				if(fxNode instanceof ActionTP) {
+					end.add(((ActionTP) fxNode).buildAction());
+				}
+			}
+			return new Pair<>(end, null); //TODO ADD STATES
 		}
 	}
 	

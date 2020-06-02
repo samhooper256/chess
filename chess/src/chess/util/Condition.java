@@ -55,6 +55,7 @@ public abstract class Condition{
 	
 	/*EOE = "Enemy or Empty." Standard MoveAndCapture and Capture condition.
 	 * Destination tile must be either empty or have a piece of the opposite color.*/
+	@AFC(name="Destination is empty or has an enemy")
 	public static final Condition EOE = new Condition() {
 		public boolean eval(Board b, int startRow, int startCol, int destRow, int destCol) {
 			Piece p = b.getPieceAt(destRow, destCol);
@@ -63,6 +64,7 @@ public abstract class Condition{
 	};
 	
 	/*POD = "Piece on Destination." Evals to true if there is a piece of any color on the destination.*/
+	@AFC(name="Piece on destination")
 	public static final Condition POD = new Condition() {
 		public boolean eval(Board b, int startRow, int startCol, int destRow, int destCol) {
 			Piece p = b.getPieceAt(destRow, destCol);
@@ -75,6 +77,7 @@ public abstract class Condition{
 	 * This condition is only useful for OtherMoveAndCaptures - for all other actions, there is
 	 * guaranteed to be a piece on the start.
 	 */
+	@AFC(name="Piece on start")
 	public static final Condition POS = new Condition() {
 		public boolean eval(Board b, int startRow, int startCol, int destRow, int destCol) {
 			Piece p = b.getPieceAt(startRow, startCol);
@@ -84,6 +87,7 @@ public abstract class Condition{
 	
 	/*DIE = "Destination is Empty." Evals to true if there is NOT a piece of any color on the destination.
 	 * It is the inverse of POD. It has a very nice acronym :) */
+	@AFC(name="Destination is empty")
 	public static final Condition DIE = new Condition() {
 		public boolean eval(Board b, int startRow, int startCol, int destRow, int destCol) {
 			Piece p = b.getPieceAt(destRow, destCol);
@@ -95,6 +99,7 @@ public abstract class Condition{
 	 * SIE = "Start is Empty." For the same reason as POS, this is only useful for
 	 * OtherMoveAndCaptures.
 	 */
+	@AFC(name="Start is empty")
 	public static final Condition SIE = new Condition() {
 		public boolean eval(Board b, int startRow, int startCol, int destRow, int destCol) {
 			Piece p = b.getPieceAt(startRow, startCol);
@@ -103,6 +108,7 @@ public abstract class Condition{
 	};
 	
 	/*EOD = "Enemy on Destination." Evals to true if there is a piece of the opposite color on the destination.*/
+	@AFC(name="Enemy on destination")
 	public static final Condition EOD = new Condition() {
 		public boolean eval(Board b, int startRow, int startCol, int destRow, int destCol) {
 			Piece p = b.getPieceAt(destRow, destCol);
@@ -111,6 +117,7 @@ public abstract class Condition{
 	};
 	
 	/*TOD = "Teammate on Destination." Evals to true if there is a piece of the same color on the destination.*/
+	@AFC(name="Teammate on destination")
 	public static final Condition TOD = new Condition() {
 		public boolean eval(Board b, int startRow, int startCol, int destRow, int destCol) {
 			Piece p = b.getPieceAt(destRow, destCol);

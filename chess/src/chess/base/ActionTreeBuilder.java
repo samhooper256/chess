@@ -7,6 +7,7 @@ import java.lang.reflect.Parameter;
 import java.lang.reflect.ParameterizedType;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.List;
 
 import chess.util.Action;
@@ -189,6 +190,7 @@ public class ActionTreeBuilder extends StackPane implements InputVerification{
 		protected String[] paramNames;
 		protected Parameter[] params;
 		protected ChildTP childPane;
+		protected ConditionTP conditionPane;
 		protected Button deleteActionButton;
 		public ActionTP(String name, VBox content, Method creationMethod, boolean childrenPossible) {
 			super();
@@ -231,6 +233,8 @@ public class ActionTreeBuilder extends StackPane implements InputVerification{
 					
 				}
 			}
+			conditionPane = new ConditionTP();
+			vBox.getChildren().add(conditionPane);
 			if(childrenPossible && ActionTree.supportsChildren((Class<? extends Action>) creationMethod.getReturnType())) {
 				childPane = new ChildTP();
 				vBox.getChildren().add(childPane);
@@ -238,6 +242,7 @@ public class ActionTreeBuilder extends StackPane implements InputVerification{
 			else {
 				childPane = null;
 			}
+			
 			deleteActionButton = new Button("Delete Action");
 			deleteActionButton.setStyle("-fx-background-color: transparent; -fx-border-width: 1px; -fx-border-color: #b00000;"
 					+ "-fx-border-radius: 6; -fx-text-fill: #b00000;"); //TODO Put this in CSS (and add hover effect)
@@ -314,6 +319,7 @@ public class ActionTreeBuilder extends StackPane implements InputVerification{
 				// TODO Auto-generated catch block
 				e.printStackTrace();
 			}
+			action.addAllConditions(conditionPane.build());
 			return action;
 		}
 	}
@@ -324,7 +330,7 @@ public class ActionTreeBuilder extends StackPane implements InputVerification{
 			super(name, content, creationMethod, true);
 			subTP = new SubActionTP();
 			ObservableList<Node> children = super.vBox.getChildren();
-			int ctpindex = children.indexOf(childPane);
+			int ctpindex = children.indexOf(conditionPane);
 			if(ctpindex >= 0) {
 				children.add(ctpindex, subTP);
 			}
@@ -370,10 +376,6 @@ public class ActionTreeBuilder extends StackPane implements InputVerification{
 			return result;
 		}
 		
-		/* *
-		 * Returns ActionTree.Node instead of ActionTree.TreeNode because
-		 * it is guaranteed that these will all be ActionTree.Nodes.
-		 */
 		public Pair<List<Action>, List<Boolean>> build(){
 			List<Action> end = new ArrayList<>();
 			for(Node fxNode : vBox.getChildren()) {
@@ -384,6 +386,50 @@ public class ActionTreeBuilder extends StackPane implements InputVerification{
 			List<Boolean> states = new ArrayList<>(end.size());
 			return new Pair<>(end, null); //TODO ADD STATES
 		}
+	}
+	
+	private class ConditionTP extends TitledPane implements InputVerification{
+		private VBox vBox;
+		private Button addConditionButton;
+		public ConditionTP() {
+			super();
+			vBox = new VBox(10);
+			addConditionButton = new Button("Add condition");
+			addConditionButton.setOnMouseClicked(mouseEvent -> {
+				ConditionBox conditionBox = new ConditionBox(pieceBuilder);
+				vBox.getChildren().add(vBox.getChildren().size() - 1, conditionBox);
+			});
+			vBox.getChildren().add(addConditionButton);
+			this.setText("Conditions");
+			this.setContent(vBox);
+			this.setExpanded(false);
+		}
+		
+		public Collection<Condition> build(){
+			ArrayList<Condition> end = new ArrayList<>(this.getChildren().size());
+			for(Node fxNode : vBox.getChildren()) {
+				if(fxNode instanceof ConditionBox) {
+					end.add(((ConditionBox) fxNode).build());
+				}
+			}
+			System.out.println("Condition Collection returned: " + end);
+			return end;
+		}
+		
+		@Override
+		public boolean verifyInput() {
+			boolean result = true;
+			for(Node fxNode : vBox.getChildren()) {
+				if(fxNode instanceof InputVerification) {
+					if(!((InputVerification) fxNode).verifyInput()) {
+						result = false;
+					}
+				}
+			}
+			
+			return result;
+		}
+		
 	}
 	
 	private class ChildTP extends TitledPane implements InputVerification{

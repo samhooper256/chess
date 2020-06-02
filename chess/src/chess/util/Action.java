@@ -2,6 +2,7 @@ package chess.util;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 import java.util.Set;
@@ -38,6 +39,10 @@ public abstract class Action {
 		for(int i = 0; i < cons.length; i++) {
 			conditions.add(cons[i]);
 		}
+	}
+	
+	public void addAllConditions(Collection<Condition> cons) {
+		conditions.addAll(cons);
 	}
 	
 	public boolean checkConditions(Board b, int startRow, int startCol, int destRow, int destCol) {

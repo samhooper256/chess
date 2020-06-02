@@ -1,0 +1,15 @@
+.root{
+    -fx-background: rgb(226, 252, 255);
+}
+
+#create-piece-button{
+    -fx-background-color: rgba(0, 255, 0, 0.5);
+    -fx-font-size: 18pt;
+    -fx-font-weight: 500;
+    -fx-font-style: normal; 
+    -fx-font-family: "Gill Sans MT";
+}
+
+#create-piece-button:hover{
+    -fx-background-color: rgba(0, 255, 0, 0.7);
+}

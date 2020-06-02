@@ -1,19 +1,28 @@
 package chess.util;
 
+import java.lang.reflect.Method;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 
 import chess.base.Board;
 import chess.base.LegalAction;
 import chess.base.LegalSummon;
 import chess.base.Piece;
+import chess.util.MoveAndCaptureAction.LineMoveAndCaptureAction;
+import chess.util.MoveAndCaptureAction.RadiusMoveAndCaptureAction;
+import chess.util.MoveAndCaptureAction.RelativeMoveAndCaptureAction;
+import chess.util.MoveAndCaptureAction.RelativeLineMoveAndCaptureAction;
+import chess.util.MoveAndCaptureAction.RelativeSegmentMoveAndCaptureAction;
 
 public abstract class SummonAction extends Action{
 	protected ArrayList<String> options;
 	
+	@User(params={"relative row", "relative column", "summon options"})
 	public static RelativeSummonAction relative(int relRow, int relCol, ArrayList<String> ops, Condition... cons) {
 		if(ops.size() == 0) {
 			throw new IllegalArgumentException("A promotion action must have at least one option (options.size() == 0)");
@@ -21,6 +30,7 @@ public abstract class SummonAction extends Action{
 		return new RelativeSummonAction(relRow, relCol, ops, cons);
 	}
 	
+	@User(params={"delta row", "delta column", "summon options"})
 	public static LineSummonAction line(int dr, int dc, ArrayList<String> ops, Condition...cons) {
 		if(ops.size() == 0) {
 			throw new IllegalArgumentException("A promotion action must have at least one option (options.size() == 0)");
@@ -28,6 +38,7 @@ public abstract class SummonAction extends Action{
 		return new LineSummonAction(dr, dc, ops, cons);
 	}
 	
+	@User(params={"relative start row", "relative start column", "delta row", "delta column", "summon options"})
 	public static RelativeLineSummonAction relLine(int relStartRow, int relStartCol, int dr, int dc,
 			ArrayList<String> ops, Condition... cons) {
 		if(ops.size() == 0) {
@@ -36,6 +47,7 @@ public abstract class SummonAction extends Action{
 		return new RelativeLineSummonAction(relStartRow, relStartCol, dr, dc, ops, cons);
 	}
 	
+	@User(params={"relative start row", "relative start column", "delta row", "delta column", "segment length", "requires start to be on board", "summon options"})
 	public static RelativeSegmentSummonAction segment(int relStartRow, int relStartCol, int dr, int dc, int length,
 			boolean requiresOnBoardStart, ArrayList<String> ops, Condition... cons) {
 		if(ops.size() == 0) {
@@ -44,6 +56,7 @@ public abstract class SummonAction extends Action{
 		return new RelativeSegmentSummonAction(relStartRow, relStartCol, dr, dc, length, requiresOnBoardStart, ops, cons);
 	}
 	
+	@User(params={"radius", "fill", "include self", "summon options"})
 	public static RadiusSummonAction radius(int radius, boolean fill, boolean includeSelf, ArrayList<String> ops, Condition... cons) {
 		if(ops.size() == 0) {
 			throw new IllegalArgumentException("A promotion action must have at least one option (options.size() == 0)");
@@ -51,6 +64,22 @@ public abstract class SummonAction extends Action{
 		return new RadiusSummonAction(radius, fill, includeSelf, ops, cons);
 	}
 	
+	private static List<Class<? extends Action>> immediateSubtypes = 
+			Collections.unmodifiableList(Arrays.asList(
+					RelativeSummonAction.class,
+					LineSummonAction.class,
+					RelativeLineSummonAction.class,
+					RelativeSegmentSummonAction.class,
+					RadiusSummonAction.class
+					
+			));
+	public static List<Class<? extends Action>> getImmediateSubtypes(){
+		return immediateSubtypes;
+	}
+	
+	public static String getActionName() {
+		return "Summon";
+	}
 	
 	protected SummonAction(ArrayList<String> ops) {
 		this.options = ops;
@@ -65,6 +94,14 @@ public abstract class SummonAction extends Action{
 			this.relRow = relRow;
 			this.relCol = relCol;
 			this.addAllConditions(cons);
+		}
+		
+		public static String getVariant() {
+			return "Relative";
+		}
+		
+		public static Method getCreationMethod() throws NoSuchMethodException, SecurityException {
+			return SummonAction.class.getMethod("relative", int.class, int.class, ArrayList.class, Condition[].class);
 		}
 
 		@Override
@@ -98,7 +135,15 @@ public abstract class SummonAction extends Action{
 		public LineSummonAction stops(Condition... cons) {
 			return (LineSummonAction) LineAction.super.stops(cons);
 		}
-
+		
+		public static String getVariant() {
+			return "Line";
+		}
+		
+		public static Method getCreationMethod() throws NoSuchMethodException, SecurityException {
+			return SummonAction.class.getMethod("line", int.class, int.class, ArrayList.class, Condition[].class);
+		}
+		
 		@Override
 		public Set<? extends LegalAction> getLegals(Board b, int startRow, int startCol) {
 			Set<LegalSummon> legals = new HashSet<>();
@@ -146,6 +191,14 @@ public abstract class SummonAction extends Action{
 		@Override
 		public RelativeLineSummonAction stops(Condition... cons) {
 			return (RelativeLineSummonAction) super.stops(cons);
+		}
+		
+		public static String getVariant() {
+			return "Relative Line";
+		}
+		
+		public static Method getCreationMethod() throws NoSuchMethodException, SecurityException {
+			return SummonAction.class.getMethod("relLine", int.class, int.class, int.class, int.class, ArrayList.class, Condition[].class);
 		}
 		
 		/*
@@ -217,6 +270,14 @@ public abstract class SummonAction extends Action{
 		
 		public RelativeSegmentSummonAction stops(Condition... cons) {
 			return (RelativeSegmentSummonAction) RelativeSegmentAction.super.stops(cons);
+		}
+		
+		public static String getVariant() {
+			return "Relative Segment";
+		}
+		
+		public static Method getCreationMethod() throws NoSuchMethodException, SecurityException {
+			return SummonAction.class.getMethod("segment", int.class, int.class, int.class, int.class, int.class, boolean.class, ArrayList.class, Condition[].class);
 		}
 		
 		@Override
@@ -297,6 +358,14 @@ public abstract class SummonAction extends Action{
 			this.fill = fill;
 			this.includeSelf = this.fill ? includeSelf : false; //if fill is not true, there is no way it can include itself.
 			this.addAllConditions(cons);
+		}
+		
+		public static String getVariant() {
+			return "Radius";
+		}
+		
+		public static Method getCreationMethod() throws NoSuchMethodException, SecurityException {
+			return SummonAction.class.getMethod("radius", int.class, boolean.class, boolean.class, ArrayList.class, Condition[].class);
 		}
 		
 		@Override

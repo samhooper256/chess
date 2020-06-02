@@ -18,11 +18,14 @@ import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.Cursor;
 import javafx.scene.Node;
+import javafx.scene.SnapshotParameters;
 import javafx.scene.control.Button;
 import javafx.scene.control.CheckBox;
 import javafx.scene.control.Control;
 import javafx.scene.control.Label;
 import javafx.scene.control.ScrollPane;
+import javafx.scene.control.TextArea;
+import javafx.scene.control.TextField;
 import javafx.scene.control.Tooltip;
 import javafx.scene.effect.ColorAdjust;
 import javafx.scene.image.Image;
@@ -58,7 +61,7 @@ public class GamePanel extends StackPane{
 	private StackPane iLeft, iRight;
 	private AnchorPane rightAnchor, leftAnchor;
 	private VBox leftVBox;
-	private Button modeButton, resetButton, clearBoardButton;
+	private Button modeButton, resetButton, clearBoardButton, pieceBuilderButton;
 	private VBox boardBox;
 	private Board board;
 	private Settings settingsMenu;
@@ -67,11 +70,13 @@ public class GamePanel extends StackPane{
 	private ImageView cancelPieceIcon;
 	private Pane cancelPieceIconWrap;
 	Label turnLabel;
+	private PieceBuilder pieceBuilder;
 	private static final String PLAY_TEXT = "Play Mode", FREEPLAY_TEXT = "Freeplay Mode";
 	public static final String WHITE_TO_MOVE_TEXT = "White to Move", BLACK_TO_MOVE_TEXT = "Black to Move";
 	private Mode mode;
 	
 	public GamePanel() {
+		pieceBuilder = new PieceBuilder();
 		hBox = new HBox();
 		hBox.setMinHeight(400);
 		hBox.alignmentProperty().set(Pos.CENTER);
@@ -125,19 +130,13 @@ public class GamePanel extends StackPane{
 		
 		CustomPiece.defineNewPiece(ghostData);
 	    
-		//TODO UNCOMMENT AND DELETE STUFF
-		//board = Board.fromPreset(this, pre);
-		board = Board.defaultBoard(this);
-	    
 	    boardBox = new VBox();
 	    boardBox.alignmentProperty().set(Pos.CENTER); 
 	    boardBox.prefWidthProperty().bind(binding);
         boardBox.prefHeightProperty().bind(binding);
         boardBox.setMaxSize(Control.USE_PREF_SIZE, Control.USE_PREF_SIZE);
 
-        VBox.setVgrow(board, Priority.ALWAYS);
         
-        boardBox.getChildren().add(board);
         
         
         
@@ -177,13 +176,6 @@ public class GamePanel extends StackPane{
 	    AnchorPane.setBottomAnchor(resetButton, 10d);
 	    
 	    piecePicker = new TilePane();
-	    
-	    Collection<Piece> pieceInstances = Piece.getInstancesOfAllPieces();
-	    Collection<PickIcon> pickIcons = new ArrayList<>(pieceInstances.size());
-	    for(Piece p : pieceInstances) {
-	    	pickIcons.add(new PickIcon(p));
-	    }
-	    piecePicker.getChildren().addAll(pickIcons);
 	    
 	    piecePickerWrap = new ScrollPane(piecePicker);
 	    piecePickerWrap.setFitToWidth(true);
@@ -331,6 +323,7 @@ public class GamePanel extends StackPane{
         AnchorPane.setRightAnchor(clearBoardButton, 10d);
         AnchorPane.setLeftAnchor(clearBoardButton, 10d);
         AnchorPane.setBottomAnchor(clearBoardButton, 10d);
+        clearBoardButton.prefHeightProperty().bind(this.heightProperty().divide(8));
         leftAnchor.getChildren().add(clearBoardButton);
         clearBoardButton.setOnMouseClicked(mouseEvent -> {
         	board.clearBoard();
@@ -338,6 +331,19 @@ public class GamePanel extends StackPane{
         clearBoardButton.setVisible(false);
         //clearBoardButton.maxWidthProperty().bind(iLeft.widthProperty());
         //clearBoardButton.setWrapText(true);
+        
+        pieceBuilderButton = new Button("Piece Builder");
+        pieceBuilderButton.setId("open-piece-builder-button");
+        AnchorPane.setBottomAnchor(pieceBuilderButton, 10d);
+        AnchorPane.setLeftAnchor(pieceBuilderButton, 10d);
+        AnchorPane.setRightAnchor(pieceBuilderButton, 10d);
+        pieceBuilderButton.prefHeightProperty().bind(this.heightProperty().divide(8));
+        pieceBuilderButton.setWrapText(true);
+        pieceBuilderButton.setAlignment(Pos.CENTER);
+        pieceBuilderButton.setOnMouseClicked(mouseEvent -> {
+        	pieceBuilder.open();
+        });
+        leftAnchor.getChildren().add(pieceBuilderButton);
         
         iLeft.getChildren().add(leftAnchor);
         
@@ -370,6 +376,14 @@ public class GamePanel extends StackPane{
         
         mode = Mode.PLAY;
         
+        //TODO UNCOMMENT AND DELETE STUFF
+        //board = Board.fromPreset(this, pre);
+        board = Board.defaultBoard(this);
+        VBox.setVgrow(board, Priority.ALWAYS);
+      
+        boardBox.getChildren().add(board);
+              
+        
         
 	}
 	
@@ -390,7 +404,16 @@ public class GamePanel extends StackPane{
 	}
 	
 	private void setToFreeplay() {
+		piecePicker.getChildren().clear();
+		Collection<Piece> pieceInstances = Piece.getInstancesOfAllPieces();
+	    Collection<PickIcon> pickIcons = new ArrayList<>(pieceInstances.size());
+	    for(Piece p : pieceInstances) {
+	    	pickIcons.add(new PickIcon(p));
+	    }
+	    piecePicker.getChildren().addAll(pickIcons);
+	    
 		turnLabel.setVisible(false);
+		pieceBuilderButton.setVisible(false);
 	    piecePickerWrap.setVisible(true);
 	    clearBoardButton.setVisible(true);
 		modeButton.setText(PLAY_TEXT);
@@ -402,6 +425,7 @@ public class GamePanel extends StackPane{
 	    piecePickerWrap.setVisible(false);
 	    clearBoardButton.setVisible(false);
 		turnLabel.setVisible(true);
+		pieceBuilderButton.setVisible(true);
 		modeButton.setText(FREEPLAY_TEXT);
 		board.updateKingLocations();
 		board.movePreparerForFXThread.prepare();
@@ -427,7 +451,6 @@ public class GamePanel extends StackPane{
 	}
 	
 	public void startDrag(MouseEvent m, Piece p) {
-		//((Node) m.getSource()).getScene().setCursor(Cursor.CLOSED_HAND);
 		setCancelVisibility(true);
 	}
 	class PickIcon extends StackPane{
@@ -436,7 +459,9 @@ public class GamePanel extends StackPane{
 		private EventHandler<? super MouseEvent> onDragDetected = dragEvent -> {
 			PickIcon source = (PickIcon) dragEvent.getSource();
 			Dragboard db = startDragAndDrop(TransferMode.COPY);
-			Image dragViewImage = source.myPiece.getImage();
+			SnapshotParameters parameters = new SnapshotParameters();
+			parameters.setFill(Color.TRANSPARENT);
+			Image dragViewImage = source.im.snapshot(parameters, null);
 			db.setDragView(dragViewImage, dragViewImage.getWidth()/2, dragViewImage.getHeight()/2);
 			ClipboardContent content = new ClipboardContent();
 	        content.putString(myPiece.getFullName());
@@ -458,14 +483,39 @@ public class GamePanel extends StackPane{
 		};
 	}
 	
+	private static boolean isInteger(String s, int radix) {
+	    if(s.isEmpty()) return false;
+	    for(int i = 0; i < s.length(); i++) {
+	        if(i == 0 && s.charAt(i) == '-') {
+	            if(s.length() == 1) return false;
+	            else continue;
+	        }
+	        if(Character.digit(s.charAt(i),radix) < 0) return false;
+	    }
+	    return true;
+	}
+	
+	
 	public class Settings extends StackPane{
 		ColorAdjust darken;
 		private GridPane gridPane;
 		private ScrollPane scroll;
 		private VBox vBox;
 		private HBox lowerBox;
+		private Label errorMessage;
+		/* Auto-flip Setting */
 		private CheckBox autoFlipCheckBox;
-		private boolean autoFlip;
+		/* Draw by insufficient material Setting*/
+		private CheckBox insufficientMaterialCheckBox;
+		/* N-move rule Setting*/
+		private HBox moveRuleHBox;
+		private CheckBox moveRuleCheckBox;
+		private TextField moveRuleTextField;
+		private Label moveRuleLabel;
+		/////////////////////
+		private int moveRule;
+		private boolean autoFlip, insufficientMaterial, moveRuleEnabled;
+		
 		public Settings() {
 			super();
 			this.setVisible(false);
@@ -486,26 +536,47 @@ public class GamePanel extends StackPane{
 			gridPane.getColumnConstraints().add(col1);
 			gridPane.setGridLinesVisible(true);
 			
-			vBox = new VBox();
+			vBox = new VBox(5);
 			scroll = new ScrollPane(vBox);
 			gridPane.add(scroll, 0, 0);
 			
+			/* Create auto-flip setting*/
 			autoFlipCheckBox = new CheckBox("Auto-flip");
 			Tooltip.install(autoFlipCheckBox, new Tooltip("When enabled, the board will automatically be rotated so that the pieces of the player"
 					+ " whose turn it is appears at the bottom."));
 			autoFlipCheckBox.setSelected(true);
 			autoFlip = true;
 			
-			vBox.getChildren().addAll(autoFlipCheckBox);
+			/* Create draw by insufficient material setting*/
+			insufficientMaterialCheckBox = new CheckBox("Draw by insufficient matierial");
+			insufficientMaterialCheckBox.setSelected(true);
+			Tooltip.install(insufficientMaterialCheckBox, new Tooltip("Determines whether the insufficient material rule is enabled."));
+			insufficientMaterial = true;
+			
+			/* Create N-move-rule setting*/
+			moveRuleCheckBox = new CheckBox();
+			moveRuleCheckBox.setSelected(true);
+			moveRuleTextField = new TextField("50");
+			moveRuleTextField.prefWidthProperty().bind(Settings.this.widthProperty().divide(32));
+			moveRuleLabel = new Label("move rule");
+			moveRuleHBox = new HBox(5, moveRuleCheckBox, moveRuleTextField, moveRuleLabel);
+			moveRuleHBox.setAlignment(Pos.CENTER_LEFT);
+			moveRule = 50;
+			moveRuleEnabled = true;
+			
+			vBox.getChildren().addAll(autoFlipCheckBox, insufficientMaterialCheckBox, moveRuleHBox);
 			
 			Button cancelButton = new Button("Cancel");
 			cancelButton.setOnMouseClicked(x -> this.closeWithoutApplying());
 			Button applyButton = new Button("Apply");
-			applyButton.setOnMouseClicked(x -> this.close());
+			applyButton.setOnMouseClicked(x -> this.attemptClose());
+			errorMessage = new Label("");
+			errorMessage.setWrapText(true);
+			errorMessage.setTextFill(Color.RED);
 			lowerBox = new HBox(20);
 			lowerBox.setAlignment(Pos.CENTER_RIGHT);
 			lowerBox.setPadding(new Insets(20));
-			lowerBox.getChildren().addAll(cancelButton, applyButton);
+			lowerBox.getChildren().addAll(errorMessage, cancelButton, applyButton);
 			gridPane.add(lowerBox, 0, 1);
 			
 			darken = new ColorAdjust();
@@ -514,12 +585,31 @@ public class GamePanel extends StackPane{
 			this.getChildren().add(gridPane);
 		}
 		
-		private void applySettings() {
+		private boolean applySettings() {
+			if(moveRuleCheckBox.isSelected()) {
+				if(!isInteger(moveRuleTextField.getText().strip(), 10)){
+					errorMessage.setText("You must enter a positive integer for move rule if it is enabled.");
+					return false;
+				}
+			}
+			
+			if(moveRuleCheckBox.isSelected()) {
+				moveRule = Integer.parseInt(moveRuleTextField.getText().strip()); //make sure to call strip
+				moveRuleTextField.setText(String.valueOf(moveRule));
+			}
+			moveRuleEnabled = moveRuleCheckBox.isSelected();
 			autoFlip = autoFlipCheckBox.isSelected();
+			insufficientMaterial = insufficientMaterialCheckBox.isSelected();
+			return true;
 		}
+		
+		
 		
 		private void keepSettings() {
 			autoFlipCheckBox.setSelected(autoFlip);
+			insufficientMaterialCheckBox.setSelected(insufficientMaterial);
+			moveRuleCheckBox.setSelected(moveRuleEnabled);
+			moveRuleTextField.setText(String.valueOf(moveRule));
 		}
 		
 		public void open() {
@@ -528,9 +618,11 @@ public class GamePanel extends StackPane{
 			this.setVisible(true);
 		}
 		
-		public void close() {
-			this.applySettings();
-			close0();
+		public void attemptClose() {
+			boolean apply = this.applySettings();
+			if(apply) {
+				close0();
+			}
 		}
 		
 		public void closeWithoutApplying() {
@@ -539,6 +631,7 @@ public class GamePanel extends StackPane{
 		}
 		
 		private void close0(){
+			errorMessage.setText("");
 			this.setVisible(false);
 			this.setPickOnBounds(false);
 			GamePanel.this.hBox.setEffect(null);
@@ -546,6 +639,18 @@ public class GamePanel extends StackPane{
 		
 		public boolean getAutoFlip() {
 			return autoFlip;
+		}
+		
+		public boolean getInsufficientMaterial() {
+			return insufficientMaterial;
+		}
+		
+		public boolean moveRuleEnabled() {
+			return moveRuleEnabled;
+		}
+		
+		public int getMoveRule() {
+			return moveRule;
 		}
 	}
 	

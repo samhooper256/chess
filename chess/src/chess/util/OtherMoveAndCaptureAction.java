@@ -1,19 +1,40 @@
 package chess.util;
 
+import java.lang.reflect.Method;
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
+import java.util.List;
 import java.util.Set;
 
 import chess.base.Board;
 import chess.base.LegalAction;
 import chess.base.LegalOtherMoveAndCapture;
 import chess.base.Piece;
+import chess.util.SummonAction.LineSummonAction;
+import chess.util.SummonAction.RadiusSummonAction;
+import chess.util.SummonAction.RelativeSummonAction;
 
 
 public abstract class OtherMoveAndCaptureAction extends chess.util.Action{
+	@User(params={"relative start row of other piece", "relative start column of other piece",
+			"relative destination row of other piece", "relative destination column of other piece"})
 	public static RelativeOtherMoveAndCaptureAction relative(int otherRelStartRow,
 			int otherRelStartCol, int otherRelDestRow, int otherRelDestCol, Condition... cons) {
 		return new RelativeOtherMoveAndCaptureAction(otherRelStartRow, otherRelStartCol,
 				otherRelDestRow, otherRelDestCol, cons);
+	}
+	
+	private static List<Class<? extends Action>> immediateSubtypes = 
+			Collections.unmodifiableList(Arrays.asList(
+					RelativeOtherMoveAndCaptureAction.class
+			));
+	public static List<Class<? extends Action>> getImmediateSubtypes(){
+		return immediateSubtypes;
+	}
+	
+	public static String getActionName() {
+		return "Other Move And Capture";
 	}
 	
 	public static class RelativeOtherMoveAndCaptureAction extends OtherMoveAndCaptureAction implements RelativeJumpAction{
@@ -25,6 +46,14 @@ public abstract class OtherMoveAndCaptureAction extends chess.util.Action{
 			this.relDestRow = otherRelDestRow;
 			this.relDestCol = otherRelDestCol;
 			this.addAllConditions(cons);
+		}
+		
+		public static String getVariant() {
+			return "Relative";
+		}
+		
+		public static Method getCreationMethod() throws NoSuchMethodException, SecurityException {
+			return OtherMoveAndCaptureAction.class.getMethod("relative", int.class, int.class, int.class, int.class, Condition[].class);
 		}
 		
 		/* *

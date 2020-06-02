@@ -1,9 +1,12 @@
 package chess.util;
 
+import java.lang.reflect.Method;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 
 import chess.base.Board;
@@ -15,34 +18,64 @@ import chess.base.Piece;
 public abstract class CaptureAction extends chess.util.Action{
 	private CaptureAction() {}
 	
-	public static RelativeJumpCaptureAction relative(int relRow, int relCol, Condition... cons) {
-		return new RelativeJumpCaptureAction(relRow, relCol, cons);
+	@User(params={"relative row", "relative column"})
+	public static RelativeCaptureAction relative(int relRow, int relCol, Condition... cons) {
+		return new RelativeCaptureAction(relRow, relCol, cons);
 	}
 	
+	@User(params={"delta row", "delta column"})
 	public static LineCaptureAction line(int deltaRow, int deltaCol, Condition... cons) {
 		return new LineCaptureAction(deltaRow, deltaCol, cons);
 	}
 	
+	@User(params={"relative start row", "relative start column", "delta row", "delta column"})
 	public static RelativeLineCaptureAction relLine(int relStartRow, int relStartCol, int dr, int dc,
 			Condition... cons) {
 		return new RelativeLineCaptureAction(relStartRow, relStartCol, dr, dc, cons);
 	}
 	
+	@User(params={"relative start row", "relative start column", "delta row", "delta column", "length", "segment length", "requires start to be on board"})
 	public static RelativeSegmentCaptureAction segment(int relStartRow, int relStartCol, int dr, int dc, int length,
 			boolean requiresOnBoardStart, Condition... cons) {
 		return new RelativeSegmentCaptureAction(relStartRow, relStartCol, dr, dc, length, requiresOnBoardStart, cons);
 	}
 	
+	@User(params={"radius", "fill", "include self"})
 	public static RadiusCaptureAction radius(int radius, boolean fill, boolean includeSelf, Condition... cons) {
 		return new RadiusCaptureAction(radius, fill, includeSelf, cons);
 	}
 	
-	public static class RelativeJumpCaptureAction extends CaptureAction implements RelativeJumpAction{
+	public static String getActionName() {
+		return "Capture";
+	}
+	
+	private static List<Class<? extends Action>> immediateSubtypes = 
+			Collections.unmodifiableList(Arrays.asList(
+					RelativeCaptureAction.class,
+					LineCaptureAction.class,
+					RelativeLineCaptureAction.class,
+					RelativeSegmentCaptureAction.class,
+					RadiusCaptureAction.class
+					
+			));
+	public static List<Class<? extends Action>> getImmediateSubtypes(){
+		return immediateSubtypes;
+	}
+	
+	public static class RelativeCaptureAction extends CaptureAction implements RelativeJumpAction{
 		private int relRow, relCol;
-		public RelativeJumpCaptureAction(int relRow, int relCol, Condition... cons) {
+		public RelativeCaptureAction(int relRow, int relCol, Condition... cons) {
 			this.relRow = relRow;
 			this.relCol = relCol;
 			this.addAllConditions(cons);
+		}
+		
+		public static String getVariant() {
+			return "Relative";
+		}
+		
+		public static Method getCreationMethod() throws NoSuchMethodException, SecurityException {
+			return CaptureAction.class.getMethod("relative", int.class, int.class, Condition[].class);
 		}
 		
 		@Override
@@ -77,6 +110,14 @@ public abstract class CaptureAction extends chess.util.Action{
 		@Override
 		public LineCaptureAction stops(Condition... cons) {
 			return (LineCaptureAction) LineAction.super.stops(cons);
+		}
+		
+		public static Method getCreationMethod() throws NoSuchMethodException, SecurityException {
+			return CaptureAction.class.getMethod("line", int.class, int.class, Condition[].class);
+		}
+		
+		public static String getVariant() {
+			return "Line";
 		}
 		
 		/*
@@ -126,9 +167,17 @@ public abstract class CaptureAction extends chess.util.Action{
 			requiresOnBoardStart = onBoardStart;
 		}
 		
+		public static Method getCreationMethod() throws NoSuchMethodException, SecurityException {
+			return CaptureAction.class.getMethod("relLine", int.class, int.class, int.class, int.class, Condition[].class);
+		}
+		
 		@Override
 		public RelativeLineCaptureAction stops(Condition... cons) {
 			return (RelativeLineCaptureAction) super.stops(cons);
+		}
+		
+		public static String getVariant() {
+			return "Relative Line";
 		}
 		
 		/*
@@ -197,8 +246,16 @@ public abstract class CaptureAction extends chess.util.Action{
 			this.addAllConditions(cons);
 		}
 		
+		public static Method getCreationMethod() throws NoSuchMethodException, SecurityException {
+			return CaptureAction.class.getMethod("segment", int.class, int.class, int.class, int.class, int.class, boolean.class, Condition[].class);
+		}
+		
 		public RelativeSegmentCaptureAction stops(Condition... cons) {
 			return (RelativeSegmentCaptureAction) RelativeSegmentAction.super.stops(cons);
+		}
+		
+		public static String getVariant() {
+			return "Relative Segment";
 		}
 
 		@Override
@@ -278,6 +335,14 @@ public abstract class CaptureAction extends chess.util.Action{
 			this.fill = fill;
 			this.includeSelf = this.fill ? includeSelf : false; //if fill is not true, there is no way it can include itself.
 			this.addAllConditions(cons);
+		}
+		
+		public static String getVariant() {
+			return "Radius";
+		}
+		
+		public static Method getCreationMethod() throws NoSuchMethodException, SecurityException {
+			return CaptureAction.class.getMethod("radius", int.class, boolean.class, boolean.class, Condition[].class);
 		}
 		
 		@Override

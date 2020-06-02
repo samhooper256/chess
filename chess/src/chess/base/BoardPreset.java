@@ -10,20 +10,18 @@ import java.util.Arrays;
  */
 public class BoardPreset {
 	private final int size;
-	private boolean turn, fiftyMoveRule;
+	private boolean turn;
 	private String[][] pieceNames;
 	
 	public BoardPreset() {
 		size = 8;
 		turn = Piece.WHITE;
-		fiftyMoveRule = true;
 		pieceNames = new String[size][size];
 	}
 	
 	public BoardPreset(int size) {
 		this.size = size;
 		turn = Piece.WHITE;
-		fiftyMoveRule = true;
 		pieceNames = new String[this.size][this.size];
 	}
 	
@@ -45,14 +43,6 @@ public class BoardPreset {
 	
 	public int getBoardSize() {
 		return size;
-	}
-	
-	public void setFiftyMoveRule(boolean fiftyMoveRule) {
-		this.fiftyMoveRule = fiftyMoveRule;
-	}
-	
-	public boolean getFiftyMoveRule() {
-		return this.fiftyMoveRule;
 	}
 	
 	/* *

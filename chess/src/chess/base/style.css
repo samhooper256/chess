@@ -57,6 +57,30 @@
     -fx-background-radius: 10 10 10 10;
 }
 
+#open-piece-builder-button{
+    -fx-background-color: rgba(255, 153, 0, 0.5);
+    -fx-font-size: 18pt;
+    -fx-font-weight: 500;
+    -fx-font-style: normal; 
+    -fx-font-family: "Gill Sans MT";
+}
+
+#open-piece-builder-button:hover{
+    -fx-background-color: rgba(255, 153, 0, 0.7);
+}
+
+#create-piece-button{
+    -fx-background-color: rgba(0, 255, 0, 0.5);
+    -fx-font-size: 18pt;
+    -fx-font-weight: 500;
+    -fx-font-style: normal; 
+    -fx-font-family: "Gill Sans MT";
+}
+
+#create-piece-button:hover{
+    -fx-background-color: rgba(0, 255, 0, 0.7);
+}
+
 .move-and-capture {
     -fx-fill: #000dff;
     -fx-opacity: 0.5;

@@ -1,12 +1,29 @@
 package chess.util;
 
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.List;
 import java.util.Set;
 
 import chess.base.Board;
 import chess.base.LegalAction;
 
 public abstract class Action {
+	private static List<Class<? extends Action>> immediateSubtypes = 
+			Collections.unmodifiableList(Arrays.asList(
+				MoveAndCaptureAction.class,
+				OtherMoveAndCaptureAction.class,
+				CaptureAction.class,
+				PromotionAction.class,
+				SummonAction.class,
+				MultiAction.class
+			));
+	
+	public static List<Class<? extends Action>> getImmediateSubtypes() {
+		return immediateSubtypes;
+	}
+	
 	protected ArrayList<Condition> conditions;
 	
 	public Action() {
@@ -66,5 +83,14 @@ public abstract class Action {
 		
 	}
 	
+	
 	public abstract Set<? extends LegalAction> getLegals(Board b, int startRow, int startCol);
+	
+	public static String getActionName() {
+		return "???";
+	}
+	
+	public static String getVariant() {
+		return "";
+	}
 }

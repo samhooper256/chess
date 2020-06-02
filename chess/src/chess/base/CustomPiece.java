@@ -33,6 +33,10 @@ public class CustomPiece extends Piece{
 		}
 	}
 	
+	public static Collection<String> getDefinedPieceNames(){
+		return definedPieces.keySet();
+	}
+	
 	public static int getDefinedPieceCount(){
 		return definedPieces.size();
 	}

@@ -129,7 +129,7 @@ public abstract class Piece {
 	public abstract int getPointValue();
 	
 	public static final Collection<Piece> getInstancesOfAllPieces(){
-		ArrayList<Piece> end = new ArrayList<>(10 + CustomPiece.getDefinedPieceCount() * 2);
+		ArrayList<Piece> end = new ArrayList<>(12 + CustomPiece.getDefinedPieceCount() * 2);
 		end.addAll(Arrays.asList(
 				new Pawn(Piece.WHITE), new Pawn(Piece.BLACK),
 				new Knight(Piece.WHITE), new Knight(Piece.BLACK),
@@ -139,6 +139,13 @@ public abstract class Piece {
 				new King(Piece.WHITE), new King(Piece.BLACK)
 		));
 		end.addAll(CustomPiece.getInstancesOfDefinedPieces());
+		return end;
+	}
+	
+	public static final Collection<String> getNamesOfAllPieces(){
+		ArrayList<String> end = new ArrayList<>(6 + CustomPiece.getDefinedPieceCount());
+		end.addAll(Arrays.asList("Pawn","Knight","Bishop","Rook","Queen","King"));
+		end.addAll(CustomPiece.getDefinedPieceNames());
 		return end;
 	}
 }

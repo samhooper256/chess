@@ -1,48 +1,80 @@
 package chess.util;
 
+import java.lang.reflect.Method;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 
 import chess.base.Board;
 import chess.base.LegalAction;
-import chess.base.LegalCapture;
 import chess.base.LegalMoveAndCapture;
 import chess.base.Piece;
 
 public abstract class MoveAndCaptureAction extends chess.util.Action{
 	private MoveAndCaptureAction() {}
 	
-	public static RelativeJumpMoveAndCaptureAction relative(int relRow, int relCol, Condition... cons) {
-		return new RelativeJumpMoveAndCaptureAction(relRow, relCol, cons);
+	@User(params={"relative row", "relative column", "conditions"})
+	public static RelativeMoveAndCaptureAction relative(int relRow, int relCol, Condition... cons) {
+		return new RelativeMoveAndCaptureAction(relRow, relCol, cons);
 	}
 	
+	@User(params={"delta row", "delta col"})
 	public static LineMoveAndCaptureAction line(int deltaRow, int deltaCol, Condition... cons) {
 		return new LineMoveAndCaptureAction(deltaRow, deltaCol, cons);
 	}
 	
+	@User(params={"relative start row", "relative start column", "delta row", "delta column"})
 	public static RelativeLineMoveAndCaptureAction relLine(int relStartRow, int relStartCol, int dr, int dc,
 			Condition... cons) {
 		return new RelativeLineMoveAndCaptureAction(relStartRow, relStartCol, dr, dc, cons);
 	}
 	
+	@User(params={"relative start row", "relative start column", "delta row", "delta column", "segment length", "requires start to be on board"})
 	public static RelativeSegmentMoveAndCaptureAction segment(int relStartRow, int relStartCol, int dr, int dc, int length,
 			boolean requiresOnBoardStart, Condition... cons) {
 		return new RelativeSegmentMoveAndCaptureAction(relStartRow, relStartCol, dr, dc, length, requiresOnBoardStart, cons);
 	}
 	
+	@User(params={"radius", "fill", "include self"})
 	public static RadiusMoveAndCaptureAction radius(int radius, boolean fill, boolean includeSelf, Condition... cons) {
 		return new RadiusMoveAndCaptureAction(radius, fill, includeSelf, cons);
 	}
 	
-	public static class RelativeJumpMoveAndCaptureAction extends MoveAndCaptureAction implements RelativeJumpAction{
+	private static List<Class<? extends Action>> immediateSubtypes = 
+			Collections.unmodifiableList(Arrays.asList(
+					RelativeMoveAndCaptureAction.class,
+					LineMoveAndCaptureAction.class,
+					RelativeLineMoveAndCaptureAction.class,
+					RelativeSegmentMoveAndCaptureAction.class,
+					RadiusMoveAndCaptureAction.class
+					
+			));
+	public static List<Class<? extends Action>> getImmediateSubtypes(){
+		return immediateSubtypes;
+	}
+	
+	public static String getActionName() {
+		return "Move And Capture";
+	}
+	
+	public static class RelativeMoveAndCaptureAction extends MoveAndCaptureAction implements RelativeJumpAction{
 		private int relRow, relCol;
-		public RelativeJumpMoveAndCaptureAction(int relRow, int relCol, Condition... cons) {
+		public RelativeMoveAndCaptureAction(int relRow, int relCol, Condition... cons) {
 			this.relRow = relRow;
 			this.relCol = relCol;
 			this.addAllConditions(cons);
+		}
+		
+		public static String getVariant() {
+			return "Relative";
+		}
+		
+		public static Method getCreationMethod() throws NoSuchMethodException, SecurityException {
+			return MoveAndCaptureAction.class.getMethod("relative", int.class, int.class, Condition[].class);
 		}
 		
 		@Override
@@ -74,9 +106,17 @@ public abstract class MoveAndCaptureAction extends chess.util.Action{
 			this.addAllConditions(cons);
 		}
 		
+		public static Method getCreationMethod() throws NoSuchMethodException, SecurityException {
+			return MoveAndCaptureAction.class.getMethod("line", int.class, int.class, Condition[].class);
+		}
+		
 		@Override
 		public LineMoveAndCaptureAction stops(Condition... cons) {
 			return (LineMoveAndCaptureAction) LineAction.super.stops(cons);
+		}
+		
+		public static String getVariant() {
+			return "Line";
 		}
 		
 		/*
@@ -126,10 +166,18 @@ public abstract class MoveAndCaptureAction extends chess.util.Action{
 			requiresOnBoardStart = onBoardStart;
 		}
 		
+		public static Method getCreationMethod() throws NoSuchMethodException, SecurityException {
+			return MoveAndCaptureAction.class.getMethod("relLine", int.class, int.class, int.class, int.class, Condition[].class);
+		}
+		
 		@Override
 		public RelativeLineMoveAndCaptureAction stops(Condition... cons) {
 			return (RelativeLineMoveAndCaptureAction) super.stops(cons);
 		}
+		
+		public static String getVariant() {
+			return "Relative Line";
+		}		
 		
 		/*
 		 * Important: Stop conditions are checked AFTER the conditions for adding a legal move. Thus,
@@ -200,7 +248,15 @@ public abstract class MoveAndCaptureAction extends chess.util.Action{
 		public RelativeSegmentMoveAndCaptureAction stops(Condition... cons) {
 			return (RelativeSegmentMoveAndCaptureAction) RelativeSegmentAction.super.stops(cons);
 		}
-
+		
+		public static String getVariant() {
+			return "Relative Segment";
+		}
+		
+		public static Method getCreationMethod() throws NoSuchMethodException, SecurityException {
+			return MoveAndCaptureAction.class.getMethod("segment", int.class, int.class, int.class, int.class, int.class, boolean.class, Condition[].class);
+		}
+		
 		@Override
 		public Set<? extends LegalAction> getLegals(Board b, int startRow, int startCol) {
 			Set<LegalMoveAndCapture> legals = new HashSet<>();
@@ -278,6 +334,14 @@ public abstract class MoveAndCaptureAction extends chess.util.Action{
 			this.fill = fill;
 			this.includeSelf = this.fill ? includeSelf : false; //if fill is not true, there is no way it can include itself.
 			this.addAllConditions(cons);
+		}
+		
+		public static String getVariant() {
+			return "Radius";
+		}
+		
+		public static Method getCreationMethod() throws NoSuchMethodException, SecurityException {
+			return MoveAndCaptureAction.class.getMethod("radius", int.class, boolean.class, boolean.class, Condition[].class);
 		}
 		
 		@Override

@@ -16,7 +16,15 @@ public class ActionTree {
 	private Node root;
 	
 	public ActionTree(Collection<TreeNode> primaryNodes) {
-		root = new Node(null, primaryNodes);
+		root = new Node(null, primaryNodes, true);
+	}
+	
+	public ActionTree() {
+		root = new Node(null, true);
+	}
+	
+	public void addPrimaryNode(TreeNode primaryNode) {
+		root.addChild(primaryNode);
 	}
 	
 	public Set<LegalAction> getLegals(Board b, int startRow, int startCol){
@@ -58,6 +66,10 @@ public class ActionTree {
 		public ArrayList<TreeNode> getChildren(){
 			return children;
 		}
+		
+		public void addChild(TreeNode child) {
+			this.getChildren().add(child);
+		}
 	}
 	
 	@Override
@@ -67,18 +79,42 @@ public class ActionTree {
 	
 	public static class Node extends TreeNode{
 		Action action;
+		private Node(Action a, boolean ignoreNullCheck) {
+			if(!ignoreNullCheck && a == null) {
+				throw new NullPointerException();
+			}
+			this.action = a;
+			this.children = new ArrayList<>(0);
+		}
+		
+		private Node(Action a, Collection<TreeNode> c, boolean ignoreNullCheck) {
+			if(!ignoreNullCheck && a == null) {
+				throw new NullPointerException();
+			}
+			this.action = a;
+			this.children = new ArrayList<>(c);
+		}
 		
 		public Node(Action a) {
+			if(a == null) {
+				throw new NullPointerException();
+			}
 			this.action = a;
 			this.children = new ArrayList<>(0);
 		}
 		
 		public Node(Action a, Collection<TreeNode> c) {
+			if(a == null) {
+				throw new NullPointerException();
+			}
 			this.action = a;
 			this.children = new ArrayList<>(c);
 		}
 		
 		public Node(Action a, TreeNode... c) {
+			if(a == null) {
+				throw new NullPointerException();
+			}
 			this.action = a;
 			this.children = new ArrayList<>();
 			for(int i = 0; i < c.length; i++) {

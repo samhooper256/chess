@@ -13,16 +13,23 @@ import java.util.Set;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 
+import chess.util.CaptureAction;
+import chess.util.MoveAndCaptureAction;
 import javafx.application.Platform;
 import javafx.beans.property.SimpleObjectProperty;
+import javafx.collections.ObservableList;
 import javafx.concurrent.Service;
 import javafx.concurrent.Task;
+import javafx.event.ActionEvent;
 import javafx.event.EventHandler;
 import javafx.geometry.HPos;
 import javafx.geometry.Pos;
 import javafx.geometry.VPos;
+import javafx.scene.SnapshotParameters;
 import javafx.scene.control.Button;
+import javafx.scene.control.ContextMenu;
 import javafx.scene.control.Control;
+import javafx.scene.control.MenuItem;
 import javafx.scene.control.ScrollPane;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
@@ -30,6 +37,7 @@ import javafx.scene.input.ClipboardContent;
 import javafx.scene.input.DataFormat;
 import javafx.scene.input.DragEvent;
 import javafx.scene.input.Dragboard;
+import javafx.scene.input.MouseButton;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.input.TransferMode;
 import javafx.scene.layout.AnchorPane;
@@ -39,6 +47,7 @@ import javafx.scene.layout.GridPane;
 import javafx.scene.layout.Pane;
 import javafx.scene.layout.RowConstraints;
 import javafx.scene.layout.StackPane;
+import javafx.scene.paint.Color;
 import javafx.scene.shape.Shape;
 import javafx.scene.text.Text;
 
@@ -56,7 +65,7 @@ public class Board extends StackPane{
 	private int[][] kingLocations; //kingLocations[0] is white king, kingLocations[1] is black king
 	private Tile currentlySelectedTile;
 	private BoardPreset preset;
-	private boolean turn, fiftyMoveRule;
+	private boolean turn;
 	private volatile boolean boardInteractionAllowed = true;
 	private volatile boolean orientation;
 	//UI Components
@@ -81,7 +90,6 @@ public class Board extends StackPane{
 	static {
 		defaultBoardPreset = new BoardPreset(DEFAULT_BOARD_SIZE);
 		defaultBoardPreset.setTurn(Piece.WHITE);
-		defaultBoardPreset.setFiftyMoveRule(true);
 		defaultBoardPreset.setPieces(new String[][] {
 			{"-Rook", "-Knight", "-Bishop", "-Queen", "-King", "-Bishop", "-Knight", "-Rook"},
 			{"-Pawn", "-Pawn", "-Pawn", "-Pawn", "-Pawn", "-Pawn", "-Pawn", "-Pawn"},
@@ -386,23 +394,25 @@ public class Board extends StackPane{
 		public void selectAndMake(int startRow, int startCol, Set<LegalAction> options) {
 			playLock.lock();
 			LegalAction end = null;
+			Piece onDest = null;
 			try {
 				Piece piece = Board.this.getPieceAt(startRow, startCol);
 				if(options.size() == 1) {
-					synchronized(Board.this.board) {
-						end = options.iterator().next();
-						end.handle(startRow, startCol, Board.this);
-					}
+					end = options.iterator().next();
 				}
 				else {
 					end = selectAction(options);
+				}
+				synchronized(Board.this.board) {
+					onDest = Board.this.board[end.destRow()][end.destCol()].currentPiece;
 					end.handle(startRow, startCol, Board.this);
 				}
+				
 				synchronized(kingLocations) {
 					kingLocations = findKings();
 				}
-				log.log(startRow, startCol, piece, end);
-				wrapUpPlay();
+				BoardPlay play = log.log(startRow, startCol, piece, onDest, end);
+				wrapUpPlay(play);
 			}
 			catch(Throwable t) {
 				t.printStackTrace();
@@ -413,14 +423,21 @@ public class Board extends StackPane{
 			
 		}
 		
-		private void wrapUpPlay(){
+		private void wrapUpPlay(BoardPlay play){
 			if(turn == Piece.WHITE) {
 				setTurn(Piece.BLACK);
 			}
 			else {
 				setTurn(Piece.WHITE);
 				moveNumber++;
-				movesSincePawnOrCapture = 0;
+				LegalAction action = play.getPlay();
+				if((action instanceof LegalMoveAndCapture || action instanceof LegalCapture) && play.getOnDest() != null
+						|| play.getPiece() instanceof Pawn) {
+					movesSincePawnOrCapture = 0;
+				}
+				else {
+					movesSincePawnOrCapture++;
+				}
 			}
 			
 			playNumber++;
@@ -451,23 +468,27 @@ public class Board extends StackPane{
 	protected MoveMaker moveMaker = new MoveMaker();
 	
 	private EventHandler<? super MouseEvent> tileClickAction = event -> {
-		if(Board.this.associatedGP.getMode() == GamePanel.Mode.PLAY) {
-			if(!boardInteractionAllowed) {
-				System.out.println("tile click blocked because board interaction is not allowed.");
-				return;
-			}
-			
-			if(!clickHandler.isRunning()) {
-				if(lock2.tryLock()) {
-					clickHandler.handle(event);
+		if(event.getButton() == MouseButton.PRIMARY) {
+			Tile source = (Tile) event.getSource();
+			source.cm.hide();
+			if(Board.this.associatedGP.getMode() == GamePanel.Mode.PLAY) {
+				if(!boardInteractionAllowed) {
+					System.out.println("tile click blocked because board interaction is not allowed.");
+					return;
 				}
-				else {
-					System.out.println("cucked! tryLock failed :(");
+				
+				if(!clickHandler.isRunning()) {
+					if(lock2.tryLock()) {
+						clickHandler.handle(event);
+					}
+					else {
+						System.out.println("cucked! tryLock failed :(");
+					}
 				}
 			}
-		}
-		else {
-			System.out.println("Interaction blocked because GamePanel mode is not Mode.PLAY");
+			else {
+				System.out.println("Interaction blocked because GamePanel mode is not Mode.PLAY");
+			}
 		}
 	};
 	
@@ -533,12 +554,19 @@ public class Board extends StackPane{
 		Board.this.associatedGP.finishDrag();
 	};
 	
+	private EventHandler<ActionEvent> tileEditPieceAction = actionEvent -> {
+		Tile source = ((Tile) ((ReferenceContextMenu) ((MenuItem) actionEvent.getSource()).getParentPopup()).getParent());
+		System.out.println("editing " + source.getPiece());
+		//TODO EDITING PIECES
+	};
 	
-	public class Tile extends StackPane implements Serializable{
-		/**
-		 * 
-		 */
-		private static final long serialVersionUID = 3545241631659415039L;
+	private EventHandler<ActionEvent> tileDeletePieceAction = actionEvent -> {
+		Tile source = ((Tile) ((ReferenceContextMenu) ((MenuItem) actionEvent.getSource()).getParentPopup()).getParent());
+		source.setPiece(null);
+	};
+	
+	
+	public class Tile extends StackPane{
 
 		class ColorBox extends Pane{
 			private ArrayList<Shape> indicators;
@@ -617,6 +645,8 @@ public class Board extends StackPane{
 		private Set<LegalAction> legalMovesShowing;
 		private WrappedImageView currentImageView;
 		private ColorBox colorBox;
+		private ReferenceContextMenu cm;
+		private MenuItem editPiece, deletePiece;
 		
 		public Tile(int row, int col) {
 			super();
@@ -638,7 +668,9 @@ public class Board extends StackPane{
 	    			Tile source = (Tile) dragEvent.getSource();
 	    			if(source.isOccupied()) {
 	    				Dragboard db = startDragAndDrop(TransferMode.MOVE);
-	    				Image dragViewImage = source.getPiece().getImage();
+	    				SnapshotParameters parameters = new SnapshotParameters();
+	    				parameters.setFill(Color.TRANSPARENT);
+	    				Image dragViewImage = source.currentImageView.snapshot(parameters, null);
 	    				db.setDragView(dragViewImage, dragViewImage.getWidth()/2, dragViewImage.getHeight()/2);
 	    				System.out.println("started dnd");
 	    				ClipboardContent content = new ClipboardContent();
@@ -650,8 +682,54 @@ public class Board extends StackPane{
 	    		}
 	        });
 	        this.setOnDragDone(tileOnDragDone);
+	        cm = new ReferenceContextMenu(this);
+	        editPiece = new MenuItem();
+	        editPiece.setOnAction(tileEditPieceAction);
+	        deletePiece = new MenuItem("Delete");
+	        deletePiece.setOnAction(tileDeletePieceAction);
+	        cm.getItems().add(editPiece);
+	        this.setOnContextMenuRequested(contextMenuEvent -> {
+	        	//System.out.println(editPiece.getText());
+	        	updateContextMenu();
+	        	//System.out.println(editPiece.getText());
+	        	if(cm.getItems().size() > 0) {
+	        		cm.show(this, contextMenuEvent.getScreenX(), contextMenuEvent.getScreenY());
+	        	}
+	        });
+	        
 	        
 		}
+		
+		private void updateContextMenu() {
+			ObservableList<MenuItem> items = cm.getItems();
+			if(currentPiece == null || currentPiece instanceof King /* you may not edit the king's rules.*/) {
+				items.remove(editPiece);
+			}
+			else {
+				if(!items.contains(editPiece)) {
+					items.add(0, editPiece);
+				}
+				editPiece.setText("Edit \"" + currentPiece.getPieceName() + "\" properties");
+			}
+			
+			
+			if(Board.this.associatedGP.getMode() == GamePanel.Mode.FREEPLAY) {
+				if(currentPiece != null) {
+					if(!items.contains(deletePiece)) {
+						items.add(deletePiece);
+					}
+				}
+				else {
+					items.remove(deletePiece);
+				}
+				
+			}
+			else if(Board.this.associatedGP.getMode() == GamePanel.Mode.PLAY) {
+				items.remove(deletePiece);
+			}
+			
+		}
+		
 		public void showLegalMovesAndPopulate() {
 			if(legalActions != null) {
 				for(LegalAction a : legalActions) {
@@ -823,11 +901,11 @@ public class Board extends StackPane{
 			return logList.get(logList.size() - 1);
 		}
 		
-		public BoardPlay log(int startRow, int startCol, Piece piece, LegalAction action) {
+		public BoardPlay log(int startRow, int startCol, Piece piece, Piece onDest, LegalAction action) {
 			if(action == null) {
 				throw new NullPointerException("cannot log a null action");
 			}
-			BoardPlay play = BoardPlay.of(startRow, startCol, piece, action);
+			BoardPlay play = BoardPlay.of(startRow, startCol, piece, onDest, action);
 			logList.add(play);
 			return play;
 		}
@@ -875,7 +953,6 @@ public class Board extends StackPane{
 		this.associatedGP = panel;
 		BOARD_SIZE = size;
 		turn = Piece.WHITE;
-		fiftyMoveRule = true;
 		this.preset = null;
 		
 		finishBoardInit();
@@ -891,7 +968,6 @@ public class Board extends StackPane{
 		
 		BOARD_SIZE = preset.getBoardSize();
 		turn = preset.getTurn();
-		fiftyMoveRule = preset.getFiftyMoveRule();
 		this.preset = preset;
 		
 		finishBoardInit();
@@ -1140,11 +1216,15 @@ public class Board extends StackPane{
 				break PREP;
 			}
 			
-			if(fiftyMoveRule && movesSincePawnOrCapture >= 50) {
-				endGame("fifty");
-				System.out.println("BIT = true :: from PFNM");
-				break PREP;
-			}
+			if(associatedGP.settings().moveRuleEnabled()) {
+				int moveRule = associatedGP.settings().getMoveRule();
+				//System.out.println("MOVE RULE ENABLED" + moveRule);
+				if(movesSincePawnOrCapture >= moveRule) {
+					endGameWithMessage("Draw by " + moveRule + "-move rule");
+					break PREP;
+				}
+			} 
+				
 			System.out.println("prep 10% complete");
 			boolean anyLegalMovesWhite = false;
 			boolean anyLegalMovesBlack = false;
@@ -1186,83 +1266,84 @@ public class Board extends StackPane{
 			System.out.println("prep 99% complete");
 			
 			//Now check for insufficient material:
-			MATERIAL_CHECK:
-			{
-				int wk = 0, bk = 0, wb = 0, bb = 0; //White Knights, Black Knights, White Bishops, Black Bishops
-				boolean wbc = false, bbc = false; //White Bishop Color, Black Bishop Color (as in light or dark square)
-				for(int i = 0; i < whitePieces.size(); i++) {
-					Piece p = whitePieces.get(i).getPiece();
-					if(p instanceof King) {
-						continue;
-					}
-					else if(p instanceof Knight) {
-						wk++;
-						if(wk > 2) {
-							break MATERIAL_CHECK;
+			if(Board.this.associatedGP.settings().getInsufficientMaterial()) {
+				MATERIAL_CHECK:
+				{
+					int wk = 0, bk = 0, wb = 0, bb = 0; //White Knights, Black Knights, White Bishops, Black Bishops
+					boolean wbc = false, bbc = false; //White Bishop Color, Black Bishop Color (as in light or dark square)
+					for(int i = 0; i < whitePieces.size(); i++) {
+						Piece p = whitePieces.get(i).getPiece();
+						if(p instanceof King) {
+							continue;
 						}
-					}
-					else if(p instanceof Bishop) {
-						wb++;
-						if(wb > 1) {
-							break MATERIAL_CHECK;
+						else if(p instanceof Knight) {
+							wk++;
+							if(wk > 2) {
+								break MATERIAL_CHECK;
+							}
+						}
+						else if(p instanceof Bishop) {
+							wb++;
+							if(wb > 1) {
+								break MATERIAL_CHECK;
+							}
+							else {
+								wbc = whitePieces.get(i).tileColor();
+							}
 						}
 						else {
-							wbc = whitePieces.get(i).tileColor();
+							break MATERIAL_CHECK;
 						}
+					}
+					for(int i = 0; i < blackPieces.size(); i++) {
+						Piece p = blackPieces.get(i).getPiece();
+						if(p instanceof King) {
+							continue;
+						}
+						else if(p instanceof Knight) {
+							bk++;
+							if(bk > 2) {
+								break MATERIAL_CHECK;
+							}
+						}
+						else if(p instanceof Bishop) {
+							bb++;
+							if(bb > 1) {
+								break MATERIAL_CHECK;
+							}
+							else {
+								bbc = blackPieces.get(i).tileColor();
+							}
+						}
+						else {
+							break MATERIAL_CHECK;
+						}
+					}
+					/*
+					 * ONLY the following conditions will cause an automatic draw:
+					 * 
+					 * King vs king with no other pieces.
+					 * King and bishop vs king.
+					 * King and knight vs king.
+					 * King and bishop vs king and bishop of the same colored square.
+					 * 
+					 * Although there are other conditions where neither player can FORCE mate,
+					 * those positions are not an automatic draw because a mate could still be
+					 * achieved if one player "helps" the other.
+					 * */
+					 
+					if(	wk == 0 && bk == 0 && wb == 0 && bb == 0 ||
+						wk == 0 && bk == 0 && (wb == 1 ^ bb == 1) ||
+						(wk == 0 ^ bk == 0) && wb == 0 && bb == 0 ||
+						wk == 0 && bk == 0 && wb == 1 && bb == 1 && wbc == bbc) {
+						endGame("material");
+						break PREP;
 					}
 					else {
 						break MATERIAL_CHECK;
 					}
 				}
-				for(int i = 0; i < blackPieces.size(); i++) {
-					Piece p = blackPieces.get(i).getPiece();
-					if(p instanceof King) {
-						continue;
-					}
-					else if(p instanceof Knight) {
-						bk++;
-						if(bk > 2) {
-							break MATERIAL_CHECK;
-						}
-					}
-					else if(p instanceof Bishop) {
-						bb++;
-						if(bb > 1) {
-							break MATERIAL_CHECK;
-						}
-						else {
-							bbc = blackPieces.get(i).tileColor();
-						}
-					}
-					else {
-						break MATERIAL_CHECK;
-					}
-				}
-				/*
-				 * ONLY the following conditions will cause an automatic draw:
-				 * 
-				 * King vs king with no other pieces.
-				 * King and bishop vs king.
-				 * King and knight vs king.
-				 * King and bishop vs king and bishop of the same colored square.
-				 * 
-				 * Although there are other conditions where neither player can FORCE mate,
-				 * those positions are not an automatic draw because a mate could still be
-				 * achieved if one player "helps" the other.
-				 * */
-				 
-				if(	wk == 0 && bk == 0 && wb == 0 && bb == 0 ||
-					wk == 0 && bk == 0 && (wb == 1 ^ bb == 1) ||
-					(wk == 0 ^ bk == 0) && wb == 0 && bb == 0 ||
-					wk == 0 && bk == 0 && wb == 1 && bb == 1 && wbc == bbc) {
-					endGame("material");
-					break PREP;
-				}
-				else {
-					break MATERIAL_CHECK;
-				}
-			}
-					
+			}	
 			
 			//Now check for checkmate/stalemate:
 			
@@ -1777,7 +1858,6 @@ public class Board extends StackPane{
 				case "white": boardPopupMessage.setText("White wins by checkmate"); break;
 				case "black": boardPopupMessage.setText("Black wins by checkmate"); break;
 				case "stalemate": boardPopupMessage.setText("Draw by stalemate"); break;
-				case "fifty": boardPopupMessage.setText("Draw by 50 move-rule"); break;
 				case "material": boardPopupMessage.setText("Draw by insufficient material"); break;
 				default: boardPopupMessage.setText("???"); break;
 				}

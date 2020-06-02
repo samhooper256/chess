@@ -12,10 +12,14 @@ import java.util.List;
 import chess.util.Action;
 import chess.util.ActionTree;
 import chess.util.Condition;
+import chess.util.MoveAndCaptureAction;
+import chess.util.RelativeJumpAction;
 import chess.util.User;
 import javafx.collections.ObservableList;
+import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.Node;
+import javafx.scene.control.Button;
 import javafx.scene.control.CheckBox;
 import javafx.scene.control.Label;
 import javafx.scene.control.Menu;
@@ -24,10 +28,20 @@ import javafx.scene.control.MenuItem;
 import javafx.scene.control.ScrollPane;
 import javafx.scene.control.TextField;
 import javafx.scene.control.TitledPane;
+import javafx.scene.layout.AnchorPane;
+import javafx.scene.layout.Border;
+import javafx.scene.layout.BorderPane;
+import javafx.scene.layout.BorderStroke;
+import javafx.scene.layout.BorderStrokeStyle;
+import javafx.scene.layout.BorderWidths;
+import javafx.scene.layout.CornerRadii;
 import javafx.scene.layout.HBox;
+import javafx.scene.layout.Pane;
 import javafx.scene.layout.StackPane;
 import javafx.scene.layout.TilePane;
 import javafx.scene.layout.VBox;
+import javafx.scene.paint.Color;
+import javafx.scene.shape.Circle;
 
 public class ActionTreeBuilder extends StackPane implements InputVerification{
 	private static List<Class<? extends Action>> actionTypes = Action.getImmediateSubtypes();
@@ -48,7 +62,16 @@ public class ActionTreeBuilder extends StackPane implements InputVerification{
 		addActionButton = new MenuButton("Add action");
 		actionTreeVBox.getChildren().addAll(addActionButton);
 		
-		ObservableList<MenuItem> items = addActionButton.getItems();
+		setupAddActionButton(addActionButton, actionTreeVBox.getChildren());
+		
+		baseContent.getChildren().add(actionTreeTitledPane);
+		bcScrollPane = new ScrollPane(baseContent);
+		baseContent.minWidthProperty().bind(bcScrollPane.widthProperty());
+		this.getChildren().addAll(bcScrollPane);
+	}
+	
+	private void setupAddActionButton(MenuButton button, ObservableList<Node> whereToAddActionTPs) {
+		ObservableList<MenuItem> items = button.getItems();
 		for(Class<? extends Action> actionType : actionTypes) {
 			String actionName = null;
 			List<Class<? extends Action>> subActionTypes = null;
@@ -61,13 +84,6 @@ public class ActionTreeBuilder extends StackPane implements InputVerification{
 				e.printStackTrace();
 			}
 			MenuItem mi = null;
-			/*
-			if(subActionTypes.size() == 1) {
-				mi = new MenuItem(actionName);
-				Class<? extends Action> type = subActionTypes.get(0);
-				mi.setOnAction(actionEvent -> addActionToMainTree(type));
-			}
-			else {*/
 			mi = new Menu(actionName);
 			ObservableList<MenuItem> subItems = ((Menu) mi).getItems();
 			for(Class<? extends Action> subActionType : subActionTypes) {
@@ -80,21 +96,14 @@ public class ActionTreeBuilder extends StackPane implements InputVerification{
 					e.printStackTrace();
 				}
 				MenuItem subMi = new MenuItem(actionVariant);
-				subMi.setOnAction(actionEvent -> addActionToMainTree(subActionType));
+				subMi.setOnAction(actionEvent -> addActionTo(whereToAddActionTPs, subActionType));
 				subItems.add(subMi);
 			}
-			/*}*/	
 			items.add(mi);
 		}
-		
-		baseContent.getChildren().add(actionTreeTitledPane);
-		bcScrollPane = new ScrollPane(baseContent);
-		baseContent.minWidthProperty().bind(bcScrollPane.widthProperty());
-		this.getChildren().addAll(bcScrollPane);
 	}
 	
-	private void addActionToMainTree(Class<? extends Action> clazz) {
-		ObservableList<Node> children = actionTreeVBox.getChildren();
+	private void addActionTo(ObservableList<Node> children, Class<? extends Action> clazz) {
 		String title = "???";
 		try {
 			title = 
@@ -114,7 +123,7 @@ public class ActionTreeBuilder extends StackPane implements InputVerification{
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
-		VBox vBox = new VBox();
+		VBox vBox = new VBox(4);
 		ActionTP newActionTP = new ActionTP(title, vBox, creationMethod);
 		
 		
@@ -162,14 +171,19 @@ public class ActionTreeBuilder extends StackPane implements InputVerification{
 	    return true;
 	}
 	
+	
 	private class ActionTP extends TitledPane implements InputVerification{
-		private Method creationMethod;
-		private VBox vBox;
-		private String[] paramNames;
-		private Parameter[] params;
+		protected Method creationMethod;
+		protected VBox vBox;
+		protected String[] paramNames;
+		protected Parameter[] params;
+		protected ChildTP childPane;
+		protected Button deleteActionButton;
 		public ActionTP(String name, VBox content, Method creationMethod) {
-			super(name, content);
+			super();
+			this.setText(name);
 			this.vBox = content;
+			this.setContent(vBox);
 			this.creationMethod = creationMethod;
 			Annotation userAnnotation = creationMethod.getAnnotation(User.class);
 			paramNames = null;
@@ -206,6 +220,24 @@ public class ActionTreeBuilder extends StackPane implements InputVerification{
 					
 				}
 			}
+			if(ActionTree.supportsChildren((Class<? extends Action>) creationMethod.getReturnType())) {
+				childPane = new ChildTP();
+				vBox.getChildren().add(childPane);
+			}
+			else {
+				childPane = null;
+			}
+			deleteActionButton = new Button("Delete Action");
+			deleteActionButton.setStyle("-fx-background-color: transparent; -fx-border-width: 1px; -fx-border-color: #b00000;"
+					+ "-fx-border-radius: 6; -fx-text-fill: #b00000;"); //TODO Put this in CSS (and add hover effect)
+			deleteActionButton.setOnMouseClicked(mouseEvent -> {
+				((Pane) ActionTP.this.getParent()).getChildren().remove(ActionTP.this);
+			});
+			
+			Pane deleteActionButtonWrap = new HBox(deleteActionButton);
+			deleteActionButtonWrap.setPadding(new Insets(10,0,0,0));
+
+			vBox.getChildren().add(deleteActionButtonWrap);
 		}
 		
 		@Override 
@@ -260,8 +292,51 @@ public class ActionTreeBuilder extends StackPane implements InputVerification{
 				e.printStackTrace();
 			}
 			
+			//System.out.println("action = " + action);
 			ActionTree.Node atNode = new ActionTree.Node(action);
+			if(childPane != null) {
+				atNode.addAllChildren(childPane.build());
+			}
+			
 			return atNode;
+		}
+	}
+	
+	private class ChildTP extends TitledPane implements InputVerification{
+		private VBox vBox;
+		private MenuButton addActionButton;
+		public ChildTP() {
+			super();
+			this.setText("Children");
+			vBox = new VBox(10);
+			addActionButton = new MenuButton("Add action");
+			setupAddActionButton(addActionButton, vBox.getChildren());
+			vBox.getChildren().add(addActionButton);
+			this.setContent(vBox);
+			this.setExpanded(false);
+		}
+
+		@Override
+		public boolean verifyInput() {
+			boolean result = true;
+			for(Node fxNode : vBox.getChildren()) {
+				if(fxNode instanceof InputVerification) {
+					if(!((InputVerification) fxNode).verifyInput()) {
+						result = false;
+					}
+				}
+			}
+			return result;
+		}
+		
+		public List<ActionTree.TreeNode> build(){
+			List<ActionTree.TreeNode> end = new ArrayList<>();
+			for(Node fxNode : vBox.getChildren()) {
+				if(fxNode instanceof ActionTP) {
+					end.add(((ActionTP) fxNode).build());
+				}
+			}
+			return end;
 		}
 	}
 	

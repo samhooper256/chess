@@ -56,6 +56,16 @@ public class ActionTree {
 		}
 	}
 	
+	public static boolean supportsChildren(Action a) {
+		return a == null || supportsChildren(a.getClass());
+	}
+	
+	public static boolean supportsChildren(Class<? extends Action> clazz) {
+		return 	RelativeJumpAction.class.isAssignableFrom(clazz) ||
+				RelativeSegmentAction.class.isAssignableFrom(clazz);
+		
+	}
+	
 	public abstract static class TreeNode{
 		protected ArrayList<TreeNode> children;
 		
@@ -69,6 +79,13 @@ public class ActionTree {
 		
 		public void addChild(TreeNode child) {
 			this.getChildren().add(child);
+		}
+		
+		public void addAllChildren(Collection<TreeNode> newChildren) {
+			this.getChildren().ensureCapacity(this.getChildren().size() + newChildren.size());
+			for(TreeNode child : newChildren) {
+				addChild(child);
+			}
 		}
 	}
 	
@@ -120,6 +137,15 @@ public class ActionTree {
 			for(int i = 0; i < c.length; i++) {
 				this.children.add(c[i]);
 			}
+		}
+		
+		@Override
+		public void addChild(TreeNode child) {
+			if(!supportsChildren(action)) {
+				throw new IllegalArgumentException("This node cannot have children because its action is of type: "
+						+ action.getClass());
+			}
+			super.addChild(child);
 		}
 		
 		@Override

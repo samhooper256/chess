@@ -381,6 +381,7 @@ public class ActionTreeBuilder extends StackPane implements InputVerification{
 					end.add(((ActionTP) fxNode).buildAction());
 				}
 			}
+			List<Boolean> states = new ArrayList<>(end.size());
 			return new Pair<>(end, null); //TODO ADD STATES
 		}
 	}

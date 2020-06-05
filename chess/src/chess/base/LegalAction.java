@@ -1,7 +1,9 @@
 package chess.base;
 
+import chess.util.ConditionClass;
 import javafx.scene.shape.Shape;
 
+@ConditionClass(name="any legal action")
 public abstract class LegalAction {
 	/*
 	 * NOTE: The displayRow and displayCol values should indicated the square that should be displayed

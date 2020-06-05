@@ -15,4 +15,6 @@ import java.lang.annotation.Target;
 public @interface AFC {
 	String name();
 	String description() default "";
+	String[] paramDescriptions() default {};
+	Class<?> returnType() default Void.class;
 }

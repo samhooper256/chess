@@ -72,6 +72,11 @@ public class Queen extends Piece {
 	public int getPointValue() {
 		return POINT_VALUE;
 	}
-
+	
+	private static final PieceType pieceType = PieceType.define("Queen", false);
+	@Override
+	public PieceType getPieceType() {
+		return pieceType;
+	}
 	
 }

@@ -1,4 +1,4 @@
-package chess.base;
+package chess.piecebuilder;
 
 import java.lang.annotation.Annotation;
 import java.lang.reflect.InvocationTargetException;
@@ -13,9 +13,12 @@ import java.util.List;
 import chess.util.Action;
 import chess.util.ActionTree;
 import chess.util.Condition;
+import chess.util.InputVerification;
 import chess.util.MoveAndCaptureAction;
 import chess.util.MultiAction;
 import chess.util.RelativeJumpAction;
+import chess.util.StoppableAction;
+import chess.util.SubMulti;
 import chess.util.User;
 import javafx.collections.ObservableList;
 import javafx.geometry.Insets;
@@ -45,11 +48,11 @@ import javafx.scene.layout.VBox;
 import javafx.scene.paint.Color;
 import javafx.scene.shape.Circle;
 
-public class ActionTreeBuilder extends StackPane implements InputVerification{
+public class ActionTreeBuilder extends StackPane implements InputVerification, ErrorSubmitable{
 	private static List<Class<? extends Action>> actionTypes = Action.getImmediateSubtypes();
 	
 	private TitledPane actionTreeTitledPane;
-	private VBox baseContent, actionTreeVBox;
+	private VBox baseContent, actionTreeVBox; //actionTreeVBox is the content of the actionTreeTitledPane
 	private MenuButton addActionButton;
 	private ScrollPane bcScrollPane;
 	private PieceBuilder pieceBuilder;
@@ -61,11 +64,11 @@ public class ActionTreeBuilder extends StackPane implements InputVerification{
 		baseContent.setFillWidth(true);
 		actionTreeVBox = new VBox(10);
 		actionTreeTitledPane = new TitledPane("Action Tree", actionTreeVBox);
+		actionTreeVBox.setPadding(new Insets(10,0,10,10));
 		addActionButton = new MenuButton("Add action");
 		actionTreeVBox.getChildren().addAll(addActionButton);
 		
 		setupAddActionButton(addActionButton, actionTreeVBox.getChildren());
-		
 		baseContent.getChildren().add(actionTreeTitledPane);
 		bcScrollPane = new ScrollPane(baseContent);
 		baseContent.minWidthProperty().bind(bcScrollPane.widthProperty());
@@ -184,19 +187,20 @@ public class ActionTreeBuilder extends StackPane implements InputVerification{
 	}
 	
 	
-	private class ActionTP extends TitledPane implements InputVerification{
+	private class ActionTP extends TitledPane implements InputVerification, Buildable<ActionTree.Node>{
 		protected Method creationMethod;
-		protected VBox vBox;
+		protected VBox vBox; //content of this TitledPane
 		protected String[] paramNames;
 		protected Parameter[] params;
 		protected ChildTP childPane;
-		protected ConditionTP conditionPane;
+		protected ConditionTP conditionPane, stopConditionPane;
 		protected Button deleteActionButton;
 		public ActionTP(String name, VBox content, Method creationMethod, boolean childrenPossible) {
 			super();
 			this.setText(name);
 			this.vBox = content;
 			this.setContent(vBox);
+			vBox.setPadding(new Insets(10,0,10,10));
 			this.creationMethod = creationMethod;
 			Annotation userAnnotation = creationMethod.getAnnotation(User.class);
 			paramNames = null;
@@ -233,8 +237,16 @@ public class ActionTreeBuilder extends StackPane implements InputVerification{
 					
 				}
 			}
-			conditionPane = new ConditionTP();
+			conditionPane = new ConditionTP(pieceBuilder);
 			vBox.getChildren().add(conditionPane);
+			if(StoppableAction.class.isAssignableFrom(creationMethod.getReturnType())) {
+				stopConditionPane = new ConditionTP("Stop Conditions", pieceBuilder);
+				vBox.getChildren().add(stopConditionPane);
+			}
+			else {
+				stopConditionPane = null;
+			}
+			
 			if(childrenPossible && ActionTree.supportsChildren((Class<? extends Action>) creationMethod.getReturnType())) {
 				childPane = new ChildTP();
 				vBox.getChildren().add(childPane);
@@ -273,6 +285,7 @@ public class ActionTreeBuilder extends StackPane implements InputVerification{
 			return creationMethod;
 		}
 		
+		@Override
 		public ActionTree.Node build() {
 			Action action = buildAction();
 			
@@ -320,16 +333,21 @@ public class ActionTreeBuilder extends StackPane implements InputVerification{
 				e.printStackTrace();
 			}
 			action.addAllConditions(conditionPane.build());
+			if(stopConditionPane != null && action instanceof StoppableAction) {
+				((StoppableAction) action).stops(stopConditionPane.build());
+			}
 			return action;
 		}
 	}
 	
 	private class MultiActionTP extends ActionTP{
-		protected SubActionTP subTP;
+		protected SubActionsTP subTP;
+		
 		public MultiActionTP(String name, VBox content, Method creationMethod) {
 			super(name, content, creationMethod, true);
-			subTP = new SubActionTP();
+			subTP = new SubActionsTP();
 			ObservableList<Node> children = super.vBox.getChildren();
+			
 			int ctpindex = children.indexOf(conditionPane);
 			if(ctpindex >= 0) {
 				children.add(ctpindex, subTP);
@@ -343,102 +361,20 @@ public class ActionTreeBuilder extends StackPane implements InputVerification{
 		public ActionTree.Node build(){
 			ActionTree.Node atNode = super.build();
 			MultiAction action = (MultiAction) atNode.getAction();
-			Pair<List<Action>, List<Boolean>> subs = subTP.build();
+			Pair<List<SubMulti>, List<Boolean>> subs = subTP.build();
 			action.addAllActions(subs.get1());
 			return atNode;
 		}
 	}
 	
-	private class SubActionTP extends TitledPane implements InputVerification{
-		private VBox vBox;
-		private MenuButton addActionButton;
-		public SubActionTP() {
-			super();
-			vBox = new VBox(10);
-			addActionButton = new MenuButton("Add action");
-			setupAddActionButton(addActionButton, vBox.getChildren(), false, false);
-			vBox.getChildren().add(addActionButton);
-			this.setText("Sub-Actions");
-			this.setContent(vBox);
-			this.setExpanded(false);
-		}
-
-		@Override
-		public boolean verifyInput() {
-			boolean result = true;
-			for(Node fxNode : vBox.getChildren()) {
-				if(fxNode instanceof InputVerification) {
-					if(!((InputVerification) fxNode).verifyInput()) {
-						result = false;
-					}
-				}
-			}
-			return result;
-		}
-		
-		public Pair<List<Action>, List<Boolean>> build(){
-			List<Action> end = new ArrayList<>();
-			for(Node fxNode : vBox.getChildren()) {
-				if(fxNode instanceof ActionTP) {
-					end.add(((ActionTP) fxNode).buildAction());
-				}
-			}
-			List<Boolean> states = new ArrayList<>(end.size());
-			return new Pair<>(end, null); //TODO ADD STATES
-		}
-	}
-	
-	private class ConditionTP extends TitledPane implements InputVerification{
-		private VBox vBox;
-		private Button addConditionButton;
-		public ConditionTP() {
-			super();
-			vBox = new VBox(10);
-			addConditionButton = new Button("Add condition");
-			addConditionButton.setOnMouseClicked(mouseEvent -> {
-				ConditionBox conditionBox = new ConditionBox(pieceBuilder);
-				vBox.getChildren().add(vBox.getChildren().size() - 1, conditionBox);
-			});
-			vBox.getChildren().add(addConditionButton);
-			this.setText("Conditions");
-			this.setContent(vBox);
-			this.setExpanded(false);
-		}
-		
-		public Collection<Condition> build(){
-			ArrayList<Condition> end = new ArrayList<>(this.getChildren().size());
-			for(Node fxNode : vBox.getChildren()) {
-				if(fxNode instanceof ConditionBox) {
-					end.add(((ConditionBox) fxNode).build());
-				}
-			}
-			System.out.println("Condition Collection returned: " + end);
-			return end;
-		}
-		
-		@Override
-		public boolean verifyInput() {
-			boolean result = true;
-			for(Node fxNode : vBox.getChildren()) {
-				if(fxNode instanceof InputVerification) {
-					if(!((InputVerification) fxNode).verifyInput()) {
-						result = false;
-					}
-				}
-			}
-			
-			return result;
-		}
-		
-	}
-	
 	private class ChildTP extends TitledPane implements InputVerification{
-		private VBox vBox;
+		private VBox vBox; //content of this ChildTP
 		private MenuButton addActionButton;
 		public ChildTP() {
 			super();
 			this.setText("Children");
 			vBox = new VBox(10);
+			vBox.setPadding(new Insets(10,0,10,10));
 			addActionButton = new MenuButton("Add action");
 			setupAddActionButton(addActionButton, vBox.getChildren());
 			vBox.getChildren().add(addActionButton);
@@ -468,6 +404,7 @@ public class ActionTreeBuilder extends StackPane implements InputVerification{
 			}
 			return end;
 		}
+
 	}
 	
 	private class IntInputHBox extends HBox implements InputVerification{
@@ -555,5 +492,10 @@ public class ActionTreeBuilder extends StackPane implements InputVerification{
 			pieceBuilder.submitErrorMessage(((Label) this.getChildren().get(0)).getText() + " needs at least one piece");
 			return false;
 		}
+	}
+
+	@Override
+	public void submitErrorMessage(String message) {
+		pieceBuilder.submitErrorMessage(message);
 	}
 }

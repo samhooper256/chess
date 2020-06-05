@@ -35,4 +35,13 @@ public interface StoppableAction {
 		}
 		return this;
 	}
+	
+	public default StoppableAction stops(Collection<Condition> cons) {
+		Collection<Condition> stopConditions = getStopConditions();
+		for(Condition c : cons) {
+			stopConditions.add(c);
+		}
+		return this;
+	}
+	
 }

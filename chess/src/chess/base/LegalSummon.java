@@ -2,12 +2,12 @@ package chess.base;
 
 import java.util.ArrayList;
 
+import chess.util.ConditionClass;
 import javafx.application.Platform;
 import javafx.scene.shape.Circle;
 import javafx.scene.shape.Shape;
 
-//TODO this entire class
-
+@ConditionClass(name="legal summon")
 public class LegalSummon extends LegalAction{
 	private ArrayList<String> options;
 	

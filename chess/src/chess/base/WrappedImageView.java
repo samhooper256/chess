@@ -5,7 +5,7 @@ import javafx.scene.image.ImageView;
 
 public class WrappedImageView extends ImageView
 {
-    WrappedImageView(Image im)
+    public WrappedImageView(Image im)
     {
     	super(im);
         setPreserveRatio(false);

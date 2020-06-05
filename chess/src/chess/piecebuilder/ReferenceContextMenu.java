@@ -1,4 +1,4 @@
-package chess.base;
+package chess.piecebuilder;
 
 import javafx.scene.Node;
 import javafx.scene.control.ContextMenu;

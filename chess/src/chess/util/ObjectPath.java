@@ -7,7 +7,7 @@ import chess.base.Board;
 
 public class ObjectPath extends PathBase{
 
-	public ObjectPath(Object base, ArrayList<Member> calls) {
+	public ObjectPath(Object base, ArrayList<MemberAccess> calls) {
 		super(base, calls);
 	}
 	
@@ -15,24 +15,34 @@ public class ObjectPath extends PathBase{
 		super(val, null);
 	}
 	
-	public Condition referenceEquals(ObjectPath other) {
-		return new ObjectReferenceEqualsCondition(this, other);
+	@AFC(name="equals")
+	public Condition isEquals(ObjectPath other) {
+		return new ObjectEqualsCondition(this, other);
 	}
 	
-	public Condition notReferenceEquals(ObjectPath other) {
-		return new ObjectNotReferenceEqualsCondition(this, other);
+	@AFC(name="does not equal")
+	public Condition notEquals(ObjectPath other) {
+		return new ObjectNotEqualsConditions(this, other);
 	}
 	
-	public Condition isNull() {
-		return new ObjectIsNullCondition(this);
-	}
-	
+	@AFC(name="exists")
 	public Condition isNotNull() {
 		return new ObjectIsNotNullCondition(this);
 	}
 	
+	@AFC(name="does not exit")
+	public Condition isNull() {
+		return new ObjectIsNullCondition(this);
+	}
+	
+	@AFC(name="is the action type")
 	public Condition instanceOf(Class<?> caster) {
 		return new ObjectInstanceOfCondition(this, caster);
+	}
+	
+	@AFC(name="is the piece")
+	public Condition isPiece(String pieceName) {
+		return new ObjectIsPieceCondition(this, pieceName);
 	}
 
 	@Override

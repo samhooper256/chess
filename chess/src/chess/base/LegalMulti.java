@@ -2,9 +2,11 @@ package chess.base;
 
 import java.util.ArrayList;
 
+import chess.util.ConditionClass;
 import javafx.scene.shape.Circle;
 import javafx.scene.shape.Shape;
 
+@ConditionClass(name="legal multi")
 public class LegalMulti extends LegalAction{
 	ArrayList<LegalAction> actions;
 	

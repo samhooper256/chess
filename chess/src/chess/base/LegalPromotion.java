@@ -2,10 +2,12 @@ package chess.base;
 
 import java.util.ArrayList;
 
+import chess.util.ConditionClass;
 import javafx.application.Platform;
 import javafx.scene.shape.Circle;
 import javafx.scene.shape.Shape;
 
+@ConditionClass(name="legal promotion")
 public class LegalPromotion extends LegalAction{
 	
 	private ArrayList<String> options;

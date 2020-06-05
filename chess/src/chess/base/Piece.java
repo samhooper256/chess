@@ -5,6 +5,7 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.Set;
 
+import chess.util.AFC;
 import javafx.scene.image.Image;
 
 /* *
@@ -65,25 +66,30 @@ public abstract class Piece {
 	public void setHasMoved(boolean hasMoved) {
 		this.hasMoved = hasMoved;
 	}
+	
+	@AFC(name="has moved")
 	public boolean hasMoved() {
 		return hasMoved;
 	}
 	
+	@AFC(name="color")
 	public boolean getColor() {
 		return color;
 	}
 	
+	@AFC(name="is white")
 	public boolean isWhite() {
 		return color == WHITE;
 	}
 	
+	@AFC(name="is black")
 	public boolean isBlack() {
 		return color == BLACK;
 	}
 	
 	//PRECONDITON : file and rank are valid, the piece at file and rank is the correct piece
 	public Set<LegalAction> getLegalMoves(Board b, char file, char rank){
-		int row = b.getBoardSizeAsInt() - rank + '0';
+		int row = b.getBoardSize() - rank + '0';
 		int col = file - 'A';
 		//System.out.printf("converted " + file + rank + " to (%d,%d)%n", row ,col);
 		return getLegalActions(b, row, col);
@@ -94,9 +100,9 @@ public abstract class Piece {
 	
 	//PRECONDITON : file and rank are valid, the piece at file and rank is the correct piece
 	public boolean canCheck(Board b, char startFile, char startRank, char destFile, char destRank) {
-		int startRow = b.getBoardSizeAsInt() - startRank + '0';
+		int startRow = b.getBoardSize() - startRank + '0';
 		int startCol = startFile - 'A';
-		int destRow = b.getBoardSizeAsInt() - destRank + '0';
+		int destRow = b.getBoardSize() - destRank + '0';
 		int destCol = destFile - 'A';
 		return canCheck(b, startRow, startCol, destRow, destCol);
 	}
@@ -126,7 +132,20 @@ public abstract class Piece {
 		return getColorString() + " Piece";
 	}
 	
+	public boolean isNameOfPiece(String pieceName) {
+		return 	pieceName.equals("King") ||
+				pieceName.equals("Queen") ||
+				pieceName.equals("Rook") ||
+				pieceName.equals("Bishop") ||
+				pieceName.equals("Knight") ||
+				pieceName.equals("Pawn") ||
+				CustomPiece.isDefinedPiece(pieceName);
+	}
+	
 	public abstract int getPointValue();
+	
+	@AFC(name="piece type")
+	public abstract PieceType getPieceType();
 	
 	public static final Collection<Piece> getInstancesOfAllPieces(){
 		ArrayList<Piece> end = new ArrayList<>(12 + CustomPiece.getDefinedPieceCount() * 2);
@@ -147,6 +166,10 @@ public abstract class Piece {
 		end.addAll(Arrays.asList("Pawn","Knight","Bishop","Rook","Queen","King"));
 		end.addAll(CustomPiece.getDefinedPieceNames());
 		return end;
+	}
+	
+	public static final int getPieceCount() {
+		return 6 + CustomPiece.getDefinedPieceCount();
 	}
 }
 

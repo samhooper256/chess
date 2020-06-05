@@ -6,9 +6,11 @@ import java.util.Set;
 
 import chess.util.ActionTree;
 import chess.util.Condition;
+import chess.util.Flag;
 import chess.util.MoveAndCaptureAction;
 import chess.util.MultiAction;
 import chess.util.OtherMoveAndCaptureAction;
+import chess.util.SubMulti;
 import javafx.scene.image.Image;
 
 /* *
@@ -58,16 +60,16 @@ public class King extends Piece{
 								Condition.DIE,
 								Condition.onStartRelative(0, 3).call("getPiece").toObj().instanceOf(Rook.class),
 								Condition.onStartRelative(0, 3).call("getPiece").call("hasMoved").toBool().invert().toCond()
-								).addAction(MoveAndCaptureAction.relative(0, 2))
-								.addAction(OtherMoveAndCaptureAction.relative(0,3,0,1))
+								).addAction(SubMulti.mnc(Flag.ORIGIN, 0, 2))
+								.addAction(SubMulti.omnc(Flag.ORIGIN, 0,3,0,1))
 							),
 							new ActionTree.Node(MultiAction.relative(0, 2,
 								Condition.DIE,
 								Condition.onStartRelative(0, 3).call("isEmpty").toBool().toCond(),
 								Condition.onStartRelative(0, 4).call("getPiece").toObj().instanceOf(Rook.class),
 								Condition.onStartRelative(0, 4).call("getPiece").call("hasMoved").toBool().invert().toCond()
-								).addAction(MoveAndCaptureAction.relative(0, 2))
-								.addAction(OtherMoveAndCaptureAction.relative(0,4,0,1))
+								).addAction(SubMulti.mnc(Flag.ORIGIN, 0, 2))
+								.addAction(SubMulti.omnc(Flag.DESTINATION, 0,4,0,1))
 							)
 						))
 					),
@@ -81,16 +83,16 @@ public class King extends Piece{
 								Condition.DIE,
 								Condition.onStartRelative(0, -3).call("getPiece").toObj().instanceOf(Rook.class),
 								Condition.onStartRelative(0, -3).call("getPiece").call("hasMoved").toBool().invert().toCond()
-								).addAction(MoveAndCaptureAction.relative(0, -2))
-								.addAction(OtherMoveAndCaptureAction.relative(0,-3,0,-1))
+								).addAction(SubMulti.mnc(Flag.ORIGIN, 0, -2))
+								.addAction(SubMulti.omnc(Flag.ORIGIN, 0,-3,0,-1))
 							),
 							new ActionTree.Node(MultiAction.relative(0, -2,
 								Condition.DIE,
 								Condition.onStartRelative(0, -3).call("isEmpty").toBool().toCond(),
 								Condition.onStartRelative(0, -4).call("getPiece").toObj().instanceOf(Rook.class),
 								Condition.onStartRelative(0, -4).call("getPiece").call("hasMoved").toBool().invert().toCond()
-								).addAction(MoveAndCaptureAction.relative(0, -2))
-								.addAction(OtherMoveAndCaptureAction.relative(0,-4,0,-1))
+								).addAction(SubMulti.mnc(Flag.ORIGIN, 0, -2))
+								.addAction(SubMulti.omnc(Flag.ORIGIN, 0,-4,0,-1))
 							)
 						))
 					)
@@ -139,4 +141,11 @@ public class King extends Piece{
 		//System.out.printf("\tAfter filtering  = %s%n", legals);
 		return legals;
 	}
+	
+	private static final PieceType pieceType = PieceType.define("King", false);
+	@Override
+	public PieceType getPieceType() {
+		return pieceType;
+	}
+	
 }

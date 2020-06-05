@@ -10,6 +10,7 @@ import chess.util.Condition;
 import chess.util.MoveAndCaptureAction;
 import chess.util.MultiAction;
 import chess.util.PromotionAction;
+import chess.util.SubMulti;
 import chess.util.SummonAction;
 import javafx.scene.image.Image;
 
@@ -45,7 +46,7 @@ public class Knight extends Piece{
 			new ActionTree.Node(MoveAndCaptureAction.relative(-1, 0)),
 			new ActionTree.Node(SummonAction.relative(-1, 0, new ArrayList<>(Arrays.asList("Rook","Queen")))),
 			new ActionTree.Node(CaptureAction.relative(-1, 0)),
-			new ActionTree.Node(MultiAction.relative(-1, 0).addAction(PromotionAction.withOptions(
+			new ActionTree.Node(MultiAction.relative(-1, 0).addAction(SubMulti.promo(
 					new ArrayList<>(Arrays.asList("Ghost")))))
 		));
 	}
@@ -89,6 +90,10 @@ public class Knight extends Piece{
 		return POINT_VALUE;
 	}
 	
-	
+	private static final PieceType pieceType = PieceType.define("Knight", false);
+	@Override
+	public PieceType getPieceType() {
+		return pieceType;
+	}
 
 }

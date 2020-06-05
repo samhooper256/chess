@@ -19,10 +19,10 @@ import chess.util.SummonAction.RelativeSummonAction;
 
 public abstract class MultiAction extends chess.util.Action{
 	
-	protected ArrayList<Action> actions;
+	protected ArrayList<SubMulti> actions;
 	protected ArrayList<Boolean> states;
 	boolean hasMoveAndCapture = false;
-	boolean hasCapture = false;
+	boolean hasCapture = false; //This variable is used by ActionTree's canCheck(...) to short-circuit. KEEP IT UPDATED.
 	boolean hasPromotion = false;
 	
 	@User(params={"relative display row", "relative display column"})
@@ -33,12 +33,12 @@ public abstract class MultiAction extends chess.util.Action{
 	/* *
 	 * Equivalent to addAction(action, true)
 	 */
-	public MultiAction addAction(Action action) {
+	public MultiAction addAction(SubMulti action) {
 		return addAction(action, true);
 	}
 	
-	public MultiAction addAllActions(Collection<Action> actions) {
-		for(Action a : actions) {
+	public MultiAction addAllActions(Collection<SubMulti> actions) {
+		for(SubMulti a : actions) {
 			addAction(a, true);
 		}
 		return this;
@@ -60,7 +60,6 @@ public abstract class MultiAction extends chess.util.Action{
 	/* 
 	 * 
 	 * THERE CAN BE A MAXIMUM OF ONE PROMOTION. Promotions will always occur first!
-	 * THERE CAN BE A MAXIMUM OF ONE MOVE AND CAPTURE. MNCs will always occur last!
 	 * 
 	 * You many not 'nest' MultiActions; that is, you may not add a MultiAction
 	 * to another MultiAction's list of actions.
@@ -73,11 +72,8 @@ public abstract class MultiAction extends chess.util.Action{
 	 * states.
 	 * */
 	
-	public MultiAction addAction(Action action, boolean state) {
-		if(action instanceof MultiAction) {
-			throw new IllegalArgumentException("You may not add a MultiAction to another MultiAction's list of actions");
-		}
-		if(action instanceof PromotionAction) {
+	public MultiAction addAction(SubMulti action, boolean state) {
+		if(action instanceof SubMulti.Promo) {
 			if(hasPromotion) {
 				throw new IllegalArgumentException("A MultiAction cannot have more than one PromotionAction");
 			}
@@ -89,24 +85,22 @@ public abstract class MultiAction extends chess.util.Action{
 			return this;
 		}
 		else {
-			if(action instanceof CaptureAction) {
-				if(!(action instanceof CaptureAction.RelativeCaptureAction)) {
-					throw new IllegalArgumentException("Only RelativeJumpCaptureAction actions are allowed.");
-				}
+			if(action instanceof SubMulti.CapRel) {
 				hasCapture = true;
 			}
-			else if(action instanceof MoveAndCaptureAction) {
+			else if(action instanceof SubMulti.MNC) {
 				if(hasMoveAndCapture) {
-					throw new IllegalArgumentException("A MultiAction cannot have more than one MoveAndCaptureAction");
+					throw new IllegalArgumentException("Only one SubMulti.MNC is allowed.");
 				}
 				else {
 					hasMoveAndCapture = true;
 				}
 			}
 			actions.add(action);
-			states.add(0, state);
+			states.add(state);
 			return this;
 		}
+		
 	}
 	
 	public static class RelativeMultiAction extends MultiAction implements RelativeJumpAction{
@@ -134,15 +128,15 @@ public abstract class MultiAction extends chess.util.Action{
 			int finalDestRow = startRow + m*relRow, finalDestCol = startCol + m*relCol;
 			//System.out.printf("multi got passed a start of (%d,%d)", startRow, startCol);
 			if(b.inBounds(finalDestRow, finalDestCol) && checkConditions(b, startRow, startCol, finalDestRow, finalDestCol)) {
-				MoveAndCaptureAction mnc = null;
+				SubMulti.MNC mnc = null;
 				ArrayList<LegalAction> legals = new ArrayList<>();
 				for(int i = 0; i < actions.size(); i++) {
-					Action act = actions.get(i);
-					if(act instanceof MoveAndCaptureAction) {
-						mnc = (MoveAndCaptureAction) act;
+					SubMulti act = actions.get(i);
+					if(act instanceof SubMulti.MNC) {
+						mnc = (SubMulti.MNC) act;
 					}
 					else {
-						Set<? extends LegalAction> actLegals = act.getLegals(b, startRow, startCol);
+						Set<? extends LegalAction> actLegals = act.getLegals(b, startRow, startCol, finalDestRow, finalDestCol);
 						if(actLegals.isEmpty()) {
 							if(states.get(i)) {
 								return Collections.emptySet();
@@ -155,7 +149,7 @@ public abstract class MultiAction extends chess.util.Action{
 				}
 				if(mnc != null) {
 					Set<LegalMulti> end = new HashSet<>();
-					for(LegalAction leg : mnc.getLegals(b, startRow, startCol)) {
+					for(LegalAction leg : mnc.getLegals(b, startRow, startCol, finalDestRow, finalDestCol)) {
 						legals.add(leg);
 						//LegalMulti's constructor copies the "legals" ArrayList, so it's okay to reuse it.
 						end.add(new LegalMulti(finalDestRow, finalDestCol, legals));
@@ -180,7 +174,7 @@ public abstract class MultiAction extends chess.util.Action{
 		}
 		
 		@Override
-		public RelativeMultiAction addAction(Action a) {
+		public RelativeMultiAction addAction(SubMulti a) {
 			return (RelativeMultiAction) super.addAction(a);
 		}
 	}

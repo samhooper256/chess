@@ -1,4 +1,4 @@
-package chess.base;
+package chess.piecebuilder;
 
 public class Pair<A,B> {
 	private A item1;

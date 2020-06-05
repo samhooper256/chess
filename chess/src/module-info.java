@@ -5,4 +5,5 @@ module chess {
 	
 	exports chess.base;
 	exports chess.util;
+	exports chess.piecebuilder;
 }

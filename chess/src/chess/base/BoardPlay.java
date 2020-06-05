@@ -1,5 +1,7 @@
 package chess.base;
 
+import chess.util.AFC;
+
 public class BoardPlay{
 	
 	private Piece piece, onDest;
@@ -18,12 +20,17 @@ public class BoardPlay{
 		this.play = p;
 	}
 	
+	@AFC(name="start row")
 	public int getStartRow() {return startRow;}
+	@AFC(name="start column")
 	public int getStartCol() {return startCol;}
 	public LegalAction getPlay() {return play;}
+	@AFC(name="acting piece")
 	public Piece getPiece() {return piece;}
+	@AFC(name="piece on destination")
 	public Piece getOnDest() {return onDest;}
 	
+	@AFC(name="distance")
 	public int distance() {
 		return Math.abs(startRow - play.destRow()) + Math.abs(startCol - play.destCol());
 	}

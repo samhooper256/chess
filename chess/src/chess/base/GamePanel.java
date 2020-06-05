@@ -6,6 +6,7 @@ import java.util.Collection;
 import java.util.Set;
 
 import chess.base.Board.Tile;
+import chess.piecebuilder.PieceBuilder;
 import chess.util.ActionTree;
 import chess.util.CaptureAction;
 import chess.util.Condition;

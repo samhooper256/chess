@@ -16,6 +16,7 @@ public class CustomPiece extends Piece{
 	private ActionTree tree;
 	private Image image;
 	private int pointValue;
+	private final PieceType pieceType;
 	
 	public static void defineNewPiece(PieceData data) {
 		definedPieces.put(data.name,
@@ -41,12 +42,17 @@ public class CustomPiece extends Piece{
 		return definedPieces.size();
 	}
 	
+	public static boolean isDefinedPiece(String pieceName) {
+		return definedPieces.containsKey(pieceName);
+	}
+	
 	private CustomPiece(PieceData data, boolean color) {
 		super(color);
 		name = data.name;
 		tree = data.tree;
 		image = color == Piece.WHITE ? data.whiteImage : data.blackImage;
 		pointValue = data.pointValue;
+		pieceType = data.pieceType;
 	}
 	
 	public static class PieceData{
@@ -56,6 +62,7 @@ public class CustomPiece extends Piece{
 		public Image whiteImage;
 		public Image blackImage;
 		public ActionTree tree;
+		public final PieceType pieceType;
 		
 		public PieceData(String name) {
 			this.name = name;
@@ -63,6 +70,7 @@ public class CustomPiece extends Piece{
 			blackImage = null;
 			tree = null;
 			pointValue = 5;
+			pieceType = PieceType.define(name, true);
 		}
 	}
 	
@@ -108,5 +116,11 @@ public class CustomPiece extends Piece{
 			end.add(factory.make(Piece.BLACK));
 		}
 		return end;
+	}
+
+	@Override
+	public PieceType getPieceType() {
+		// TODO Auto-generated method stub
+		return null;
 	}
 }

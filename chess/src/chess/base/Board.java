@@ -13,6 +13,8 @@ import java.util.Set;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 
+import chess.piecebuilder.ReferenceContextMenu;
+import chess.util.AFC;
 import chess.util.CaptureAction;
 import chess.util.MoveAndCaptureAction;
 import javafx.application.Platform;
@@ -836,14 +838,17 @@ public class Board extends StackPane{
 			return isShowingLegal;
 		}
 		
+		@AFC(name="is occupied")
 		public boolean isOccupied() {
 			return currentPiece != null;
 		}
 		
+		@AFC(name="is empty")
 		public boolean isEmpty() {
 			return currentPiece == null;
 		}
 		
+		@AFC(name="get piece")
 		public Piece getPiece() {
 			return currentPiece;
 		}
@@ -851,7 +856,9 @@ public class Board extends StackPane{
 			return String.format("[Tile %d,%d]", row,col);
 		}
 		
+		@AFC(name="row")
 		public int getRow() { return row; }
+		@AFC(name="col")
 		public int getCol() { return col; }
 		
 		public boolean isCheckableBy(boolean myColor) {
@@ -875,6 +882,7 @@ public class Board extends StackPane{
 			return false;
 		}
 		
+		@AFC(name="enemy line distance")
 		public int enemyLineDistance(boolean color) {
 			return color == Piece.WHITE ? row + 1 : BOARD_SIZE - row;
 		}
@@ -886,6 +894,16 @@ public class Board extends StackPane{
 			return (row+col) % 2 == 0;
 		}
 		
+		@AFC(name="is light")
+		public boolean isLight() {
+			return tileColor() == true;
+		}
+		
+		@AFC(name="is dark")
+		public boolean isDark() {
+			return tileColor() == false;
+		}
+		
 	}
 	
 	public class BoardLog{
@@ -894,9 +912,12 @@ public class Board extends StackPane{
 			logList = new ArrayList<>();
 		}
 		
+		@AFC(name="play count")
 		public int playCount() {
 			return logList.size();
 		}
+		
+		@AFC(name="last play")
 		public BoardPlay last() {
 			return logList.get(logList.size() - 1);
 		}
@@ -917,14 +938,17 @@ public class Board extends StackPane{
 	
 	private BoardLog log = new BoardLog();
 	
+	@AFC(name="get play log")
 	public BoardLog getLog() {
 		return log;
 	}
 	
+	@AFC(name="last play")
 	public BoardPlay lastPlay() {
 		return log.last();
 	}
 	
+	@AFC(name="has play")
 	public boolean hasPlay() {
 		return log.playCount() > 0;
 	}
@@ -1916,7 +1940,8 @@ public class Board extends StackPane{
 		return row >= 0 && col >= 0 && row < BOARD_SIZE && col < BOARD_SIZE;
 	}
 	
-	public int getBoardSizeAsInt() {
+	@AFC(name="board size")
+	public int getBoardSize() {
 		return BOARD_SIZE;
 	}
 	
@@ -1928,6 +1953,7 @@ public class Board extends StackPane{
 		return board[row][col].currentPiece;
 	}
 	
+	@AFC(name="get tile at") //TODO REMOVE ANNOTATION
 	public Tile getTileAt(int row, int col) {
 		return board[row][col];
 	}

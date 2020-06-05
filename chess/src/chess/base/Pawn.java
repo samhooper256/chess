@@ -7,10 +7,12 @@ import java.util.Set;
 import chess.util.ActionTree;
 import chess.util.CaptureAction;
 import chess.util.Condition;
+import chess.util.Flag;
 import chess.util.IntegerPath;
 import chess.util.MoveAndCaptureAction;
 import chess.util.MultiAction;
 import chess.util.PromotionAction;
+import chess.util.SubMulti;
 import chess.util.SummonAction;
 import javafx.scene.image.Image;
 
@@ -43,16 +45,16 @@ public class Pawn extends Piece{
 				new ActionTree.Choke(Arrays.asList(IntegerPath.fromStartEnemyDist.isEquals(new IntegerPath(2))),
 						Arrays.asList(
 							new ActionTree.Node(MultiAction.relative(-1, 0, Condition.DIE)
-								.addAction(MoveAndCaptureAction.relative(-1, 0))
-								.addAction(PromotionAction.withOptions(new ArrayList<>(Arrays.asList("Queen","Rook","Bishop","Knight"))))
+								.addAction(SubMulti.mnc(Flag.DESTINATION,0,0))
+								.addAction(SubMulti.promo(new ArrayList<>(Arrays.asList("Queen","Rook","Bishop","Knight"))))
 							),
 							new ActionTree.Node(MultiAction.relative(-1, 1, Condition.EOD)
-								.addAction(MoveAndCaptureAction.relative(-1, 1))
-								.addAction(PromotionAction.withOptions(new ArrayList<>(Arrays.asList("Queen","Rook","Bishop","Knight"))))
+								.addAction(SubMulti.mnc(Flag.DESTINATION,0,0))
+								.addAction(SubMulti.promo(new ArrayList<>(Arrays.asList("Queen","Rook","Bishop","Knight"))))
 							),
 							new ActionTree.Node(MultiAction.relative(-1, -1, Condition.EOD)
-								.addAction(MoveAndCaptureAction.relative(-1, -1))
-								.addAction(PromotionAction.withOptions(new ArrayList<>(Arrays.asList("Queen","Rook","Bishop","Knight"))))
+								.addAction(SubMulti.mnc(Flag.DESTINATION,0,0))
+								.addAction(SubMulti.promo(new ArrayList<>(Arrays.asList("Queen","Rook","Bishop","Knight"))))
 							)
 						)
 				),
@@ -63,15 +65,15 @@ public class Pawn extends Piece{
 						Condition.onBoard().call("lastPlay").call("getPlay").toObj().instanceOf(LegalMoveAndCapture.class)),
 					new ArrayList<>(Arrays.asList(
 						new ActionTree.Node(MultiAction.relative(-1, -1)
-							.addAction(MoveAndCaptureAction.relative(-1, -1, Condition.DIE))
-							.addAction(CaptureAction.relative(0, -1, Condition.EOD,
-							Condition.onDest().call("getPiece").toObj().referenceEquals(Condition.onBoard().call("lastPlay").call("getPiece").toObj())	
+							.addAction(SubMulti.mnc(Flag.DESTINATION, 0, 0, Condition.DIE))
+							.addAction(SubMulti.capRel(Flag.ORIGIN, 0, -1, Condition.EOD,
+							Condition.onDest().call("getPiece").toObj().isEquals(Condition.onBoard().call("lastPlay").call("getPiece").toObj())	
 							))
 						),
 						new ActionTree.Node(MultiAction.relative(-1, 1)
-							.addAction(MoveAndCaptureAction.relative(-1, 1, Condition.DIE))
-							.addAction(CaptureAction.relative(0, 1, Condition.EOD,
-							Condition.onDest().call("getPiece").toObj().referenceEquals(Condition.onBoard().call("lastPlay").call("getPiece").toObj())	
+							.addAction(SubMulti.mnc(Flag.DESTINATION, 0, 0, Condition.DIE))
+							.addAction(SubMulti.capRel(Flag.ORIGIN, 0, 1, Condition.EOD,
+							Condition.onDest().call("getPiece").toObj().isEquals(Condition.onBoard().call("lastPlay").call("getPiece").toObj())	
 							))
 						)
 					))
@@ -99,122 +101,7 @@ public class Pawn extends Piece{
 	@Override
 	public boolean canCheck(Board b, int startRow, int startCol, int destRow, int destCol) {
 		return tree.canCheck(b, startRow, startCol, destRow, destCol);
-		/*
-		if(this.getColor() == b.getBoardOrientation()) { //this pawn is moving "UP"
-			return destRow == startRow - 1 && (destCol == startCol - 1 || destCol == startCol + 1);
-		}
-		else { //this pawn is moving "down"
-			return destRow == startRow + 1 && (destCol == startCol - 1 || destCol == startCol + 1);
-		}
-		*/
 	}
-	
-	
-	/*
-	@Override
-	public ArrayList<int[]> getLegalActions(Board b, int row, int col) {
-		ArrayList<int[]> legalMoves = new ArrayList<>();
-		int nr, nc;
-		boolean ep1 = true, ep2 = true, twoHopPotential = true;
-		if(this.getColor() == Piece.WHITE) {
-			nr = row - 1; nc = col;
-			if(b.inBounds(nr, nc)) {
-				Piece p = b.getPieceAt(nr, nc);
-				if(p == null && b.tryMoveForLegality(row, col, nr, nc)) {
-					legalMoves.add(new int[] {nr, nc});
-				}
-				else {
-					twoHopPotential = false;
-				}
-			}
-			nr = row - 1; nc = col - 1;
-			if(b.inBounds(nr, nc)) {
-				Piece p = b.getPieceAt(nr, nc);
-				if(p != null && p.getColor() != this.getColor() && b.tryMoveForLegality(row, col, nr, nc)) {
-					legalMoves.add(new int[] {nr, nc});
-					ep1 = false;
-				}
-			}
-			nr = row - 1; nc = col + 1;
-			if(b.inBounds(nr, nc)) {
-				Piece p = b.getPieceAt(nr, nc);
-				if(p != null && p.getColor() != this.getColor() && b.tryMoveForLegality(row, col, nr, nc)) {
-					legalMoves.add(new int[] {nr, nc});
-					ep2 = false;
-				}
-			}
-			if(twoHopPotential && !this.hasMoved()) {
-				nr = row - 2; nc = col;
-				if(b.inBounds(nr, nc)) {
-					Piece p = b.getPieceAt(nr, nc);
-					if(p == null && b.tryMoveForLegality(row, col, nr, nc)) {
-						legalMoves.add(new int[] {nr, nc});
-					}
-				}
-			}
-			Piece p;
-			if(	ep1 && b.inBounds(row, col - 1) && (p = b.getPieceAt(row, col - 1)) instanceof Pawn && 
-				p.getColor() != this.getColor() &&
-				b.getPieceAt(row - 1, col - 1) == null && b.checkEnPassantLegality(row, col, row - 1, col - 1)){
-				legalMoves.add(new int[] {row - 1, col - 1});
-			}
-			if(	ep2 && b.inBounds(row, col + 1) && (p = b.getPieceAt(row, col + 1)) instanceof Pawn && 
-				p.getColor() != this.getColor() &&
-				b.getPieceAt(row - 1, col + 1) == null && b.checkEnPassantLegality(row, col, row - 1, col + 1)){
-				legalMoves.add(new int[] {row - 1, col + 1});
-			}
-		}
-		else {
-			nr = row + 1; nc = col;
-			if(b.inBounds(nr, nc)) {
-				Piece p = b.getPieceAt(nr, nc);
-				if(p == null && b.tryMoveForLegality(row, col, nr, nc)) {
-					legalMoves.add(new int[] {nr, nc});
-				}
-				else {
-					twoHopPotential = false;
-				}
-			}
-			nr = row + 1; nc = col - 1;
-			if(b.inBounds(nr, nc)) {
-				Piece p = b.getPieceAt(nr, nc);
-				if(p != null && p.getColor() != this.getColor() && b.tryMoveForLegality(row, col, nr, nc)) {
-					legalMoves.add(new int[] {nr, nc});
-					ep1 = false;
-				}
-			}
-			nr = row + 1; nc = col + 1;
-			if(b.inBounds(nr, nc)) {
-				Piece p = b.getPieceAt(nr, nc);
-				if(p != null && p.getColor() != this.getColor() && b.tryMoveForLegality(row, col, nr, nc)) {
-					legalMoves.add(new int[] {nr, nc});
-					ep2 = false;
-				}
-			}
-			if(twoHopPotential && !this.hasMoved()) { 
-				nr = row + 2; nc = col;
-				if(b.inBounds(nr, nc)) {
-					Piece p = b.getPieceAt(nr, nc);
-					if(p == null && b.tryMoveForLegality(row, col, nr, nc)) {
-						legalMoves.add(new int[] {nr, nc});
-					}
-				}
-			}
-			Piece p;
-			if(	ep1 && b.inBounds(row, col - 1) && (p = b.getPieceAt(row, col - 1)) instanceof Pawn && 
-				p.getColor() != this.getColor() &&
-				b.getPieceAt(row + 1, col - 1) == null && b.checkEnPassantLegality(row, col, row + 1, col - 1)){
-				legalMoves.add(new int[] {row + 1, col - 1});
-			}
-			if(	ep2 && b.inBounds(row, col + 1) && (p = b.getPieceAt(row, col + 1)) instanceof Pawn && 
-				p.getColor() != this.getColor() &&
-				b.getPieceAt(row + 1, col + 1) == null && b.checkEnPassantLegality(row, col, row + 1, col + 1)){
-				legalMoves.add(new int[] {row + 1, col + 1});
-			}
-		}
-		return legalMoves;
-	}
-	*/
 
 	
 
@@ -232,5 +119,9 @@ public class Pawn extends Piece{
 		return POINT_VALUE;
 	}
 
-	
+	private static final PieceType pieceType = PieceType.define("Pawn", false);
+	@Override
+	public PieceType getPieceType() {
+		return pieceType;
+	}
 }

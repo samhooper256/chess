@@ -1,9 +1,11 @@
 package chess.base;
 
+import chess.util.ConditionClass;
 import javafx.application.Platform;
 import javafx.scene.shape.Circle;
 import javafx.scene.shape.Shape;
 
+@ConditionClass(name="legal other move and capture")
 public class LegalOtherMoveAndCapture extends LegalAction{
 	private final int startRow, startCol;
 	public LegalOtherMoveAndCapture(int startRow, int startCol, int destRow, int destCol) {

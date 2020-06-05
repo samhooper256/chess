@@ -41,11 +41,20 @@ a.addCondition(Condition.andAll(
 
 */
 
-enum Flag{
-	DESTINATION, ORIGIN, BOARD, SELF
-}
+
 public abstract class Condition{
-	
+	public static final Method[] postConstructionModifierMethods;
+	static {
+		postConstructionModifierMethods = new Method[3];
+		try {
+			postConstructionModifierMethods[0] = Condition.class.getMethod("and", Condition.class, Condition.class);
+			postConstructionModifierMethods[1] = Condition.class.getMethod("or", Condition.class, Condition.class);
+			postConstructionModifierMethods[2] = Condition.class.getMethod("xor", Condition.class, Condition.class);
+		} catch (NoSuchMethodException | SecurityException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+	}
 	/////////////////////////////////////////////////////////////////////////////
 	/* Common Conditions have been made as public static final variables below.*/
 	/* ALL OF THESE CONDITIONS COULD BE MADE ON THEIR OWN. They provide no new */
@@ -188,22 +197,39 @@ public abstract class Condition{
 		return result;
 	}
 	
+	@AFC(name="destination tile", returnType=Board.Tile.class)
 	public static ConditionBuilder onDest() {
 		return new ConditionBuilder(Flag.DESTINATION);
 	}
+	
+	@AFC(name="start tile", returnType=Board.Tile.class)
 	public static ConditionBuilder onStart() {
 		return new ConditionBuilder(Flag.ORIGIN);
 	}
+	
+	@AFC(name="board", returnType=Board.class)
 	public static ConditionBuilder onBoard() {
 		return new ConditionBuilder(Flag.BOARD);
 	}
+	
+	@AFC(name="acting piece", returnType=Piece.class)
 	public static ConditionBuilder onSelf() {
 		return new ConditionBuilder(Flag.SELF);
 	}
 	public static ConditionBuilder onDestRelative(int row, int col) {
-		return new ConditionBuilder(new RelativeTile(row, col, Flag.DESTINATION));
+		return new ConditionBuilder(new RelativeTile(
+				new IntegerPath(row), new IntegerPath(col), Flag.DESTINATION));
 	}
 	public static ConditionBuilder onStartRelative(int row, int col) {
+		return new ConditionBuilder(
+				new RelativeTile(new IntegerPath(row), new IntegerPath(col), Flag.ORIGIN));
+	}
+	@AFC(name="relative tile to destination", returnType=Board.Tile.class, paramDescriptions={"row","column"})
+	public static ConditionBuilder onDestRelative(IntegerPath row, IntegerPath col) {
+		return new ConditionBuilder(new RelativeTile(row, col, Flag.DESTINATION));
+	}
+	@AFC(name="relative tile to start", returnType=Board.Tile.class, paramDescriptions={"row","column"})
+	public static ConditionBuilder onStartRelative(IntegerPath row, IntegerPath col) {
 		return new ConditionBuilder(new RelativeTile(row, col, Flag.ORIGIN));
 	}
 	public static ConditionBuilder on(Object o) {
@@ -213,15 +239,15 @@ public abstract class Condition{
 	public static Condition not(Condition c1) {
 		return new NOTCondition(c1);
 	}
-	
+	@ConditionCombiner(name="and")
 	public static Condition and(Condition c1, Condition c2) {
 		return new ANDCondition(c1, c2);
 	}
-	
+	@ConditionCombiner(name="or")
 	public static Condition or(Condition c1, Condition c2) {
 		return new ORCondition(c1, c2);
 	}
-	
+	@ConditionCombiner(name="xor")
 	public static Condition xor(Condition c1, Condition c2) {
 		return new XORCondition(c1, c2);
 	}
@@ -245,86 +271,25 @@ public abstract class Condition{
 
 class RelativeTile{
 	public Flag relativeTo;
-	public int row, col;
+	public IntegerPath row, col;
 	
-	public RelativeTile(int r, int c, Flag rel) {
+	public RelativeTile(IntegerPath r, IntegerPath c, Flag rel) {
 		this.row = r;
 		this.col = c;
 		this.relativeTo = rel;
 	}
-}
-
-abstract class PathBase{
-	protected Object base;
-	/*
-	 * If calls is empty OR null, base can be used
-	 * */
-	protected ArrayList<Member> calls;
-	public PathBase(Object base, ArrayList<Member> calls) {
-		this.base = base;
-		this.calls = calls;
+	
+	public int calcRow(Board b, int startRow, int startCol, int destRow, int destCol) {
+		return row.get(b, startRow, startCol, destRow, destCol);
 	}
 	
-	public Object get(Board b, int startRow, int startCol, int destRow, int destCol) {
-		Object end;
-		if(base instanceof Flag) {
-			if(base == Flag.DESTINATION) {
-				end = b.getTileAt(destRow, destCol);
-			}
-			else if(base == Flag.ORIGIN) {
-				end = b.getTileAt(startRow, startCol);
-			}
-			else if(base == Flag.BOARD) {
-				end = b;
-			}
-			else if(base == Flag.SELF) {
-				end = b.getPieceAt(startRow, startCol);
-			}
-			else {
-				throw new IllegalArgumentException("bad news bears");
-			}
-		}
-		else if(base instanceof RelativeTile) {
-			RelativeTile helper = (RelativeTile) base;
-			if(helper.relativeTo == Flag.ORIGIN) {
-				end = b.getTileAt(startRow + helper.row, startCol + helper.col);
-			}
-			else if(helper.relativeTo == Flag.DESTINATION) {
-				end = b.getTileAt(destRow + helper.row, destCol + helper.col);
-			}
-			else {
-				throw new IllegalArgumentException("bad news bears");
-			}
-		}
-		else {
-			end = base;
-		}
-		
-		if(calls == null) {
-			return end;
-		}
-		Object current = end;
-		for(int i = 0; i < calls.size(); i++) {
-			try {
-				Member m = calls.get(i);
-				if(m instanceof Method) {
-					current = ((Method) calls.get(i)).invoke(current);
-				}
-				else { //instance of Field
-					current = ((Field) calls.get(i)).get(current);
-				}
-			} catch (IllegalAccessException e) {
-				// Auto-generated catch block
-				e.printStackTrace();
-			} catch (IllegalArgumentException e) {
-				// Auto-generated catch block
-				e.printStackTrace();
-			} catch (InvocationTargetException e) {
-				// Auto-generated catch block
-				e.printStackTrace();
-			}
-		}
-		return current;
+	public int calcCol(Board b, int startRow, int startCol, int destRow, int destCol) {
+		return col.get(b, startRow, startCol, destRow, destCol);
+	}
+	
+	@Override
+	public String toString() {
+		return "[RelativeTile:relativeTo="+relativeTo+", row="+row+", col="+col+"]";
 	}
 }
 
@@ -339,6 +304,11 @@ class SingleBooleanCondition extends Condition{
 	@Override
 	public boolean eval(Board b, int startRow, int startCol, int destRow, int destCol) {
 		return isInverted ^ path.get(b, startRow, startCol, destRow, destCol).booleanValue();
+	}
+	
+	@Override
+	public String toString() {
+		return "SingleBooleanCondition on boolpath="+path;
 	}
 }
 
@@ -474,29 +444,29 @@ class IntegerNotEqualsCondition extends Condition{
 	}
 }
 
-class ObjectReferenceEqualsCondition extends Condition{
+class ObjectEqualsCondition extends Condition{
 	ObjectPath path1, path2;
-	public ObjectReferenceEqualsCondition(ObjectPath path1, ObjectPath path2) {
+	public ObjectEqualsCondition(ObjectPath path1, ObjectPath path2) {
 		this.path1 = path1;
 		this.path2 = path2;
 	}
 	@Override
 	public boolean eval(Board b, int startRow, int startCol, int destRow, int destCol) {
-		return 	path1.get(b, startRow, startCol, destRow, destCol) ==
-				path2.get(b, startRow, startCol, destRow, destCol);
+		return 	path1.get(b, startRow, startCol, destRow, destCol).equals(
+				path2.get(b, startRow, startCol, destRow, destCol));
 	}
 }
 
-class ObjectNotReferenceEqualsCondition extends Condition{
+class ObjectNotEqualsConditions extends Condition{
 	ObjectPath path1, path2;
-	public ObjectNotReferenceEqualsCondition(ObjectPath path1, ObjectPath path2) {
+	public ObjectNotEqualsConditions(ObjectPath path1, ObjectPath path2) {
 		this.path1 = path1;
 		this.path2 = path2;
 	}
 	@Override
 	public boolean eval(Board b, int startRow, int startCol, int destRow, int destCol) {
-		return 	path1.get(b, startRow, startCol, destRow, destCol) !=
-				path2.get(b, startRow, startCol, destRow, destCol);
+		return 	!path1.get(b, startRow, startCol, destRow, destCol).equals(
+				path2.get(b, startRow, startCol, destRow, destCol));
 	}
 }
 
@@ -533,6 +503,25 @@ class ObjectInstanceOfCondition extends Condition{
 	@Override
 	public boolean eval(Board b, int startRow, int startCol, int destRow, int destCol) {
 		return 	caster.isInstance(path.get(b, startRow, startCol, destRow, destCol));
+	}
+}
+
+class ObjectIsPieceCondition extends Condition{
+	ObjectPath path;
+	String pieceName;
+	
+	public ObjectIsPieceCondition(ObjectPath path, String pieceName) {
+		this.path = path;
+		this.pieceName = pieceName;
+	}
+	
+	@Override
+	public boolean eval(Board b, int startRow, int startCol, int destRow, int destCol) {
+		Object obj = path.get(b, startRow, startCol, destRow, destCol);
+		if(obj != null && obj instanceof Piece) {
+			return ((Piece) obj).getPieceName().equals(pieceName);
+		}
+		return false;
 	}
 }
 

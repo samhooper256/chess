@@ -1,13 +1,13 @@
-package chess.base;
+package chess.piecebuilder;
 
 import java.io.File;
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
 
-import chess.util.ActionTree;
-import chess.util.MoveAndCaptureAction;
-import javafx.beans.binding.Binding;
+import chess.base.CustomPiece;
+import chess.base.Piece;
+import chess.base.WrappedImageView;
+import chess.util.InputVerification;
 import javafx.beans.binding.Bindings;
 import javafx.beans.binding.NumberBinding;
 import javafx.beans.binding.StringExpression;
@@ -295,6 +295,9 @@ public class PieceBuilder extends Stage implements InputVerification{
 			result &= false;
 		}
 		result &= actionTreeBuilder.verifyInput();
+		if(result) {
+			System.out.println("****INPUT SUCCESSFULLY VERIFIED****");
+		}
 		return result;
 	}
 	

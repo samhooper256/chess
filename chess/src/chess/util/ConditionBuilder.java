@@ -11,12 +11,12 @@ import chess.base.Piece;
 
 public class ConditionBuilder{
 	Object base;
-	ArrayList<Member> calls;
+	ArrayList<MemberAccess> accesses;
 	Class<?> currentClass;
 	
 	public ConditionBuilder(Object base){
 		this.base = base;
-		this.calls = new ArrayList<>();
+		this.accesses = new ArrayList<>();
 		if(base instanceof Flag) {
 			if(base == Flag.DESTINATION || base == Flag.ORIGIN) {
 				currentClass = Tile.class;
@@ -43,7 +43,7 @@ public class ConditionBuilder{
 		Field f;
 		try {
 			f = currentClass.getField(name);
-			calls.add(f);
+			accesses.add(new MemberAccess(f));
 			currentClass = f.getType();
 		} catch (NoSuchFieldException e) {
 			// Auto-generated catch block
@@ -55,11 +55,11 @@ public class ConditionBuilder{
 		return this;
 	}
 	
-	public ConditionBuilder call(String name) {
+	public ConditionBuilder call(String name, Object...args) {
 		Method m;
 		try {
 			m = currentClass.getMethod(name);
-			calls.add(m);
+			accesses.add(new MemberAccess(m, args));
 			currentClass = m.getReturnType();
 			if(currentClass == null) {
 				throw new IllegalArgumentException("no void method calls.");
@@ -76,27 +76,45 @@ public class ConditionBuilder{
 		return this;
 	}
 	
+	public ConditionBuilder call(Method m, Object...args) {
+		try {
+			accesses.add(new MemberAccess(m, args));
+			currentClass = m.getReturnType();
+			if(currentClass == null) {
+				throw new IllegalArgumentException("no void method calls.");
+			}
+		}
+		catch (SecurityException e) {
+			// Auto-generated catch block
+			e.printStackTrace();
+		}
+		
+		
+		return this;
+	}
+
+	
 	public BoolPath toBool() {
-		if(currentClass == Boolean.class || currentClass == boolean.class) {
-			return new BoolPath(base, calls);
+		if(currentClass == boolean.class) {
+			return new BoolPath(base, accesses);
 		}
 		else {
-			throw new IllegalArgumentException("Calls/Properties do not lead to a boolean/Boolean");
+			throw new IllegalArgumentException("Calls/Properties do not lead to a boolean");
 		}
 	}
 	
 	public IntegerPath toInt() {
-		if(currentClass == Integer.class || currentClass == int.class) {
-			return new IntegerPath(base, calls);
+		if(currentClass == int.class) {
+			return new IntegerPath(base, accesses);
 		}
 		else {
-			throw new IllegalArgumentException("Calls/Properties do not lead to an int/Integer");
+			throw new IllegalArgumentException("Calls/Properties do not lead to an int");
 		}
 	}
 	
 	public ObjectPath toObj() {
 		if(!currentClass.isPrimitive()) {
-			return new ObjectPath(base, calls);
+			return new ObjectPath(base, accesses);
 		}
 		else {
 			throw new IllegalArgumentException("Calls/Properties do not lead to an Object");

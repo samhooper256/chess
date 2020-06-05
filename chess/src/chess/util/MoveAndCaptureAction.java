@@ -17,7 +17,7 @@ import chess.base.Piece;
 public abstract class MoveAndCaptureAction extends chess.util.Action{
 	private MoveAndCaptureAction() {}
 	
-	@User(params={"relative row", "relative column", "conditions"})
+	@User(params={"relative row", "relative column"})
 	public static RelativeMoveAndCaptureAction relative(int relRow, int relCol, Condition... cons) {
 		return new RelativeMoveAndCaptureAction(relRow, relCol, cons);
 	}

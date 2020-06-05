@@ -59,7 +59,7 @@ public abstract class Action {
 			return 0;
 		}
 		
-		final int size = b.getBoardSizeAsInt();
+		final int size = b.getBoardSize();
 		
 		int rowDist, colDist;
 		

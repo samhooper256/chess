@@ -120,7 +120,6 @@ public class CustomPiece extends Piece{
 
 	@Override
 	public PieceType getPieceType() {
-		// TODO Auto-generated method stub
-		return null;
+		return pieceType;
 	}
 }

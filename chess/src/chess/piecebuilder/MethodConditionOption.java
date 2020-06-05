@@ -59,9 +59,9 @@ public class MethodConditionOption extends ConditionOption{
 			//TODO Do something?
 		}
 		else {
-			ConditionChoiceBox newCB = new ConditionChoiceBox(super.choiceBox.nodeToAddTo);
+			ConditionChoiceBox newCB = new ConditionChoiceBox((Pane & ErrorSubmitable) super.choiceBox.nodeToAddTo);
 			if(method.getParameterCount() > 0) {
-				ParameterBlock pBlock = new ParameterBlock(method);
+				ParameterBlock pBlock = new ParameterBlock(method, super.choiceBox);
 				children.add(pBlock);
 			}
 			for(Method m : returnType.getMethods()) {

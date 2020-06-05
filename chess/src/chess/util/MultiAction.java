@@ -132,39 +132,21 @@ public abstract class MultiAction extends chess.util.Action{
 				ArrayList<LegalAction> legals = new ArrayList<>();
 				for(int i = 0; i < actions.size(); i++) {
 					SubMulti act = actions.get(i);
-					if(act instanceof SubMulti.MNC) {
-						mnc = (SubMulti.MNC) act;
+					Set<? extends LegalAction> actLegals = act.getLegals(b, startRow, startCol, finalDestRow, finalDestCol);
+					if(actLegals.isEmpty()) {
+						if(states.get(i).booleanValue()) {
+							return Collections.emptySet();
+						}
 					}
 					else {
-						Set<? extends LegalAction> actLegals = act.getLegals(b, startRow, startCol, finalDestRow, finalDestCol);
-						if(actLegals.isEmpty()) {
-							if(states.get(i)) {
-								return Collections.emptySet();
-							}
-						}
-						else {
-							legals.add(actLegals.iterator().next());
-						}
+						legals.addAll(actLegals);
 					}
 				}
-				if(mnc != null) {
-					Set<LegalMulti> end = new HashSet<>();
-					for(LegalAction leg : mnc.getLegals(b, startRow, startCol, finalDestRow, finalDestCol)) {
-						legals.add(leg);
-						//LegalMulti's constructor copies the "legals" ArrayList, so it's okay to reuse it.
-						end.add(new LegalMulti(finalDestRow, finalDestCol, legals));
-						legals.remove(legals.size() - 1);
-					}
-					return end;
+				if(legals.isEmpty()) {
+					return Collections.emptySet();
 				}
 				else {
-					if(legals.isEmpty()) {
-						return Collections.emptySet();
-					}
-					else {
-						Set<? extends LegalAction> s = Collections.singleton(new LegalMulti(finalDestRow, finalDestCol, legals));
-						return s;
-					}
+					return Collections.singleton(new LegalMulti(finalDestRow, finalDestCol, legals));
 				}
 			}
 			else {

@@ -1,12 +1,13 @@
 package chess.piecebuilder;
 
+import chess.util.InputVerification;
 import chess.util.IntTextField;
 import chess.util.IntegerPath;
 import javafx.collections.ObservableList;
 import javafx.scene.Node;
 import javafx.scene.layout.Pane;
 
-public class IntegerLiteralConditionOption extends ConditionOption{
+public class IntegerLiteralConditionOption extends ConditionOption implements InputVerification{
 	private IntTextField followingIntTextField;
 	protected IntegerLiteralConditionOption(ConditionChoiceBox choiceBox) {
 		super(choiceBox);
@@ -40,5 +41,17 @@ public class IntegerLiteralConditionOption extends ConditionOption{
 	
 	public IntegerPath getIntegerPath() {
 		return new IntegerPath(getIntValue());
+	}
+
+	@Override
+	public boolean verifyInput() {
+		//System.out.println("verifying input of IntegerLiteralConditionOption...");
+		if(followingIntTextField == null) {
+			//System.out.println("Following inttextfield was null");
+			return false;
+		}
+		boolean result = followingIntTextField.verifyInput();
+		//System.out.println("result = " + result);
+		return result;
 	}
 }

@@ -797,7 +797,6 @@ public class Board extends StackPane{
 				isHighlighted = value;
 			}
 			
-			// TODO Auto-generated method stub
 			synchronized(Tile.this) {
 				if(isHighlighted) {
 					Tile.this.setStyle("-fx-background-color: " + ((row+col) % 2 == 0 ? LIGHT_COLOR_SELECTED : DARK_COLOR_SELECTED) + ";");
@@ -1818,6 +1817,26 @@ public class Board extends StackPane{
 			
 			return anyValid;
 		}
+		else if(current instanceof LegalSummon) {
+			LegalSummon pro = (LegalSummon) current;
+			Piece onTile = this.board[startRow][startCol].currentPiece;
+			boolean anyValid = false;
+			for(Iterator<String> itr = pro.getOptions().iterator(); itr.hasNext();) {
+				String pieceName = itr.next();
+				this.board[pro.row()][pro.col()].currentPiece = Piece.forName(pieceName, color);
+				result = tryMultiForLegality(startRow, startCol, action, index + 1, color);
+				if(result) {
+					anyValid = true;
+				}
+				else {
+					itr.remove();
+				}
+			}
+			
+			this.board[startRow][startCol].currentPiece = onTile;
+			
+			return anyValid;
+		}
 		else {
 			throw new IllegalArgumentException(current.getClass().getName() + " actions are not supported in multis yet.");
 		}
@@ -1953,7 +1972,6 @@ public class Board extends StackPane{
 		return board[row][col].currentPiece;
 	}
 	
-	@AFC(name="get tile at") //TODO REMOVE ANNOTATION
 	public Tile getTileAt(int row, int col) {
 		return board[row][col];
 	}

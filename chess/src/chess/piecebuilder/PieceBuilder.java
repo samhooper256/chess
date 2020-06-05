@@ -41,7 +41,7 @@ import javafx.scene.paint.Color;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
 
-public class PieceBuilder extends Stage implements InputVerification{
+public class PieceBuilder extends Stage implements InputVerification, ErrorSubmitable{
 	private Scene scene;
 	private StackPane outerStackPane, whiteImageOuter, blackImageOuter, whiteImageInternal, blackImageInternal;
 	private VBox outermostVBox, leftVBox, leftImageVBox;
@@ -222,6 +222,7 @@ public class PieceBuilder extends Stage implements InputVerification{
 		errorVBox = new VBox();
 		errorVBox.setPickOnBounds(false);
 		errorVBox.setAlignment(Pos.BOTTOM_RIGHT);
+		errorVBox.setMouseTransparent(true);
 		hideErrors = new Button("Hide errors");
 		hideErrors.prefHeightProperty().bind(outerStackPane.heightProperty().divide(12));
 		hideErrors.prefWidthProperty().bind(outerStackPane.widthProperty().divide(6));
@@ -284,23 +285,35 @@ public class PieceBuilder extends Stage implements InputVerification{
 	}
 	@Override
 	public boolean verifyInput() {
-		boolean result = true;
-		String name = nameTextField.getText().strip();
-		if(name == null || name.isEmpty() || name.isBlank()) {
-			submitErrorMessage("name field is blank");
-			result &= false;
+		try {
+			boolean result = true;
+			String name = nameTextField.getText().strip();
+			if(name == null || name.isEmpty() || name.isBlank()) {
+				submitErrorMessage("name field is blank");
+				result &= false;
+			}
+			if(name.indexOf('+') >= 0 || name.indexOf('-') >= 0) {
+				submitErrorMessage("Bad name (contains plus or minus"); //TODO actual error message
+				result &= false;
+			}
+			result &= actionTreeBuilder.verifyInput();
+			if(result) {
+				System.out.println("****INPUT SUCCESSFULLY VERIFIED****");
+			}
+			else {
+				System.out.println("Input Validation returned false.");
+			}
+			return result;
 		}
-		if(name.indexOf('+') >= 0 || name.indexOf('-') >= 0) {
-			submitErrorMessage("Bad name (contains plus or minus"); //TODO actual error message
-			result &= false;
+		catch(Exception exception) {
+			System.out.println("Exception occured while trying to validate input:");
+			exception.printStackTrace(System.err);
+			submitErrorMessage("Unkown Error occured.");
 		}
-		result &= actionTreeBuilder.verifyInput();
-		if(result) {
-			System.out.println("****INPUT SUCCESSFULLY VERIFIED****");
-		}
-		return result;
+		return false;
 	}
 	
+	@Override
 	public void submitErrorMessage(String message) {
 		if(!errorsShowing) {
 			errorVBox.getChildren().add(hideErrors);

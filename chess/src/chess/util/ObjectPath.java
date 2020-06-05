@@ -30,7 +30,7 @@ public class ObjectPath extends PathBase{
 		return new ObjectIsNotNullCondition(this);
 	}
 	
-	@AFC(name="does not exit")
+	@AFC(name="does not exist")
 	public Condition isNull() {
 		return new ObjectIsNullCondition(this);
 	}

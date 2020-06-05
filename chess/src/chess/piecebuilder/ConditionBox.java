@@ -79,11 +79,13 @@ public class ConditionBox extends VBox implements InputVerification, MultiCondit
 	private HBox defaultValueHBox, invertedHBox;
 	private ChoiceBox<Boolean> defaultValueChoiceBox;
 	private CheckBox invertedCheckBox;
-	public ConditionBox(Pane pane) {
-		if(!(pane instanceof ErrorSubmitable)) {
+	private ConditionBoxWrap conditionBoxWrap;
+	public ConditionBox(ConditionBoxWrap wrap, Pane ntad) {
+		if(!(ntad instanceof ErrorSubmitable)) {
 			throw new IllegalArgumentException("nodeToAddTo is not ErrorSubmitable");
 		}
-		this.nodeToAddTo = pane;
+		this.conditionBoxWrap = wrap;
+		this.nodeToAddTo = ntad;
 		this.setFillWidth(true);
 		flow = new ESFlow(this);
 		conditionNameLabel = new Label("Condition: ");
@@ -107,6 +109,7 @@ public class ConditionBox extends VBox implements InputVerification, MultiCondit
 		flow.setHgap(2);
 		flow.setVgap(4);
 		this.setOnDragOver(dragEvent -> {
+			//System.out.println("Condition box drag over");
 			Dragboard db = dragEvent.getDragboard();
 	        if (db.hasString() && db.getString().equals("multi-condition")) {
 	        	dragEvent.acceptTransferModes(TransferMode.COPY);
@@ -114,15 +117,19 @@ public class ConditionBox extends VBox implements InputVerification, MultiCondit
 	        dragEvent.consume();
 		});
 		this.setOnDragDropped(dragEvent -> {
-			//System.out.println("ConditionBox dropped (consumes): " + dragEvent);
+			System.out.println("ConditionBox dropped (consumes) ");
 			Dragboard db = dragEvent.getDragboard();
 	        boolean success = false;
 	        if (db.hasString() && db.getString().equals("multi-condition")) {
+	        	System.out.println(">has correct string");
 	        	Set<TransferMode> transferModes = db.getTransferModes();
 	        	if(transferModes.size() == 1 && transferModes.iterator().next() == TransferMode.COPY) {
+	        		System.out.println(">has valid transfer modes");
 	    			new MultiConditionBox(this); //constructor handles rewiring nodeToAddTo
+	    			success = true;
 	        	}
 	        }
+	        System.out.println(">success="+success);
 	        dragEvent.setDropCompleted(success);
 	        dragEvent.consume();
 		});
@@ -223,8 +230,7 @@ public class ConditionBox extends VBox implements InputVerification, MultiCondit
 			}
 		}
 		else {
-			boolean result = true;
-			//TODO Verify input for custom conditions
+			boolean result = customConditionBox.verifyInput();
 			return result;
 		}
 		
@@ -243,5 +249,14 @@ public class ConditionBox extends VBox implements InputVerification, MultiCondit
 	@Override
 	public void submitErrorMessage(String message) {
 		((ErrorSubmitable) nodeToAddTo).submitErrorMessage(message);
+	}
+
+	@Override
+	public ConditionBoxWrap getWrap() {
+		return conditionBoxWrap;
+	}
+	@Override
+	public String toString() {
+		return "[ConditionBox@"+hashCode()+", children="+getChildren()+"]";
 	}
 }

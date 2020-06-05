@@ -12,6 +12,7 @@ import java.util.List;
 
 import chess.util.Action;
 import chess.util.ActionTree;
+import chess.util.ActionTree.Choke;
 import chess.util.Condition;
 import chess.util.InputVerification;
 import chess.util.MoveAndCaptureAction;
@@ -48,7 +49,7 @@ import javafx.scene.layout.VBox;
 import javafx.scene.paint.Color;
 import javafx.scene.shape.Circle;
 
-public class ActionTreeBuilder extends StackPane implements InputVerification, ErrorSubmitable{
+public class ActionTreeBuilder extends StackPane implements InputVerification, ErrorSubmitable, Buildable<ActionTree>{
 	private static List<Class<? extends Action>> actionTypes = Action.getImmediateSubtypes();
 	
 	private TitledPane actionTreeTitledPane;
@@ -56,6 +57,7 @@ public class ActionTreeBuilder extends StackPane implements InputVerification, E
 	private MenuButton addActionButton;
 	private ScrollPane bcScrollPane;
 	private PieceBuilder pieceBuilder;
+	private Button addBottleneckButton;
 	
 	public ActionTreeBuilder(PieceBuilder pieceBuilder) {
 		super();
@@ -65,10 +67,13 @@ public class ActionTreeBuilder extends StackPane implements InputVerification, E
 		actionTreeVBox = new VBox(10);
 		actionTreeTitledPane = new TitledPane("Action Tree", actionTreeVBox);
 		actionTreeVBox.setPadding(new Insets(10,0,10,10));
-		addActionButton = new MenuButton("Add action");
-		actionTreeVBox.getChildren().addAll(addActionButton);
 		
+		addActionButton = new MenuButton("Add Action");
 		setupAddActionButton(addActionButton, actionTreeVBox.getChildren());
+		addBottleneckButton = new Button("Add Bottleneck");
+		addBottleneckButton.setOnAction(actionEvent -> ActionTreeBuilder.this.addBottleneck(actionTreeVBox.getChildren(), addActionButton));
+		actionTreeVBox.getChildren().addAll(addActionButton, addBottleneckButton);
+		
 		baseContent.getChildren().add(actionTreeTitledPane);
 		bcScrollPane = new ScrollPane(baseContent);
 		baseContent.minWidthProperty().bind(bcScrollPane.widthProperty());
@@ -107,14 +112,14 @@ public class ActionTreeBuilder extends StackPane implements InputVerification, E
 					e.printStackTrace();
 				}
 				MenuItem subMi = new MenuItem(actionVariant);
-				subMi.setOnAction(actionEvent -> addActionTo(whereToAddActionTPs, subActionType, childrenPossible));
+				subMi.setOnAction(actionEvent -> addActionTo(whereToAddActionTPs, subActionType, button, childrenPossible));
 				subItems.add(subMi);
 			}
 			items.add(mi);
 		}
 	}
 	
-	private void addActionTo(ObservableList<Node> children, Class<? extends Action> clazz, boolean childrenPossible) {
+	private void addActionTo(ObservableList<Node> children, Class<? extends Action> clazz, Node addBefore, boolean childrenPossible) {
 		String title = "???";
 		try {
 			title = 
@@ -142,7 +147,11 @@ public class ActionTreeBuilder extends StackPane implements InputVerification, E
 		else {
 			newActionTP = new ActionTP(title, vBox, creationMethod, childrenPossible);
 		}
-		children.add(children.size() - 1, newActionTP);
+		children.add(children.lastIndexOf(addBefore), newActionTP);
+	}
+	
+	private void addBottleneck(ObservableList<Node> children, Node addBefore) {
+		children.add(children.lastIndexOf(addBefore), new ChokeTP());
 	}
 	
 	@Override
@@ -157,12 +166,19 @@ public class ActionTreeBuilder extends StackPane implements InputVerification, E
 		}
 		return result;
 	}
+	
+	@Override
 	public ActionTree build() {
 		ActionTree tree = new ActionTree();
 		for(Node fxNode : actionTreeVBox.getChildren()) {
-			if(fxNode instanceof ActionTP) {
-				ActionTP actionTP = (ActionTP) fxNode;
-				tree.addPrimaryNode(actionTP.build());
+			if(fxNode instanceof Buildable) {
+				Object builtObject = ((Buildable<?>) fxNode).build();
+				if(builtObject instanceof ActionTree.TreeNode) {
+					tree.addPrimaryNode((ActionTree.TreeNode) builtObject);
+				}
+				else {
+					throw new UnsupportedOperationException("Unrecognized Buildable: " + fxNode);
+				}
 			}
 		}
 		return tree;
@@ -171,22 +187,9 @@ public class ActionTreeBuilder extends StackPane implements InputVerification, E
 	public void reset() {
 		actionTreeVBox.getChildren().clear();
 		actionTreeVBox.getChildren().add(addActionButton);
+		actionTreeVBox.getChildren().add(addBottleneckButton);
 	}
-	
-	
-	private static boolean isInteger(String s, int radix) {
-	    if(s.isEmpty()) return false;
-	    for(int i = 0; i < s.length(); i++) {
-	        if(i == 0 && s.charAt(i) == '-') {
-	            if(s.length() == 1) return false;
-	            else continue;
-	        }
-	        if(Character.digit(s.charAt(i),radix) < 0) return false;
-	    }
-	    return true;
-	}
-	
-	
+
 	private class ActionTP extends TitledPane implements InputVerification, Buildable<ActionTree.Node>{
 		protected Method creationMethod;
 		protected VBox vBox; //content of this TitledPane
@@ -220,7 +223,7 @@ public class ActionTreeBuilder extends StackPane implements InputVerification, E
 				}
 				else {
 					if(p.getType() == int.class) {
-						IntInputHBox hBox = new IntInputHBox(paramNames[i]);
+						IntInputHBox hBox = new IntInputHBox(paramNames[i], pieceBuilder);
 						vBox.getChildren().add(hBox);
 					}
 					else if(p.getType() == boolean.class) {
@@ -228,7 +231,7 @@ public class ActionTreeBuilder extends StackPane implements InputVerification, E
 						vBox.getChildren().add(hBox);
 					}
 					else if(p.getType() == ArrayList.class && ((ParameterizedType) p.getParameterizedType()).getActualTypeArguments()[0] == String.class) {
-						StringArrayListInputHBox hBox= new StringArrayListInputHBox(paramNames[i]);
+						PieceOptionsInputHBox hBox= new PieceOptionsInputHBox(paramNames[i], pieceBuilder);
 						vBox.getChildren().add(hBox);
 					}
 					else {
@@ -312,8 +315,8 @@ public class ActionTreeBuilder extends StackPane implements InputVerification, E
 					actualParams[apIndex] = booleanInput.getBoolean();
 					apIndex++;
 				}
-				else if(n instanceof StringArrayListInputHBox) {
-					StringArrayListInputHBox listInput = (StringArrayListInputHBox) n;
+				else if(n instanceof PieceOptionsInputHBox) {
+					PieceOptionsInputHBox listInput = (PieceOptionsInputHBox) n;
 					actualParams[apIndex] = listInput.getArrayList();
 					apIndex++;
 				}
@@ -340,12 +343,48 @@ public class ActionTreeBuilder extends StackPane implements InputVerification, E
 		}
 	}
 	
+	private class ChokeTP extends TitledPane implements InputVerification, Buildable<ActionTree.Choke>{
+		private VBox vBox; //the content of this TitledPane
+		private Button deleteChokeButton;
+		private ConditionTP conditionTP;
+		private ChildTP childTP;
+		public ChokeTP() {
+			vBox = new VBox(4);
+			this.setContent(vBox);
+			this.setText("Bottleneck");
+			conditionTP = new ConditionTP(pieceBuilder);
+			childTP = new ChildTP();
+			deleteChokeButton = new Button("Delete Bottleneck");
+			deleteChokeButton.setStyle("-fx-background-color: transparent; -fx-border-width: 1px; -fx-border-color: #b00000;"
+					+ "-fx-border-radius: 6; -fx-text-fill: #b00000;"); //TODO Put this in CSS (and add hover effect)
+			deleteChokeButton.setOnMouseClicked(mouseEvent -> {
+				((Pane) ChokeTP.this.getParent()).getChildren().remove(ChokeTP.this);
+			});
+			
+			Pane deleteChokeButtonWrap = new HBox(deleteChokeButton);
+			deleteChokeButtonWrap.setPadding(new Insets(10,0,0,0));
+			
+			vBox.getChildren().addAll(conditionTP, childTP, deleteChokeButtonWrap);
+		}
+		@Override
+		public ActionTree.Choke build() {
+			return new ActionTree.Choke(conditionTP.build(), childTP.build());
+		}
+
+		@Override
+		public boolean verifyInput() {
+			//TODO - does this need more work?
+			return conditionTP.verifyInput() & childTP.verifyInput(); //single & on purpose
+		}
+		
+	}
+	
 	private class MultiActionTP extends ActionTP{
 		protected SubActionsTP subTP;
 		
 		public MultiActionTP(String name, VBox content, Method creationMethod) {
 			super(name, content, creationMethod, true);
-			subTP = new SubActionsTP();
+			subTP = new SubActionsTP(pieceBuilder);
 			ObservableList<Node> children = super.vBox.getChildren();
 			
 			int ctpindex = children.indexOf(conditionPane);
@@ -361,15 +400,18 @@ public class ActionTreeBuilder extends StackPane implements InputVerification, E
 		public ActionTree.Node build(){
 			ActionTree.Node atNode = super.build();
 			MultiAction action = (MultiAction) atNode.getAction();
-			Pair<List<SubMulti>, List<Boolean>> subs = subTP.build();
-			action.addAllActions(subs.get1());
+			List<Pair<SubMulti, Boolean>> subs = subTP.build();
+			for(Pair<SubMulti, Boolean> p : subs) {
+				action.addAction(p.get1(), p.get2().booleanValue());
+			}
 			return atNode;
 		}
 	}
 	
-	private class ChildTP extends TitledPane implements InputVerification{
+	private class ChildTP extends TitledPane implements InputVerification, Buildable<List<ActionTree.TreeNode>>{
 		private VBox vBox; //content of this ChildTP
 		private MenuButton addActionButton;
+		private Button addBottleneckButton;
 		public ChildTP() {
 			super();
 			this.setText("Children");
@@ -377,7 +419,9 @@ public class ActionTreeBuilder extends StackPane implements InputVerification, E
 			vBox.setPadding(new Insets(10,0,10,10));
 			addActionButton = new MenuButton("Add action");
 			setupAddActionButton(addActionButton, vBox.getChildren());
-			vBox.getChildren().add(addActionButton);
+			addBottleneckButton = new Button("Add Bottleneck");
+			addBottleneckButton.setOnAction(actionEvent -> addBottleneck(vBox.getChildren(), addActionButton));
+			vBox.getChildren().addAll(addActionButton, addBottleneckButton);
 			this.setContent(vBox);
 			this.setExpanded(false);
 		}
@@ -395,11 +439,18 @@ public class ActionTreeBuilder extends StackPane implements InputVerification, E
 			return result;
 		}
 		
+		@Override
 		public List<ActionTree.TreeNode> build(){
 			List<ActionTree.TreeNode> end = new ArrayList<>();
 			for(Node fxNode : vBox.getChildren()) {
-				if(fxNode instanceof ActionTP) {
-					end.add(((ActionTP) fxNode).build());
+				if(fxNode instanceof Buildable) {
+					Object builtObject = ((Buildable<?>) fxNode).build();
+					if(builtObject instanceof ActionTree.TreeNode) {
+						end.add((ActionTree.TreeNode) builtObject);
+					}
+					else {
+						throw new UnsupportedOperationException("Unrecognized Buildable: " + fxNode);
+					}
 				}
 			}
 			return end;
@@ -407,93 +458,6 @@ public class ActionTreeBuilder extends StackPane implements InputVerification, E
 
 	}
 	
-	private class IntInputHBox extends HBox implements InputVerification{
-		private static final int SPACING = 5;
-		private TextField textField;
-		public IntInputHBox(String parameterName) {
-			super(SPACING);
-			this.setAlignment(Pos.CENTER_LEFT);
-			this.getChildren().add(new Label(String.format("%s (integer): ", parameterName)));
-			textField = new TextField();
-			this.getChildren().add(textField);
-		}
-		
-		public boolean verifyInput() {
-			System.out.println("Verifying int input");
-			boolean result = isInteger(textField.getText().strip(), 10);
-			if(!result) {
-				pieceBuilder.submitErrorMessage(((Label) this.getChildren().get(0)).getText() + " is invalid");
-			}
-			return result;
-		}
-		
-		//isValid should be called right before this to avoid an exception
-		public int getInt() {
-			return Integer.parseInt(textField.getText().strip());
-		}
-	}
-	
-	//Does not implement InputVerification because input will always be valid
-	private class BooleanInputHBox extends HBox{
-		private static final int SPACING = 5;
-		private CheckBox checkBox;
-		public BooleanInputHBox(String parameterName) {
-			super(SPACING);
-			this.setAlignment(Pos.CENTER_LEFT);
-			this.getChildren().add(new Label(String.format("%s: ", parameterName)));
-			checkBox = new CheckBox();
-			this.getChildren().add(checkBox);
-		}
-		
-		public boolean getBoolean() {
-			return checkBox.isSelected();
-		}
-	}
-	
-	private class StringArrayListInputHBox extends HBox implements InputVerification{
-		private static final int SPACING = 5;
-		private TilePane tilePane;
-		public StringArrayListInputHBox(String parameterName) {
-			super(SPACING);
-			this.setAlignment(Pos.CENTER_LEFT);
-			tilePane = new TilePane();
-			tilePane.setSnapToPixel(true);
-			tilePane.setTileAlignment(Pos.CENTER_LEFT);
-			tilePane.setVgap(5);
-			tilePane.setHgap(5);
-			ObservableList<Node> tilePaneChildren = tilePane.getChildren();
-			for(String s : pieceBuilder.currentPieceNames) {
-				if(!s.equals("King")) {
-					tilePaneChildren.add(new CheckBox(s));
-				}
-			}
-			this.getChildren().addAll(new Label(String.format("%s: ", parameterName)), tilePane);
-		}
-		
-		public ArrayList<String> getArrayList() {
-			ArrayList<String> end = new ArrayList<>();
-			for(Node fxNode : tilePane.getChildren()) {
-				CheckBox cb = (CheckBox) fxNode;
-				if(cb.isSelected()) {
-					end.add(cb.getText());
-				}
-			}
-			return end;
-		}
-
-		@Override
-		public boolean verifyInput() {
-			for(Node fxNode : tilePane.getChildren()) {
-				CheckBox cb = (CheckBox) fxNode;
-				if(cb.isSelected()) {
-					return true;
-				}
-			}
-			pieceBuilder.submitErrorMessage(((Label) this.getChildren().get(0)).getText() + " needs at least one piece");
-			return false;
-		}
-	}
-
 	@Override
 	public void submitErrorMessage(String message) {
 		pieceBuilder.submitErrorMessage(message);

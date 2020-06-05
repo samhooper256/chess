@@ -61,8 +61,16 @@ public class CustomConditionBox extends VBox implements InputVerification, Error
 	
 	@Override
 	public boolean verifyInput() {
-		// TODO verify inputs!
-		return true;
+		boolean result = true;
+		//System.out.println("my children = " + getChildren());
+		for(Node fxNode : getChildren()) {
+			//System.out.println("verifying " + fxNode);
+			if(fxNode instanceof InputVerification && !((InputVerification) fxNode).verifyInput()) {
+				//System.out.println("\treturning because invalid");
+				result = false;
+			}
+		}
+		return result;
 	}
 
 	@Override
@@ -132,13 +140,13 @@ public class CustomConditionBox extends FlowPane implements InputVerification, B
 	
 	@Override
 	public boolean verifyInput() {
-		// TODO verify inputs!
+		// todo verify inputs!
 		return true;
 	}
 
 	@Override
 	public Condition build() {
-		// TODO Auto-generated method stub
+		// todo Auto-generated method stub
 		return null;
 	}
 }

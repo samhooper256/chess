@@ -3,6 +3,7 @@ package chess.piecebuilder;
 import java.lang.reflect.Method;
 
 import chess.util.BoolPath;
+import chess.util.InputVerification;
 import chess.util.IntTextField;
 import chess.util.IntegerPath;
 import javafx.collections.ObservableList;
@@ -10,10 +11,12 @@ import javafx.scene.Node;
 import javafx.scene.control.CheckBox;
 import javafx.scene.layout.HBox;
 
-public class ParameterBlock extends HBox implements Buildable<Object[]>{
+public class ParameterBlock extends HBox implements Buildable<Object[]>, InputVerification, ErrorSubmitable{
 	private Method method;
-	public ParameterBlock(Method m) {
+	private ErrorSubmitable submitErrorsTo;
+	public ParameterBlock(Method m, ErrorSubmitable es) {
 		this.method = m;
+		this.submitErrorsTo = es;
 		for(Class<?> clazz : m.getParameterTypes()) {
 			if(clazz == int.class || clazz == IntegerPath.class) {
 				this.getChildren().add(new IntegerPathBuilder(this));
@@ -37,5 +40,19 @@ public class ParameterBlock extends HBox implements Buildable<Object[]>{
 			params[i] = ((PathBuilder) children.get(i)).build();
 		}
 		return params;
+	}
+	@Override
+	public void submitErrorMessage(String message) {
+		submitErrorsTo.submitErrorMessage(message);
+	}
+	@Override
+	public boolean verifyInput() {
+		boolean result = true;
+		for(Node fxNode : getChildren()) {
+			if(fxNode instanceof InputVerification) {
+				result &= ((InputVerification) fxNode).verifyInput();
+			}
+		}
+		return result;
 	}
 }

@@ -4,6 +4,7 @@ import java.lang.reflect.Method;
 
 import chess.util.AFC;
 import chess.util.BoolPath;
+import chess.util.InputVerification;
 import chess.util.IntegerPath;
 import chess.util.ObjectPath;
 import javafx.beans.value.ChangeListener;
@@ -53,7 +54,7 @@ public abstract class BuildFinisher extends ChoiceBox<Method> {
 	
 	public abstract PathBuilder getPrecedingBuilder();
 	
-	public static class BoolBuildFinisher extends BuildFinisher{
+	public static class BoolBuildFinisher extends BuildFinisher implements InputVerification, ErrorSubmitable{
 		private BoolPathBuilder precedingBuilder;
 		public BoolBuildFinisher(BoolPathBuilder precedingBuilder) {
 			super();
@@ -73,15 +74,11 @@ public abstract class BuildFinisher extends ChoiceBox<Method> {
 			      public void changed(ObservableValue<? extends Number> observableValue, Number number, Number number2) {
 			        Method choice = BoolBuildFinisher.this.getItems().get((Integer) number2);
 			        Class<?>[] paramTypes = choice.getParameterTypes();
-			        boolean nodeAdded = false;
+			        CustomConditionBox ccb = (CustomConditionBox) precedingBuilder.nodeToAddTo;
+			        int myIndex = ccb.getChildren().indexOf(BoolBuildFinisher.this);
+			        ConditionBox.clearPast(ccb.getChildren(), myIndex);
 			        for(int i = 0; i < paramTypes.length; i++) {
 			        	if(paramTypes[i] == BoolPath.class) {
-			        		CustomConditionBox ccb = (CustomConditionBox) precedingBuilder.nodeToAddTo;
-			        		if(!nodeAdded) {
-			        			int myIndex = ccb.getChildren().indexOf(BoolBuildFinisher.this);
-				        		ConditionBox.clearPast(ccb.getChildren(), myIndex);
-				        		nodeAdded = true;
-			        		}
 			        		ccb.addDropPathPane("bool", false);
 			        	}
 			        	else {
@@ -94,6 +91,19 @@ public abstract class BuildFinisher extends ChoiceBox<Method> {
 		@Override
 		public PathBuilder getPrecedingBuilder() {
 			return precedingBuilder;
+		}
+		@Override
+		public void submitErrorMessage(String message) {
+			precedingBuilder.submitErrorMessage(message);
+		}
+		@Override
+		public boolean verifyInput() {
+			boolean result = true;
+			if(BoolBuildFinisher.this.getSelectionModel().isEmpty()) {
+				submitErrorMessage("Boolean Path finisher has no selection");
+				result = false;
+			}
+			return result;
 		}
 	}
 	
@@ -118,15 +128,11 @@ public abstract class BuildFinisher extends ChoiceBox<Method> {
 			      public void changed(ObservableValue<? extends Number> observableValue, Number number, Number number2) {
 			        Method choice = IntegerBuildFinisher.this.getItems().get((Integer) number2);
 			        Class<?>[] paramTypes = choice.getParameterTypes();
-			        boolean nodeAdded = false;
+			        CustomConditionBox ccb = (CustomConditionBox) precedingBuilder.nodeToAddTo;
+			        int myIndex = ccb.getChildren().indexOf(IntegerBuildFinisher.this);
+			        ConditionBox.clearPast(ccb.getChildren(), myIndex);
 			        for(int i = 0; i < paramTypes.length; i++) {
 			        	if(paramTypes[i] == IntegerPath.class) {
-			        		CustomConditionBox ccb = (CustomConditionBox) precedingBuilder.nodeToAddTo;
-			        		if(!nodeAdded) {
-			        			int myIndex = ccb.getChildren().indexOf(IntegerBuildFinisher.this);
-				        		ConditionBox.clearPast(ccb.getChildren(), myIndex);
-				        		nodeAdded = true;
-			        		}
 			        		ccb.addDropPathPane("integer", false);
 			        	}
 			        	else {
@@ -157,7 +163,7 @@ public abstract class BuildFinisher extends ChoiceBox<Method> {
 				if(m.isAnnotationPresent(AFC.class)) {
 					//AFC afc = m.getAnnotation(AFC.class);
 					items.add(m);
-					if(m.getName().equals("referenceEquals")) {
+					if(m.getName().equals("isNotNull")) {
 						this.setValue(m);
 					}
 				}
@@ -170,28 +176,15 @@ public abstract class BuildFinisher extends ChoiceBox<Method> {
 			        Class<?>[] paramTypes = choice.getParameterTypes();
 			        CustomConditionBox ccb = (CustomConditionBox) precedingBuilder.nodeToAddTo;
 			        int myIndex = ccb.getChildren().indexOf(ObjectBuildFinisher.this);
-			        ConditionBox.clearPast(ccb.getChildren(), myIndex + paramTypes.length);
-			        boolean nodeAdded = false;
+			        ConditionBox.clearPast(ccb.getChildren(), myIndex);
 			        for(int i = 0; i < paramTypes.length; i++) {
 			        	if(paramTypes[i] == ObjectPath.class) {
-			        		if(!nodeAdded) {
-				        		ConditionBox.clearPast(ccb.getChildren(), myIndex);
-				        		nodeAdded = true;
-			        		}
 			        		ccb.addDropPathPane("object", false);
 			        	}
 			        	else if(paramTypes[i] == Class.class) {
-			        		if(!nodeAdded) {
-				        		ConditionBox.clearPast(ccb.getChildren(), myIndex);
-				        		nodeAdded = true;
-			        		}
 			        		ccb.getChildren().add(new ConditionActionChooser());
 			        	}
 			        	else if(paramTypes[i] == String.class && choice.getName().equals("isPiece")){
-			        		if(!nodeAdded) {
-				        		ConditionBox.clearPast(ccb.getChildren(), myIndex);
-				        		nodeAdded = true;
-			        		}
 			        		ccb.getChildren().add(new ConditionPieceChooser());
 			        	}
 			        	else {
@@ -200,11 +193,6 @@ public abstract class BuildFinisher extends ChoiceBox<Method> {
 			        }
 			      }
 			    });
-		}
-		
-		@Override
-		public void postAdd() {
-			((CustomConditionBox) precedingBuilder.nodeToAddTo).addDropPathPane("object", false);
 		}
 		@Override
 		public PathBuilder getPrecedingBuilder() {

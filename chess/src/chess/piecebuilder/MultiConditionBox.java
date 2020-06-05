@@ -23,10 +23,10 @@ import javafx.scene.layout.Region;
 import javafx.scene.layout.VBox;
 import javafx.util.StringConverter;
 
-public class MultiConditionBox extends VBox implements InputVerification, MultiConditionPart{
-	private MultiConditionPart mcp1, mcp2;
+public class MultiConditionBox extends VBox implements MultiConditionPart{
 	private Pane nodeToAddTo;
 	private ChoiceBox<Method> choiceBox;
+	private ConditionBoxWrap conditionBoxWrap;
 	private static final StringConverter<Method> methodStringConverter = new StringConverter<>() {
 
 		@Override
@@ -41,29 +41,31 @@ public class MultiConditionBox extends VBox implements InputVerification, MultiC
 	};
 	public MultiConditionBox(MultiConditionPart first){
 		super(4);
+		System.out.println("Entered MCP constructor, mcp passed was: " + first);
 		this.setFillWidth(true);
-		this.mcp1 = first;
-		this.mcp2 = new ConditionBox(this);
-		this.nodeToAddTo = first.getNodeToAddTo();
-		first.setNodeToAddTo(this);
-		ObservableList<Node> children = nodeToAddTo.getChildren();
-		int index = children.indexOf(mcp1);
-		children.remove(mcp1);
-		//System.out.println("index = " + index);
-		//System.out.println(nodeToAddTo + "\n" + nodeToAddTo.getChildren());
+		this.conditionBoxWrap = first.getWrap();
+		MultiConditionPart mcp1, mcp2;
+		mcp1 = first;
+		mcp2 = new ConditionBox(conditionBoxWrap, this);
+		this.nodeToAddTo = mcp1.getNodeToAddTo();
+		int mcp1index = this.nodeToAddTo.getChildren().indexOf(mcp1);
+		//System.out.println("\tmcp1's ntad was: " + nodeToAddTo + ", but now that's my ntad");
+		mcp1.setNodeToAddTo(this);
+		//System.out.println("\now mcp1's ntad is" + this + " (this)");
+		nodeToAddTo.getChildren().remove(mcp1);
+		//System.out.println("\tmy ntad's children (after removing mcp1):" + nodeToAddTo.getChildren());
 		choiceBox = new ChoiceBox<>();
 		choiceBox.getItems().addAll(Condition.postConstructionModifierMethods);
 		choiceBox.setConverter(methodStringConverter);
 		choiceBox.setValue(Condition.postConstructionModifierMethods[0]);
 		this.getChildren().addAll((Node) mcp1, choiceBox, (Node) mcp2);
-		if(index >= 0) {
-			children.add(index, this);
-		}
-		else {
-			throw new IllegalArgumentException("It's not there???");
-		}
+		//System.out.println("\tmy children (after add 3 things):" + getChildren());
+		nodeToAddTo.getChildren().add(mcp1index, this);
+		//System.out.println("\tfinally, my ntad's children (after ntad.getChildren().add(mcp1index, this)): " + nodeToAddTo.getChildren());
+		
 		//TODO COde from this line to *** is the exact same as in CustomConditionBox - fix?
 		this.setOnDragOver(dragEvent -> {
+			//System.out.println("MultiConditionBox drag over");
 			Dragboard db = dragEvent.getDragboard();
 	        if (db.hasString() && db.getString().equals("multi-condition")) {
 	        	dragEvent.acceptTransferModes(TransferMode.COPY);
@@ -71,7 +73,7 @@ public class MultiConditionBox extends VBox implements InputVerification, MultiC
 	        dragEvent.consume();
 		});
 		this.setOnDragDropped(dragEvent -> {
-			//System.out.println("MultiConditionBox dropped (consumes): " + dragEvent);
+			//System.out.println("MultiConditionBox dropped (consumes)");
 			Dragboard db = dragEvent.getDragboard();
 	        boolean success = false;
 	        if (db.hasString() && db.getString().equals("multi-condition")) {
@@ -86,11 +88,12 @@ public class MultiConditionBox extends VBox implements InputVerification, MultiC
 		//***
 		
 		this.setStyle("-fx-border-width: 1px; -fx-border-color: rgba(38, 38, 255, 1.0);"); //TODO put in CSS (this and elsewhere)
+		System.out.println("created: " +this );
 	}
 	@Override
 	public boolean verifyInput() {
-		// TODO verify inputs!
-		return true;
+		return 	((InputVerification) getChildren().get(0)).verifyInput() &
+				((InputVerification) getChildren().get(2)).verifyInput(); //single & on purpose
 	}
 	
 	@Override
@@ -104,7 +107,7 @@ public class MultiConditionBox extends VBox implements InputVerification, MultiC
 	@Override
 	public Condition build() {
 		try {
-			return (Condition) choiceBox.getValue().invoke(null, mcp1.build(), mcp2.build());
+			return (Condition) choiceBox.getValue().invoke(null, ((Buildable<Condition>) getChildren().get(0)).build(), ((Buildable<Condition>) getChildren().get(0)).build());
 		} catch (IllegalAccessException | IllegalArgumentException | InvocationTargetException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
@@ -114,5 +117,13 @@ public class MultiConditionBox extends VBox implements InputVerification, MultiC
 	@Override
 	public void submitErrorMessage(String message) {
 		((ErrorSubmitable) nodeToAddTo).submitErrorMessage(message);
+	}
+	@Override
+	public ConditionBoxWrap getWrap() {
+		return conditionBoxWrap;
+	}
+	@Override
+	public String toString() {
+		return "[MutliConditionBox@"+hashCode()+", children="+getChildren()+"]";
 	}
 }

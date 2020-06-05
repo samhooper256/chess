@@ -7,9 +7,10 @@ import javafx.beans.value.ObservableValue;
 import javafx.scene.control.ChoiceBox;
 import javafx.scene.layout.Pane;
 
-public class ConditionChoiceBox extends ChoiceBox<ConditionOption>{
+//DON'T MAKE THIS InputVerifiable - see BoolPathBuilder.verifyInput()
+public class ConditionChoiceBox extends ChoiceBox<ConditionOption> implements ErrorSubmitable{
 	public Pane nodeToAddTo;
-	public ConditionChoiceBox(Pane ntad) {
+	public <T extends Pane & ErrorSubmitable> ConditionChoiceBox(T ntad) {
 		super();
 		this.nodeToAddTo = ntad;
 		ConditionChoiceBox.this.getSelectionModel().selectedIndexProperty().addListener(new ChangeListener<Number>() {
@@ -33,5 +34,10 @@ public class ConditionChoiceBox extends ChoiceBox<ConditionOption>{
 	 */
 	public void addMethod(String name, Method m) {
 		this.getItems().add(new MethodConditionOption(this, name, m));
+	}
+
+	@Override
+	public void submitErrorMessage(String message) {
+		((ErrorSubmitable) nodeToAddTo).submitErrorMessage(message);
 	}
 }

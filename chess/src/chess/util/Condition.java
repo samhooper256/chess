@@ -66,7 +66,7 @@ public abstract class Condition{
 	 * Destination tile must be either empty or have a piece of the opposite color.*/
 	@AFC(name="Destination is empty or has an enemy")
 	public static final Condition EOE = new Condition() {
-		public boolean eval(Board b, int startRow, int startCol, int destRow, int destCol) {
+		boolean eval(Board b, int startRow, int startCol, int destRow, int destCol) {
 			Piece p = b.getPieceAt(destRow, destCol);
 			return p == null || p.getColor() != b.getPieceAt(startRow, startCol).getColor();
 		}
@@ -75,7 +75,7 @@ public abstract class Condition{
 	/*POD = "Piece on Destination." Evals to true if there is a piece of any color on the destination.*/
 	@AFC(name="Piece on destination")
 	public static final Condition POD = new Condition() {
-		public boolean eval(Board b, int startRow, int startCol, int destRow, int destCol) {
+		boolean eval(Board b, int startRow, int startCol, int destRow, int destCol) {
 			Piece p = b.getPieceAt(destRow, destCol);
 			return p != null;
 		}
@@ -88,7 +88,7 @@ public abstract class Condition{
 	 */
 	@AFC(name="Piece on start")
 	public static final Condition POS = new Condition() {
-		public boolean eval(Board b, int startRow, int startCol, int destRow, int destCol) {
+		boolean eval(Board b, int startRow, int startCol, int destRow, int destCol) {
 			Piece p = b.getPieceAt(startRow, startCol);
 			return p != null;
 		}
@@ -98,7 +98,7 @@ public abstract class Condition{
 	 * It is the inverse of POD. It has a very nice acronym :) */
 	@AFC(name="Destination is empty")
 	public static final Condition DIE = new Condition() {
-		public boolean eval(Board b, int startRow, int startCol, int destRow, int destCol) {
+		boolean eval(Board b, int startRow, int startCol, int destRow, int destCol) {
 			Piece p = b.getPieceAt(destRow, destCol);
 			return p == null;
 		}
@@ -110,7 +110,7 @@ public abstract class Condition{
 	 */
 	@AFC(name="Start is empty")
 	public static final Condition SIE = new Condition() {
-		public boolean eval(Board b, int startRow, int startCol, int destRow, int destCol) {
+		boolean eval(Board b, int startRow, int startCol, int destRow, int destCol) {
 			Piece p = b.getPieceAt(startRow, startCol);
 			return p == null;
 		}
@@ -119,7 +119,7 @@ public abstract class Condition{
 	/*EOD = "Enemy on Destination." Evals to true if there is a piece of the opposite color on the destination.*/
 	@AFC(name="Enemy on destination")
 	public static final Condition EOD = new Condition() {
-		public boolean eval(Board b, int startRow, int startCol, int destRow, int destCol) {
+		boolean eval(Board b, int startRow, int startCol, int destRow, int destCol) {
 			Piece p = b.getPieceAt(destRow, destCol);
 			return p != null && p.getColor() != b.getPieceAt(startRow, startCol).getColor();
 		}
@@ -128,7 +128,7 @@ public abstract class Condition{
 	/*TOD = "Teammate on Destination." Evals to true if there is a piece of the same color on the destination.*/
 	@AFC(name="Teammate on destination")
 	public static final Condition TOD = new Condition() {
-		public boolean eval(Board b, int startRow, int startCol, int destRow, int destCol) {
+		boolean eval(Board b, int startRow, int startCol, int destRow, int destCol) {
 			Piece p = b.getPieceAt(destRow, destCol);
 			return p != null && p.getColor() == b.getPieceAt(startRow, startCol).getColor();
 		}
@@ -154,7 +154,7 @@ public abstract class Condition{
 	public static Condition onStartRelativeCheckable(int relRow, int relCol) {
 		return new Condition() {
 			@Override
-			public boolean eval(Board b, int startRow, int startCol, int destRow, int destCol) {
+			boolean eval(Board b, int startRow, int startCol, int destRow, int destCol) {
 				boolean myColor = b.getPieceAt(startRow, startCol).getColor();
 				int m = myColor == Piece.WHITE ? 1 : -1;
 				return b.getTileAt(startRow + m*relRow, startCol + m*relCol).isCheckableBy(myColor);
@@ -162,7 +162,7 @@ public abstract class Condition{
 		};
 	}
 	
-	protected abstract boolean eval(Board b, int startRow, int startCol, int destRow, int destCol);
+	abstract boolean eval(Board b, int startRow, int startCol, int destRow, int destCol);
 	
 	protected boolean evalOrFalse(Board b, int startRow, int startCol, int destRow, int destCol) {
 		boolean result;
@@ -180,7 +180,7 @@ public abstract class Condition{
 		try {
 			result = this.eval(b, startRow, startCol, destRow, destCol);
 		}
-		catch(Exception e) {
+		catch(Throwable e) {
 			return defaultValue;
 		}
 		return result;
@@ -302,7 +302,7 @@ class SingleBooleanCondition extends Condition{
 	}
 	
 	@Override
-	public boolean eval(Board b, int startRow, int startCol, int destRow, int destCol) {
+	boolean eval(Board b, int startRow, int startCol, int destRow, int destCol) {
 		return isInverted ^ path.get(b, startRow, startCol, destRow, destCol).booleanValue();
 	}
 	
@@ -320,7 +320,7 @@ class BooleanEqualsCondition extends Condition{
 	}
 	
 	@Override
-	public boolean eval(Board b, int startRow, int startCol, int destRow, int destCol) {
+	boolean eval(Board b, int startRow, int startCol, int destRow, int destCol) {
 		return 	path1.get(b, startRow, startCol, destRow, destCol).booleanValue() ==
 				path2.get(b, startRow, startCol, destRow, destCol).booleanValue();
 	}
@@ -334,7 +334,7 @@ class BooleanNotEqualsCondition extends Condition{
 	}
 	
 	@Override
-	public boolean eval(Board b, int startRow, int startCol, int destRow, int destCol) {
+	boolean eval(Board b, int startRow, int startCol, int destRow, int destCol) {
 		return 	path1.get(b, startRow, startCol, destRow, destCol).booleanValue() !=
 				path2.get(b, startRow, startCol, destRow, destCol).booleanValue();
 	}
@@ -347,7 +347,7 @@ class BooleanIsEnemyCondition extends Condition{
 	}
 	
 	@Override
-	public boolean eval(Board b, int startRow, int startCol, int destRow, int destCol) {
+	boolean eval(Board b, int startRow, int startCol, int destRow, int destCol) {
 		return 	path.get(b, startRow, startCol, destRow, destCol).booleanValue() !=
 				b.getPieceAt(startRow, startCol).getColor();
 	}
@@ -360,7 +360,7 @@ class BooleanIsAllyCondition extends Condition{
 	}
 	
 	@Override
-	public boolean eval(Board b, int startRow, int startCol, int destRow, int destCol) {
+	boolean eval(Board b, int startRow, int startCol, int destRow, int destCol) {
 		return 	path.get(b, startRow, startCol, destRow, destCol).booleanValue() ==
 				b.getPieceAt(startRow, startCol).getColor();
 	}
@@ -373,7 +373,7 @@ class IntegerGreaterThanCondition extends Condition{
 		this.path2 = path2;
 	}
 	@Override
-	public boolean eval(Board b, int startRow, int startCol, int destRow, int destCol) {
+	boolean eval(Board b, int startRow, int startCol, int destRow, int destCol) {
 		return 	path1.get(b, startRow, startCol, destRow, destCol).intValue() >
 				path2.get(b, startRow, startCol, destRow, destCol).intValue();
 	}
@@ -386,7 +386,7 @@ class IntegerLessThanCondition extends Condition{
 		this.path2 = path2;
 	}
 	@Override
-	public boolean eval(Board b, int startRow, int startCol, int destRow, int destCol) {
+	boolean eval(Board b, int startRow, int startCol, int destRow, int destCol) {
 		return 	path1.get(b, startRow, startCol, destRow, destCol).intValue() < 
 				path2.get(b, startRow, startCol, destRow, destCol).intValue();
 	}
@@ -399,7 +399,7 @@ class IntegerGreaterThanOrEqualCondition extends Condition{
 		this.path2 = path2;
 	}
 	@Override
-	public boolean eval(Board b, int startRow, int startCol, int destRow, int destCol) {
+	boolean eval(Board b, int startRow, int startCol, int destRow, int destCol) {
 		return 	path1.get(b, startRow, startCol, destRow, destCol).intValue() >= 
 				path2.get(b, startRow, startCol, destRow, destCol).intValue();
 	}
@@ -412,7 +412,7 @@ class IntegerLessThanOrEqualCondition extends Condition{
 		this.path2 = path2;
 	}
 	@Override
-	public boolean eval(Board b, int startRow, int startCol, int destRow, int destCol) {
+	boolean eval(Board b, int startRow, int startCol, int destRow, int destCol) {
 		return 	path1.get(b, startRow, startCol, destRow, destCol).intValue() <= 
 				path2.get(b, startRow, startCol, destRow, destCol).intValue();
 	}
@@ -425,7 +425,7 @@ class IntegerEqualsCondition extends Condition{
 		this.path2 = path2;
 	}
 	@Override
-	public boolean eval(Board b, int startRow, int startCol, int destRow, int destCol) {
+	boolean eval(Board b, int startRow, int startCol, int destRow, int destCol) {
 		return 	path1.get(b, startRow, startCol, destRow, destCol).intValue() == 
 				path2.get(b, startRow, startCol, destRow, destCol).intValue();
 	}
@@ -438,7 +438,7 @@ class IntegerNotEqualsCondition extends Condition{
 		this.path2 = path2;
 	}
 	@Override
-	public boolean eval(Board b, int startRow, int startCol, int destRow, int destCol) {
+	boolean eval(Board b, int startRow, int startCol, int destRow, int destCol) {
 		return 	path1.get(b, startRow, startCol, destRow, destCol).intValue() != 
 				path2.get(b, startRow, startCol, destRow, destCol).intValue();
 	}
@@ -451,7 +451,7 @@ class ObjectEqualsCondition extends Condition{
 		this.path2 = path2;
 	}
 	@Override
-	public boolean eval(Board b, int startRow, int startCol, int destRow, int destCol) {
+	boolean eval(Board b, int startRow, int startCol, int destRow, int destCol) {
 		return 	path1.get(b, startRow, startCol, destRow, destCol).equals(
 				path2.get(b, startRow, startCol, destRow, destCol));
 	}
@@ -464,7 +464,7 @@ class ObjectNotEqualsConditions extends Condition{
 		this.path2 = path2;
 	}
 	@Override
-	public boolean eval(Board b, int startRow, int startCol, int destRow, int destCol) {
+	boolean eval(Board b, int startRow, int startCol, int destRow, int destCol) {
 		return 	!path1.get(b, startRow, startCol, destRow, destCol).equals(
 				path2.get(b, startRow, startCol, destRow, destCol));
 	}
@@ -476,7 +476,7 @@ class ObjectIsNullCondition extends Condition{
 		this.path = path;
 	}
 	@Override
-	public boolean eval(Board b, int startRow, int startCol, int destRow, int destCol) {
+	boolean eval(Board b, int startRow, int startCol, int destRow, int destCol) {
 		return 	path.get(b, startRow, startCol, destRow, destCol) == null;
 	}
 }
@@ -487,7 +487,7 @@ class ObjectIsNotNullCondition extends Condition{
 		this.path = path;
 	}
 	@Override
-	public boolean eval(Board b, int startRow, int startCol, int destRow, int destCol) {
+	boolean eval(Board b, int startRow, int startCol, int destRow, int destCol) {
 		return 	path.get(b, startRow, startCol, destRow, destCol) != null;
 	}
 }
@@ -501,7 +501,7 @@ class ObjectInstanceOfCondition extends Condition{
 		this.caster = caster;
 	}
 	@Override
-	public boolean eval(Board b, int startRow, int startCol, int destRow, int destCol) {
+	boolean eval(Board b, int startRow, int startCol, int destRow, int destCol) {
 		return 	caster.isInstance(path.get(b, startRow, startCol, destRow, destCol));
 	}
 }
@@ -516,7 +516,7 @@ class ObjectIsPieceCondition extends Condition{
 	}
 	
 	@Override
-	public boolean eval(Board b, int startRow, int startCol, int destRow, int destCol) {
+	boolean eval(Board b, int startRow, int startCol, int destRow, int destCol) {
 		Object obj = path.get(b, startRow, startCol, destRow, destCol);
 		if(obj != null && obj instanceof Piece) {
 			return ((Piece) obj).getPieceName().equals(pieceName);
@@ -535,7 +535,7 @@ class ANDCondition extends Condition{
 	}
 	
 	@Override
-	public boolean eval(Board b, int startRow, int startCol, int destRow, int destCol) {
+	boolean eval(Board b, int startRow, int startCol, int destRow, int destCol) {
 		return 	c1.calc(b, startRow, startCol, destRow, destCol) &&
 				c2.calc(b, startRow, startCol, destRow, destCol);
 				
@@ -551,7 +551,7 @@ class ORCondition extends Condition{
 	}
 	
 	@Override
-	public boolean eval(Board b, int startRow, int startCol, int destRow, int destCol) {
+	boolean eval(Board b, int startRow, int startCol, int destRow, int destCol) {
 		return 	c1.calc(b, startRow, startCol, destRow, destCol) ||
 				c2.calc(b, startRow, startCol, destRow, destCol);
 				
@@ -567,7 +567,7 @@ class XORCondition extends Condition{
 	}
 	
 	@Override
-	public boolean eval(Board b, int startRow, int startCol, int destRow, int destCol) {
+	boolean eval(Board b, int startRow, int startCol, int destRow, int destCol) {
 		return 	c1.calc(b, startRow, startCol, destRow, destCol) ^
 				c2.calc(b, startRow, startCol, destRow, destCol);
 				
@@ -582,7 +582,7 @@ class NOTCondition extends Condition{
 	}
 	
 	@Override
-	public boolean eval(Board b, int startRow, int startCol, int destRow, int destCol) {
+	boolean eval(Board b, int startRow, int startCol, int destRow, int destCol) {
 		return 	!c1.calc(b, startRow, startCol, destRow, destCol);
 	}
 }

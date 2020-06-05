@@ -2,6 +2,7 @@ package chess.piecebuilder;
 
 import java.util.Set;
 
+import chess.util.InputVerification;
 import javafx.collections.ObservableList;
 import javafx.geometry.Insets;
 import javafx.scene.Node;
@@ -11,16 +12,19 @@ import javafx.scene.input.TransferMode;
 import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.Pane;
 
-public class DropPathPane extends BorderPane{
+public class DropPathPane extends BorderPane implements InputVerification, ErrorSubmitable {
 	private Label label;
 	private String pathType;
 	private boolean addFinsiher;
 	public Pane nodeToAddTo;
-	public DropPathPane(boolean addFinisher, Pane ntad) {
+	private boolean pathHasBeenDropped;
+	public <T extends Pane & ErrorSubmitable> DropPathPane(boolean addFinisher, T ntad) {
 		super();
+		this.pathHasBeenDropped = false;
 		this.addFinsiher = addFinisher;
 		this.label = new Label("Drop Any Path");
 		this.nodeToAddTo = ntad;
+		this.pathType = null;
 		label.setPadding(new Insets(5));
 		this.setCenter(label);
 		this.setOnDragDropped(dragEvent -> {
@@ -32,13 +36,13 @@ public class DropPathPane extends BorderPane{
 	    			String builderName = db.getString();
 	                PathBuilder builder = null;
 	                if(builderName.equals("bool")) {
-	                	builder = new BoolPathBuilder(nodeToAddTo);
+	                	builder = new BoolPathBuilder((Pane & ErrorSubmitable) nodeToAddTo);
 	                }
 	                else if(builderName.equals("integer")) {
-	                	builder = new IntegerPathBuilder(nodeToAddTo);
+	                	builder = new IntegerPathBuilder((Pane & ErrorSubmitable) nodeToAddTo);
 	                }
 	                else if(builderName.equals("object")) {
-	                	builder = new ObjectPathBuilder(nodeToAddTo);
+	                	builder = new ObjectPathBuilder((Pane & ErrorSubmitable) nodeToAddTo);
 	                }
 	                else {
 	                	dragEvent.setDropCompleted(false);
@@ -48,6 +52,7 @@ public class DropPathPane extends BorderPane{
 	                if(builder != null) {
 	                	ObservableList<Node> children = nodeToAddTo.getChildren();
 	                	int myIndex = children.indexOf(DropPathPane.this);
+	                	DropPathPane.this.pathHasBeenDropped = true;
 	                	ConditionBox.clearPast(children, myIndex, true);
 	                	children.add(builder);
 	                	if(nodeToAddTo instanceof CustomConditionBox) {
@@ -102,13 +107,13 @@ public class DropPathPane extends BorderPane{
 	    			String builderName = db.getString();
 	                PathBuilder builder = null;
 	                if(builderName.equals("bool")) {
-	                	builder = new BoolPathBuilder(nodeToAddTo);
+	                	builder = new BoolPathBuilder((Pane & ErrorSubmitable) nodeToAddTo);
 	                }
 	                else if(builderName.equals("integer")) {
-	                	builder = new IntegerPathBuilder(nodeToAddTo);
+	                	builder = new IntegerPathBuilder((Pane & ErrorSubmitable) nodeToAddTo);
 	                }
 	                else if(builderName.equals("object")) {
-	                	builder = new ObjectPathBuilder(nodeToAddTo);
+	                	builder = new ObjectPathBuilder((Pane & ErrorSubmitable) nodeToAddTo);
 	                }
 	                else {
 	                	throw new IllegalArgumentException("bad builder name: " + builderName);
@@ -141,6 +146,37 @@ public class DropPathPane extends BorderPane{
 	        }
 		});
 		this.setStyle("-fx-border-width: 1px; -fx-border-color: #00ff00;");
+	}
+
+	@Override
+	public void submitErrorMessage(String message) {
+		((ErrorSubmitable) nodeToAddTo).submitErrorMessage(message);
+	}
+
+	@Override
+	public boolean verifyInput() {
+		if(!pathHasBeenDropped) {
+			if(pathType != null) {
+				String displayPathType = "???";
+				if(pathType.equals("bool")) {
+					displayPathType = "Boolean";
+				}
+				else if(pathType.equals("integer")) {
+					displayPathType = "Integer";
+				}
+				else if(pathType.equals("object")) {
+					displayPathType = "Anything";
+				}
+				submitErrorMessage("Custom Condition needs a " + displayPathType + " Path to be dropped");
+			}
+			else {
+				submitErrorMessage("Custom Condition needs a path to be dropped");
+			}
+			return false;
+		}
+		else {
+			return true;
+		}
 	}
 	
 }

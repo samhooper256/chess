@@ -53,8 +53,8 @@ public class MemberAccess {
 				throw new IllegalArgumentException("bad Member (not a Field or Method)");
 			}
 		} catch (IllegalArgumentException | IllegalAccessException | InvocationTargetException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+			//DON'T Print stack trace - Exception is okay to be thrown, it will get caught by Condition.calc() and the 
+			//Condition's defaultValue will be returned
 		}
 		return null;	
 	}

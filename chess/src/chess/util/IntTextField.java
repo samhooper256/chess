@@ -7,6 +7,7 @@ public class IntTextField extends TextField implements InputVerification{
 	
 	public IntTextField() {
 		super();
+		this.setMaxWidth(40);
 		radix = 10;
 	}
 	

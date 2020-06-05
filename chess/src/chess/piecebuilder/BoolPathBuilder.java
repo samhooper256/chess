@@ -8,6 +8,7 @@ import chess.util.AFC;
 import chess.util.BoolPath;
 import chess.util.Condition;
 import chess.util.ConditionBuilder;
+import chess.util.InputVerification;
 import chess.util.PathBase;
 import javafx.collections.ObservableList;
 import javafx.scene.Node;
@@ -17,7 +18,7 @@ import javafx.scene.layout.FlowPane;
 import javafx.scene.layout.Pane;
 
 public class BoolPathBuilder extends PathBuilder{
-	public BoolPathBuilder(Pane ntad) {
+	public <T extends Pane & ErrorSubmitable> BoolPathBuilder(T ntad) {
 		super(ntad);
 		this.setStyle("-fx-border-width: 1px; -fx-border-color: rgba(228, 56, 255, 1.0);");
 		onChoiceBox.getItems().addAll(new BooleanLiteralConditionOption(onChoiceBox, true),
@@ -93,5 +94,41 @@ public class BoolPathBuilder extends PathBuilder{
 			e.printStackTrace();
 		}
 		throw new IllegalArgumentException("Unknown Error ( see stack trace )");
+	}
+
+	@Override
+	public boolean verifyInput() {
+		boolean result = super.verifyInput();
+		if(!result) {
+			submitErrorMessage("Boolean Path has no selection for the \"on\" box");
+			return false;
+		}
+		ObservableList<Node> children = this.getChildren(); //BoolPathBuilders are Panes
+		Node last = children.get(children.size() - 1);
+		if(last instanceof ConditionChoiceBox) {
+			ConditionOption selected = ((ConditionChoiceBox) last).getValue();
+			if(selected == null) {
+				submitErrorMessage("Boolean Path does have a selection");
+				result = false;
+			}
+			else if(selected instanceof MethodConditionOption) {
+				if(!(((MethodConditionOption) selected).method.getReturnType() == boolean.class)) {
+					submitErrorMessage("Boolean Path does not lead to a boolean property");
+					result = false;
+				}
+			}
+			else if(selected instanceof BooleanLiteralConditionOption) {
+				//we're good, nothing to do here
+			}
+			else {
+				throw new UnsupportedOperationException(selected.getClass() + " not supported");
+			}
+		}
+		for(Node fxNode : children) {
+			if(fxNode instanceof InputVerification) {
+				result &= ((InputVerification) fxNode).verifyInput();
+			}
+		}
+		return result;
 	}
 }

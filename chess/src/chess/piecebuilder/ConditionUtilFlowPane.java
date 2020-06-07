@@ -49,7 +49,7 @@ public class ConditionUtilFlowPane extends FlowPane{
 				Image dragViewImage = BoolPathDrop.this.snapshot(parameters, null);
 				db.setDragView(dragViewImage, dragViewImage.getWidth()/2, dragViewImage.getHeight()/2);
 				ClipboardContent content = new ClipboardContent();
-		        content.putString("bool");
+		        content.putString(PathBuilder.BOOLEAN_BUILDER);
 		        db.setContent(content);
 		        mouseEvent.consume();
 			});
@@ -67,7 +67,7 @@ public class ConditionUtilFlowPane extends FlowPane{
 				Image dragViewImage = IntegerPathDrop.this.snapshot(parameters, null);
 				db.setDragView(dragViewImage, dragViewImage.getWidth()/2, dragViewImage.getHeight()/2);
 				ClipboardContent content = new ClipboardContent();
-		        content.putString("integer");
+		        content.putString(PathBuilder.INTEGER_BUILDER);
 		        db.setContent(content);
 		        mouseEvent.consume();
 			});
@@ -85,7 +85,7 @@ public class ConditionUtilFlowPane extends FlowPane{
 				Image dragViewImage = ObjectPathDrop.this.snapshot(parameters, null);
 				db.setDragView(dragViewImage, dragViewImage.getWidth()/2, dragViewImage.getHeight()/2);
 				ClipboardContent content = new ClipboardContent();
-		        content.putString("object");
+		        content.putString(PathBuilder.OBJECT_BUILDER);
 		        db.setContent(content);
 		        mouseEvent.consume();
 			});

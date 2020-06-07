@@ -31,6 +31,7 @@ import javafx.scene.SnapshotParameters;
 import javafx.scene.control.Button;
 import javafx.scene.control.ContextMenu;
 import javafx.scene.control.Control;
+import javafx.scene.control.Label;
 import javafx.scene.control.MenuItem;
 import javafx.scene.control.ScrollPane;
 import javafx.scene.image.Image;
@@ -79,7 +80,8 @@ public class Board extends StackPane{
 	private StackPane boardPopupBox, promotionStackPane;
 	private GridPane grid, promotionGridPane, popupMessageArea;
 	private AnchorPane popupMessageOverlay;
-	private Text boardPopupMessage, popupMessageXButton, popupGameOverText;
+	private Label boardPopupMessage;
+	private Text popupMessageXButton, popupGameOverText;
 	private Button popupResetButton, popupViewBoardButton;
 	private Tile[][] boardDisplay;
 	private ScrollPane promotionScrollPane;
@@ -318,6 +320,8 @@ public class Board extends StackPane{
 					public PromotionIcon(Piece p) {
 						super(p.getImage());
 						this.myPiece = p;
+						this.setFitWidth(100);
+						this.setPreserveRatio(true);
 						this.setOnMouseClicked(event -> {
 							promotionGridPane.getChildren().clear();
 							boardOverlay.setVisible(false);
@@ -1101,7 +1105,8 @@ public class Board extends StackPane{
 		
 		boardPopupBox.getChildren().add(popupMessageArea);
 		
-		boardPopupMessage = new Text();
+		boardPopupMessage = new Label();
+		boardPopupMessage.setWrapText(true);
 		boardPopupMessage.setId("popup-message");
 		
 		popupGameOverText = new Text("Game Over");

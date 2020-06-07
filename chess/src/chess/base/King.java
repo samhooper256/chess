@@ -47,27 +47,27 @@ public class King extends Piece{
 			new ActionTree.Node(MoveAndCaptureAction.relative(-1, 1, Condition.EOE)),
 			new ActionTree.Choke(
 				new ArrayList<>(Arrays.asList(
-					Condition.onSelf().call("hasMoved").toBool().invert().toCond()
+					Condition.onSelf().call("hasMoved").toBooleanPath().invert().toCond()
 				)),
 				new ArrayList<>(Arrays.asList(
 					new ActionTree.Choke(
 						new ArrayList<>(Arrays.asList(
-							Condition.onStartRelative(0, 1).call("isEmpty").toBool().toCond(),
+							Condition.onStartRelative(0, 1).call("isEmpty").toBooleanPath().toCond(),
 							Condition.onStartRelativeCheckable(0, 1).not()
 						)),
 						new ArrayList<>(Arrays.asList(
 							new ActionTree.Node(MultiAction.relative(0, 2,
 								Condition.DIE,
-								Condition.onStartRelative(0, 3).call("getPiece").toObj().instanceOf(Rook.class),
-								Condition.onStartRelative(0, 3).call("getPiece").call("hasMoved").toBool().invert().toCond()
+								Condition.onStartRelative(0, 3).call("getPiece").toObjectPath().instanceOf(Rook.class),
+								Condition.onStartRelative(0, 3).call("getPiece").call("hasMoved").toBooleanPath().invert().toCond()
 								).addAction(SubMulti.mnc(Flag.ORIGIN, 0, 2))
 								.addAction(SubMulti.omnc(Flag.ORIGIN, 0,3,0,1))
 							),
 							new ActionTree.Node(MultiAction.relative(0, 2,
 								Condition.DIE,
-								Condition.onStartRelative(0, 3).call("isEmpty").toBool().toCond(),
-								Condition.onStartRelative(0, 4).call("getPiece").toObj().instanceOf(Rook.class),
-								Condition.onStartRelative(0, 4).call("getPiece").call("hasMoved").toBool().invert().toCond()
+								Condition.onStartRelative(0, 3).call("isEmpty").toBooleanPath().toCond(),
+								Condition.onStartRelative(0, 4).call("getPiece").toObjectPath().instanceOf(Rook.class),
+								Condition.onStartRelative(0, 4).call("getPiece").call("hasMoved").toBooleanPath().invert().toCond()
 								).addAction(SubMulti.mnc(Flag.ORIGIN, 0, 2))
 								.addAction(SubMulti.omnc(Flag.DESTINATION, 0,4,0,1))
 							)
@@ -75,22 +75,22 @@ public class King extends Piece{
 					),
 					new ActionTree.Choke(
 						new ArrayList<>(Arrays.asList(
-							Condition.onStartRelative(0, -1).call("isEmpty").toBool().toCond(),
+							Condition.onStartRelative(0, -1).call("isEmpty").toBooleanPath().toCond(),
 							Condition.onStartRelativeCheckable(0, -1).not()
 						)),
 						new ArrayList<>(Arrays.asList(
 							new ActionTree.Node(MultiAction.relative(0, -2,
 								Condition.DIE,
-								Condition.onStartRelative(0, -3).call("getPiece").toObj().instanceOf(Rook.class),
-								Condition.onStartRelative(0, -3).call("getPiece").call("hasMoved").toBool().invert().toCond()
+								Condition.onStartRelative(0, -3).call("getPiece").toObjectPath().instanceOf(Rook.class),
+								Condition.onStartRelative(0, -3).call("getPiece").call("hasMoved").toBooleanPath().invert().toCond()
 								).addAction(SubMulti.mnc(Flag.ORIGIN, 0, -2))
 								.addAction(SubMulti.omnc(Flag.ORIGIN, 0,-3,0,-1))
 							),
 							new ActionTree.Node(MultiAction.relative(0, -2,
 								Condition.DIE,
-								Condition.onStartRelative(0, -3).call("isEmpty").toBool().toCond(),
-								Condition.onStartRelative(0, -4).call("getPiece").toObj().instanceOf(Rook.class),
-								Condition.onStartRelative(0, -4).call("getPiece").call("hasMoved").toBool().invert().toCond()
+								Condition.onStartRelative(0, -3).call("isEmpty").toBooleanPath().toCond(),
+								Condition.onStartRelative(0, -4).call("getPiece").toObjectPath().instanceOf(Rook.class),
+								Condition.onStartRelative(0, -4).call("getPiece").call("hasMoved").toBooleanPath().invert().toCond()
 								).addAction(SubMulti.mnc(Flag.ORIGIN, 0, -2))
 								.addAction(SubMulti.omnc(Flag.ORIGIN, 0,-4,0,-1))
 							)

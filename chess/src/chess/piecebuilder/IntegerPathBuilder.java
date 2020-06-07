@@ -13,8 +13,8 @@ import javafx.scene.Node;
 import javafx.scene.layout.Pane;
 
 public class IntegerPathBuilder extends PathBuilder{
-	public <T extends Pane> IntegerPathBuilder(T ntad) {
-		super(ntad);
+	public IntegerPathBuilder() {
+		super();
 		this.setStyle("-fx-border-width: 1px; -fx-border-color: rgba(255, 149, 0, 1.0);");
 		onChoiceBox.getItems().addAll(new IntegerLiteralConditionOption(onChoiceBox));
 	}
@@ -123,7 +123,7 @@ public class IntegerPathBuilder extends PathBuilder{
 				}
 				index++;
 			}
-			return conditionBuilder.toInt();
+			return conditionBuilder.toIntegerPath();
 			
 		} catch (IllegalAccessException | IllegalArgumentException | InvocationTargetException e) {
 			// TODO Auto-generated catch block

@@ -5,7 +5,7 @@ import java.lang.reflect.Method;
 import java.util.Arrays;
 
 import chess.util.AFC;
-import chess.util.BoolPath;
+import chess.util.BooleanPath;
 import chess.util.Condition;
 import chess.util.ConditionBuilder;
 import chess.util.InputVerification;
@@ -17,9 +17,9 @@ import javafx.scene.control.Label;
 import javafx.scene.layout.FlowPane;
 import javafx.scene.layout.Pane;
 
-public class BoolPathBuilder extends PathBuilder{
-	public <T extends Pane> BoolPathBuilder(T ntad) {
-		super(ntad);
+public class BooleanPathBuilder extends PathBuilder{
+	public BooleanPathBuilder() {
+		super();
 		this.setStyle("-fx-border-width: 1px; -fx-border-color: rgba(228, 56, 255, 1.0);");
 		onChoiceBox.getItems().addAll(new BooleanLiteralConditionOption(onChoiceBox, true),
 				new BooleanLiteralConditionOption(onChoiceBox, false));
@@ -31,7 +31,7 @@ public class BoolPathBuilder extends PathBuilder{
 	}
 
 	@Override
-	public BoolPath build() {
+	public BooleanPath build() {
 		try {
 			
 		Method onMethod = null;
@@ -87,7 +87,7 @@ public class BoolPathBuilder extends PathBuilder{
 			}
 			index++;
 		}
-		return conditionBuilder.toBool();
+		return conditionBuilder.toBooleanPath();
 		
 		} catch (IllegalAccessException | IllegalArgumentException | InvocationTargetException e) {
 			// TODO Auto-generated catch block

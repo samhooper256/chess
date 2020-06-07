@@ -37,7 +37,7 @@ public class Pawn extends Piece{
 					Arrays.asList(
 						new ActionTree.Node(MoveAndCaptureAction.relative(-1, 0, Condition.DIE),
 							new ActionTree.Node(MoveAndCaptureAction.relative(-2, 0, Condition.DIE,
-							Condition.onSelf().call("hasMoved").toBool().invert().toCond()))),
+							Condition.onSelf().call("hasMoved").toBooleanPath().invert().toCond()))),
 						new ActionTree.Node(MoveAndCaptureAction.relative(-1, 1, Condition.EOD)),
 						new ActionTree.Node(MoveAndCaptureAction.relative(-1, -1, Condition.EOD))
 					)
@@ -59,21 +59,21 @@ public class Pawn extends Piece{
 						)
 				),
 				new ActionTree.Choke(Arrays.asList(
-						Condition.onBoard().call("hasPlay").toBool().toCond(),
-						Condition.onBoard().call("lastPlay").call("distance").toInt().isEquals(new IntegerPath(2)),
-						Condition.onBoard().call("lastPlay").call("getPiece").toObj().instanceOf(Pawn.class),
-						Condition.onBoard().call("lastPlay").call("getPlay").toObj().instanceOf(LegalMoveAndCapture.class)),
+						Condition.onBoard().call("hasPlay").toBooleanPath().toCond(),
+						Condition.onBoard().call("lastPlay").call("distance").toIntegerPath().isEquals(new IntegerPath(2)),
+						Condition.onBoard().call("lastPlay").call("getPiece").toObjectPath().instanceOf(Pawn.class),
+						Condition.onBoard().call("lastPlay").call("getPlay").toObjectPath().instanceOf(LegalMoveAndCapture.class)),
 					new ArrayList<>(Arrays.asList(
 						new ActionTree.Node(MultiAction.relative(-1, -1)
 							.addAction(SubMulti.mnc(Flag.DESTINATION, 0, 0, Condition.DIE))
 							.addAction(SubMulti.capRel(Flag.ORIGIN, 0, -1, Condition.EOD,
-							Condition.onDest().call("getPiece").toObj().isEquals(Condition.onBoard().call("lastPlay").call("getPiece").toObj())	
+							Condition.onDest().call("getPiece").toObjectPath().isEquals(Condition.onBoard().call("lastPlay").call("getPiece").toObjectPath())	
 							))
 						),
 						new ActionTree.Node(MultiAction.relative(-1, 1)
 							.addAction(SubMulti.mnc(Flag.DESTINATION, 0, 0, Condition.DIE))
 							.addAction(SubMulti.capRel(Flag.ORIGIN, 0, 1, Condition.EOD,
-							Condition.onDest().call("getPiece").toObj().isEquals(Condition.onBoard().call("lastPlay").call("getPiece").toObj())	
+							Condition.onDest().call("getPiece").toObjectPath().isEquals(Condition.onBoard().call("lastPlay").call("getPiece").toObjectPath())	
 							))
 						)
 					))

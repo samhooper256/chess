@@ -25,6 +25,7 @@ import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.input.Dragboard;
 import javafx.scene.input.TransferMode;
+import javafx.scene.layout.AnchorPane;
 import javafx.scene.layout.Border;
 import javafx.scene.layout.BorderStroke;
 import javafx.scene.layout.BorderStrokeStyle;
@@ -38,39 +39,24 @@ import javafx.scene.layout.RowConstraints;
 import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
 import javafx.scene.paint.Color;
+import javafx.stage.FileChooser;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
 
 public class PieceBuilder extends Stage implements InputVerification{
-	private Scene scene;
-	private StackPane outerStackPane, whiteImageOuter, blackImageOuter, whiteImageInternal, blackImageInternal;
-	private VBox outermostVBox, leftVBox, leftImageVBox;
-	private GridPane gridPane;
-	private TextField nameTextField;
-	private Label nameLabel;
-	private HBox nameHBox;
-	private Button createPieceButton, hideErrors;
-	private ImageView whiteImageView, blackImageView;
-	private Image whiteImage, blackImage;
-	private ActionTreeBuilder actionTreeBuilder;
-	private VBox errorVBox;
-	private boolean errorsShowing;
-	private DoubleProperty errorFontSize;
-	private StringExpression errorFontStringExpression;
 	private static final Image WHITE_DEFAULT_IMAGE, BLACK_DEFAULT_IMAGE;
-	private Collection<String> currentPieceNames; //TODO Update this whenever PieceBuilder is opened! (and when a new piece is added and PieceBuilder remains open)
 	
 	static {
-		WHITE_DEFAULT_IMAGE = new Image(PieceBuilder.class.getResourceAsStream("/resources/white_default_image.png"));
-		BLACK_DEFAULT_IMAGE = new Image(PieceBuilder.class.getResourceAsStream("/resources/black_default_image.png"));
+		WHITE_DEFAULT_IMAGE = new Image(PieceBuilder.class.getResourceAsStream("/resources/white_default_image.png"), 240, 240, false, true);
+		BLACK_DEFAULT_IMAGE = new Image(PieceBuilder.class.getResourceAsStream("/resources/black_default_image.png"), 240, 240, false, true);
 	}
 	
 	private static PieceBuilder instance;
 	
-	/* *
+	/**
 	 * Creates a single PieceBuilder instance and returns it.
 	 * If a PieceBuilder instance has already been created, this method throws an
-	 * UnsupportedOperationException as only one isntance of this class should exist
+	 * UnsupportedOperationException as only one instance of this class should exist
 	 * at any time.
 	 */
 	public static PieceBuilder make() {
@@ -82,7 +68,7 @@ public class PieceBuilder extends Stage implements InputVerification{
 		}
 	}
 	
-	/*
+	/**
 	 * Returns the existing PieceBuilder instance, or creates one and returns it
 	 * if it does not exist. Does not throw any exceptions.
 	 */
@@ -95,7 +81,7 @@ public class PieceBuilder extends Stage implements InputVerification{
 		}
 	}
 	
-	/* *
+	/**
 	 * Returns the PieceBuilder instance, throwing a NullPointerException if it has
 	 * not been created yet.
 	 */
@@ -134,6 +120,26 @@ public class PieceBuilder extends Stage implements InputVerification{
 			return instance.currentPieceNames0();
 		}
 	}
+	
+	private Scene scene;
+	private StackPane outerStackPane, whiteImageOuter, blackImageOuter, whiteImageInternal, blackImageInternal;
+	private VBox outermostVBox, leftVBox, leftImageVBox;
+	private GridPane gridPane;
+	private TextField nameTextField;
+	private Label nameLabel;
+	private HBox nameHBox;
+	private Button createPieceButton, hideErrors;
+	private ImageView whiteImageView, blackImageView;
+	private Image whiteImage, blackImage;
+	private ActionTreeBuilder actionTreeBuilder;
+	private VBox errorVBox;
+	private boolean errorsShowing;
+	private DoubleProperty errorFontSize;
+	private StringExpression errorFontStringExpression;
+	private Collection<String> currentPieceNames; //TODO Update this whenever PieceBuilder is opened! (and when a new piece is added and PieceBuilder remains open)
+	private FileChooser fileChooser;
+	private AnchorPane whiteXAnchor, blackXAnchor;
+	private Label whiteX, blackX;
 	
 	private PieceBuilder() {
 		super();
@@ -177,25 +183,51 @@ public class PieceBuilder extends Stage implements InputVerification{
 		whiteImageOuter.maxWidthProperty().bind(leftImageVBox.widthProperty());
 		NumberBinding nbw = Bindings.min(whiteImageOuter.widthProperty(), whiteImageOuter.heightProperty());
 		whiteImageInternal = new StackPane();
-		whiteImageInternal.setBorder(new Border(new BorderStroke(Color.grayRgb(117), BorderStrokeStyle.DASHED, CornerRadii.EMPTY, new BorderWidths(2))));
+		whiteImageInternal.setBorder(new Border(new BorderStroke(Color.grayRgb(117), BorderStrokeStyle.DASHED, CornerRadii.EMPTY, new BorderWidths(2)))); //TODO put in css
 		whiteImageInternal.maxWidthProperty().bind(nbw);
 		whiteImageInternal.maxHeightProperty().bind(nbw);
+		whiteXAnchor = new AnchorPane(); 
+		whiteX = new Label("X"); //TODO IN css, make this color red (and make font larger?) (do the same for blackX)
+		AnchorPane.setRightAnchor(whiteX, 10d);
+		AnchorPane.setTopAnchor(whiteX, 10d);
+		whiteXAnchor.getChildren().add(whiteX);
+		whiteXAnchor.setPickOnBounds(false);
+		whiteXAnchor.setVisible(false);
 		whiteImage = WHITE_DEFAULT_IMAGE;
-		whiteImageView = new WrappedImageView(whiteImage);
-		whiteImageInternal.getChildren().add(whiteImageView);
+		whiteImageView = new WrappedImageView(whiteImage, 0, 0);
+		whiteImageInternal.getChildren().addAll(whiteImageView, whiteXAnchor);
 		whiteImageOuter.getChildren().add(whiteImageInternal);
 		
 		blackImageOuter = new StackPane();
 		NumberBinding nbb = Bindings.min(blackImageOuter.widthProperty(), blackImageOuter.heightProperty());
 		blackImageInternal = new StackPane();
-		blackImageInternal.setBorder(new Border(new BorderStroke(Color.grayRgb(117), BorderStrokeStyle.DASHED, CornerRadii.EMPTY, new BorderWidths(2))));
+		blackImageInternal.setBorder(new Border(new BorderStroke(Color.grayRgb(117), BorderStrokeStyle.DASHED, CornerRadii.EMPTY, new BorderWidths(2)))); //TODO put in css
 		blackImageInternal.maxWidthProperty().bind(nbb);
 		blackImageInternal.maxHeightProperty().bind(nbb);
+		blackXAnchor = new AnchorPane(); 
+		blackX = new Label("X"); //TODO IN css, make this color red (and make font larger?) (do the same for blackX)
+		AnchorPane.setRightAnchor(blackX, 10d);
+		AnchorPane.setTopAnchor(blackX, 10d);
+		blackXAnchor.getChildren().add(blackX);
+		blackXAnchor.setPickOnBounds(false);
+		blackXAnchor.setVisible(false);
 		blackImage = BLACK_DEFAULT_IMAGE;
-		blackImageView = new WrappedImageView(blackImage);
-		blackImageInternal.getChildren().add(blackImageView);
+		blackImageView = new WrappedImageView(blackImage, 0, 0);
+		blackImageInternal.getChildren().addAll(blackImageView, blackXAnchor);
 		blackImageOuter.getChildren().add(blackImageInternal);
 		
+		whiteX.setOnMouseClicked(mouseEvent -> {
+			clearWhiteImage();
+			mouseEvent.consume();
+		});
+		whiteImageInternal.setOnMouseClicked(mouseEvent -> {
+			fileChooser.setTitle("Select White Piece Image");
+			File selectedFile = fileChooser.showOpenDialog(PieceBuilder.this);
+			if(selectedFile != null) {
+				Image newWhiteImage = new Image(selectedFile.toURI().toString(), 240, 240, false, true);
+				setCustomWhiteImage(newWhiteImage);
+			}
+		});
 		whiteImageInternal.setOnDragOver(dragEvent -> {
 			if (dragEvent.getGestureSource() != whiteImageInternal
                     && dragEvent.getDragboard().hasFiles()) {
@@ -213,8 +245,8 @@ public class PieceBuilder extends Stage implements InputVerification{
 					File file = files.get(0);
 					if(isValidImage(file)) {
 						try {
-							whiteImage = new Image(file.toURI().toString());
-							whiteImageView.setImage(whiteImage);
+							Image newWhiteImage = new Image(file.toURI().toString(), 240, 240, false, true);
+							setCustomWhiteImage(newWhiteImage);
 							success = true;
 						}
 						catch(Exception e) {
@@ -224,16 +256,25 @@ public class PieceBuilder extends Stage implements InputVerification{
 					}
 				}
             }
-            /* let the source know whether the string was successfully 
-             * transferred and used */
             dragEvent.setDropCompleted(success);
 
             dragEvent.consume();
 		});
+		blackX.setOnMouseClicked(mouseEvent -> {
+			clearBlackImage();
+			mouseEvent.consume();
+		});
+		blackImageInternal.setOnMouseClicked(mouseEvent -> {
+			fileChooser.setTitle("Select Black Piece Image");
+			File selectedFile = fileChooser.showOpenDialog(PieceBuilder.this);
+			if(selectedFile != null) {
+				Image newBlackImage = new Image(selectedFile.toURI().toString(), 240, 240, false, true);
+				setCustomBlackImage(newBlackImage);
+			}
+		});
 		blackImageInternal.setOnDragOver(dragEvent -> {
 			if (dragEvent.getGestureSource() != blackImageInternal
                     && dragEvent.getDragboard().hasFiles()) {
-                /* allow for both copying and moving, whatever user chooses */
 				dragEvent.acceptTransferModes(TransferMode.COPY);
             }
 			dragEvent.consume();
@@ -247,19 +288,16 @@ public class PieceBuilder extends Stage implements InputVerification{
 					File file = files.get(0);
 					if(isValidImage(file)) {
 						try {
-							blackImage = new Image(file.toURI().toString());
+							blackImage = new Image(file.toURI().toString(), 240, 240, false, true);
 							blackImageView.setImage(blackImage);
 							success = true;
 						}
 						catch(Exception e) {
 							//TODO display error messsage about the image???
 						}
-						
 					}
 				}
             }
-            /* let the source know whether the string was successfully 
-             * transferred and used */
             dragEvent.setDropCompleted(success);
 
             dragEvent.consume();
@@ -269,6 +307,16 @@ public class PieceBuilder extends Stage implements InputVerification{
 		VBox.setVgrow(blackImageOuter, Priority.ALWAYS);
 		leftImageVBox.setAlignment(Pos.CENTER);
 		leftImageVBox.getChildren().addAll(whiteImageOuter, blackImageOuter);
+		
+		fileChooser = new FileChooser();
+		fileChooser.setInitialDirectory(new File(System.getProperty("user.home")));
+		fileChooser.getExtensionFilters().addAll(
+            new FileChooser.ExtensionFilter("All Images", "*.*"),
+            new FileChooser.ExtensionFilter("JPG", "*.jpg"),
+            new FileChooser.ExtensionFilter("PNG", "*.png"),
+            new FileChooser.ExtensionFilter("BMP", "*.bmp"),
+            new FileChooser.ExtensionFilter("GIF", "*.gif")
+        );
 		
 		createPieceButton = new Button("Create Piece");
 		createPieceButton.setMaxWidth(Double.MAX_VALUE);
@@ -333,6 +381,33 @@ public class PieceBuilder extends Stage implements InputVerification{
 			return false;
 		}
 	}
+	private void setCustomWhiteImage(Image newWhiteImage) {
+		whiteImage = newWhiteImage;
+		whiteImageView.setImage(whiteImage);
+		whiteXAnchor.setVisible(true);
+	}
+	private void setCustomBlackImage(Image newBlackImage) {
+		blackImage = newBlackImage;
+		blackImageView.setImage(blackImage);
+		blackXAnchor.setVisible(true);
+	}
+	
+	private void clearWhiteImage() {
+		if(whiteImage != WHITE_DEFAULT_IMAGE) {
+			whiteImage = WHITE_DEFAULT_IMAGE;
+			whiteImageView.setImage(whiteImage);
+			whiteXAnchor.setVisible(false);
+		}
+	}
+	
+	private void clearBlackImage() {
+		if(blackImage != BLACK_DEFAULT_IMAGE) {
+			blackImage = BLACK_DEFAULT_IMAGE;
+			blackImageView.setImage(blackImage);
+			blackXAnchor.setVisible(false);
+		}
+	}
+	
 	private void attemptCreate() {
 		clearErrors();
 		if(!verifyInput()) {
@@ -401,8 +476,10 @@ public class PieceBuilder extends Stage implements InputVerification{
 	private void reset() {
 		whiteImage = WHITE_DEFAULT_IMAGE;
 		whiteImageView.setImage(whiteImage);
+		whiteXAnchor.setVisible(false);
 		blackImage = BLACK_DEFAULT_IMAGE;
 		blackImageView.setImage(blackImage);
+		blackXAnchor.setVisible(false);
 		nameTextField.setText("");
 		actionTreeBuilder.reset();
 	}

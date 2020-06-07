@@ -5,19 +5,19 @@ import java.util.ArrayList;
 
 import chess.base.Board;
 
-public class BoolPath extends PathBase{
+public class BooleanPath extends PathBase{
 	boolean isInverted = false;
-	public BoolPath(Object base, ArrayList<MemberAccess> calls) {
+	public BooleanPath(Object base, ArrayList<MemberAccess> calls) {
 		super(base, calls);
 	}
 	
-	public static final BoolPath trueConstantBoolPath;
-	public static final BoolPath falseConstantBoolPath;
+	public static final BooleanPath trueConstantBoolPath;
+	public static final BooleanPath falseConstantBoolPath;
 	static {
-		trueConstantBoolPath = new BoolPath(true);
-		falseConstantBoolPath = new BoolPath(false);
+		trueConstantBoolPath = new BooleanPath(true);
+		falseConstantBoolPath = new BooleanPath(false);
 	}
-	public BoolPath(boolean constant) {
+	public BooleanPath(boolean constant) {
 		super(Boolean.valueOf(constant), null);
 	}
 	
@@ -27,7 +27,7 @@ public class BoolPath extends PathBase{
 	}
 	
 	@AFC(name="equals")
-	public Condition equals(BoolPath other) {
+	public Condition equals(BooleanPath other) {
 		if(isInverted) {
 			return new BooleanNotEqualsCondition(this, other);
 		}
@@ -37,7 +37,7 @@ public class BoolPath extends PathBase{
 	}
 	
 	@AFC(name="does not equal")
-	public Condition notEquals(BoolPath other) {
+	public Condition notEquals(BooleanPath other) {
 		if(isInverted) {
 			return new BooleanEqualsCondition(this, other);
 		}
@@ -71,7 +71,7 @@ public class BoolPath extends PathBase{
 		return (Boolean) super.get(b, startRow, startCol, destRow, destCol);
 	}
 	
-	public BoolPath invert() {
+	public BooleanPath invert() {
 		isInverted = !isInverted;
 		return this;
 	}

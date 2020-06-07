@@ -152,7 +152,7 @@ public class ConditionBox extends VBox implements InputVerification, MultiCondit
 		int box1index = children.indexOf(box1);
 		clearPast(children, box1index);
 		if(premadeConditionBox == null) {
-			premadeConditionBox = new PremadeConditionBox(this.flow);
+			premadeConditionBox = new PremadeConditionBox();
 		}
 		children.add(premadeConditionBox);
 		isOnPremade = true;
@@ -163,9 +163,7 @@ public class ConditionBox extends VBox implements InputVerification, MultiCondit
 		ObservableList<Node> children = flow.getChildren();
 		int box1index = children.indexOf(box1);
 		clearPast(children, box1index);
-		if(customConditionBox == null) {
-			customConditionBox = new CustomConditionBox(this.flow);
-		}
+		customConditionBox = new CustomConditionBox(this.flow);
 		children.add(customConditionBox);
 		isOnPremade = false;
 	}

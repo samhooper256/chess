@@ -94,16 +94,16 @@ public class ConditionBuilder{
 	}
 
 	
-	public BoolPath toBool() {
+	public BooleanPath toBooleanPath() {
 		if(currentClass == boolean.class) {
-			return new BoolPath(base, accesses);
+			return new BooleanPath(base, accesses);
 		}
 		else {
 			throw new IllegalArgumentException("Calls/Properties do not lead to a boolean");
 		}
 	}
 	
-	public IntegerPath toInt() {
+	public IntegerPath toIntegerPath() {
 		if(currentClass == int.class) {
 			return new IntegerPath(base, accesses);
 		}
@@ -112,7 +112,7 @@ public class ConditionBuilder{
 		}
 	}
 	
-	public ObjectPath toObj() {
+	public ObjectPath toObjectPath() {
 		if(!currentClass.isPrimitive()) {
 			return new ObjectPath(base, accesses);
 		}

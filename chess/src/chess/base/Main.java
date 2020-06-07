@@ -4,7 +4,6 @@ import javafx.application.Application;
 import javafx.scene.Scene;
 import javafx.stage.Stage;
 
-
 //TODO DELETE UNUSED IMPORTS (chess.util.*)
 /* *
  * @author Sam Hooper
@@ -13,7 +12,7 @@ public class Main extends Application{
 	public static void main(String[] args) {
 		Application.launch(args);
 	}
-
+	
 	@Override
 	public void start(Stage primaryStage) throws Exception {
 		GamePanel gp = new GamePanel();
@@ -26,6 +25,6 @@ public class Main extends Application{
 		primaryStage.setScene(scene);
 		primaryStage.sizeToScene();
 		primaryStage.show();
-		
 	}
+	
 }

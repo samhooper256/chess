@@ -16,10 +16,8 @@ import javafx.scene.layout.Pane;
 public abstract class PathBuilder extends HBox implements InputVerification{
 	private Label label;
 	protected ConditionChoiceBox onChoiceBox;
-	Pane nodeToAddTo;
-	public <T extends Pane> PathBuilder(T ntad) {
+	public PathBuilder() {
 		super();
-		this.nodeToAddTo = ntad;
 		this.setSpacing(4);
 		this.setAlignment(Pos.CENTER_LEFT);
 		label = new Label(getPathTypeName() + " Path on: ");
@@ -31,6 +29,57 @@ public abstract class PathBuilder extends HBox implements InputVerification{
 		}
 		this.getChildren().addAll(label, onChoiceBox);
 	}
+	
+	public static final String 	OBJECT_BUILDER = "Object",
+								BOOLEAN_BUILDER = "Boolean",
+								INTEGER_BUILDER = "Integer";
+	/**
+	 * Returns null if the string is invalid.
+	 * @param <T>
+	 * @param builderType
+	 * @return
+	 */
+	@SuppressWarnings("unchecked")
+	public static <T extends PathBuilder> T getBuilderByStringNull(String builderType) {
+		switch(builderType) {
+		case INTEGER_BUILDER: return (T) new IntegerPathBuilder();
+		case BOOLEAN_BUILDER: return (T) new BooleanPathBuilder();
+		case OBJECT_BUILDER: return (T) new ObjectPathBuilder();
+		default: return null;
+		}
+	}
+	
+	/**
+	 * Throws Exception if the string is invalid.
+	 * @param <T>
+	 * @param builderType
+	 * @return
+	 */
+	@SuppressWarnings("unchecked")
+	public static <T extends PathBuilder> T getBuilderByStringEx(String builderType) {
+		switch(builderType) {
+		case INTEGER_BUILDER: return (T) new IntegerPathBuilder();
+		case BOOLEAN_BUILDER: return (T) new BooleanPathBuilder();
+		case OBJECT_BUILDER: return (T) new ObjectPathBuilder();
+		default: throw new IllegalArgumentException(builderType + " is not a valid builder name");
+		}
+	}
+	
+	public static String getStringForBuilder(PathBuilder builder) {
+		if(builder instanceof IntegerPathBuilder) {
+			return INTEGER_BUILDER;
+		}
+		else if(builder instanceof BooleanPathBuilder) {
+			return BOOLEAN_BUILDER;
+		}
+		else if(builder instanceof ObjectPathBuilder) {
+			return OBJECT_BUILDER;
+		}
+		else {
+			throw new UnsupportedOperationException(builder.getClass() + " is not supported as a builder type");
+		}
+	}
+	
 	
 	public abstract String getPathTypeName();
 	

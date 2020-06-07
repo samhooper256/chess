@@ -294,9 +294,9 @@ class RelativeTile{
 }
 
 class SingleBooleanCondition extends Condition{
-	BoolPath path;
+	BooleanPath path;
 	private boolean isInverted;
-	public SingleBooleanCondition(BoolPath path, boolean invert) {
+	public SingleBooleanCondition(BooleanPath path, boolean invert) {
 		this.path = path;
 		this.isInverted = invert;
 	}
@@ -313,8 +313,8 @@ class SingleBooleanCondition extends Condition{
 }
 
 class BooleanEqualsCondition extends Condition{
-	BoolPath path1, path2;
-	public BooleanEqualsCondition(BoolPath path1, BoolPath path2) {
+	BooleanPath path1, path2;
+	public BooleanEqualsCondition(BooleanPath path1, BooleanPath path2) {
 		this.path1 = path1;
 		this.path2 = path2;
 	}
@@ -327,8 +327,8 @@ class BooleanEqualsCondition extends Condition{
 }
 
 class BooleanNotEqualsCondition extends Condition{
-	BoolPath path1, path2;
-	public BooleanNotEqualsCondition(BoolPath path1, BoolPath path2) {
+	BooleanPath path1, path2;
+	public BooleanNotEqualsCondition(BooleanPath path1, BooleanPath path2) {
 		this.path1 = path1;
 		this.path2 = path2;
 	}
@@ -341,8 +341,8 @@ class BooleanNotEqualsCondition extends Condition{
 }
 
 class BooleanIsEnemyCondition extends Condition{
-	BoolPath path;
-	public BooleanIsEnemyCondition(BoolPath path) {
+	BooleanPath path;
+	public BooleanIsEnemyCondition(BooleanPath path) {
 		this.path = path;
 	}
 	
@@ -354,8 +354,8 @@ class BooleanIsEnemyCondition extends Condition{
 }
 
 class BooleanIsAllyCondition extends Condition{
-	BoolPath path;
-	public BooleanIsAllyCondition(BoolPath path) {
+	BooleanPath path;
+	public BooleanIsAllyCondition(BooleanPath path) {
 		this.path = path;
 	}
 	

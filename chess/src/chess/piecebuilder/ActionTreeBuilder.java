@@ -137,13 +137,12 @@ public class ActionTreeBuilder extends StackPane implements InputVerification, B
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
-		VBox vBox = new VBox(4);
 		ActionTP newActionTP;
 		if(MultiAction.class.isAssignableFrom(clazz)) {
-			newActionTP = new MultiActionTP(title, vBox, creationMethod);
+			newActionTP = new MultiActionTP(title, creationMethod);
 		}
 		else {
-			newActionTP = new ActionTP(title, vBox, creationMethod, childrenPossible);
+			newActionTP = new ActionTP(title, creationMethod, childrenPossible);
 		}
 		children.add(children.lastIndexOf(addBefore), newActionTP);
 	}
@@ -196,10 +195,10 @@ public class ActionTreeBuilder extends StackPane implements InputVerification, B
 		protected ChildTP childPane;
 		protected ConditionTP conditionPane, stopConditionPane;
 		protected Button deleteActionButton;
-		public ActionTP(String name, VBox content, Method creationMethod, boolean childrenPossible) {
+		public ActionTP(String name, Method creationMethod, boolean childrenPossible) {
 			super();
 			this.setText(name);
-			this.vBox = content;
+			this.vBox = new VBox(4);
 			this.setContent(vBox);
 			vBox.setPadding(new Insets(10,0,10,10));
 			this.creationMethod = creationMethod;
@@ -380,8 +379,8 @@ public class ActionTreeBuilder extends StackPane implements InputVerification, B
 	private class MultiActionTP extends ActionTP{
 		protected SubActionsTP subTP;
 		
-		public MultiActionTP(String name, VBox content, Method creationMethod) {
-			super(name, content, creationMethod, true);
+		public MultiActionTP(String name, Method creationMethod) {
+			super(name, creationMethod, true);
 			subTP = new SubActionsTP();
 			ObservableList<Node> children = super.vBox.getChildren();
 			

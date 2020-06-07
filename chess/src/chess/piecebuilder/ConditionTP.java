@@ -27,7 +27,7 @@ public class ConditionTP extends TitledPane implements InputVerification, Builda
 		conditionUtilFlowPane = new ConditionUtilFlowPane();
 		addConditionButton = new Button("Add condition");
 		addConditionButton.setOnMouseClicked(mouseEvent -> {
-			ConditionBoxWrap conditionBoxWrap = new ConditionBoxWrap(esvBox);
+			ConditionBoxWrap conditionBoxWrap = new ConditionBoxWrap();
 			esvBox.getChildren().add(esvBox.getChildren().lastIndexOf(addConditionButton), conditionBoxWrap);
 		});
 		esvBox.getChildren().addAll(conditionUtilFlowPane, addConditionButton);

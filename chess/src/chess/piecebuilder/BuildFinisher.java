@@ -3,7 +3,7 @@ package chess.piecebuilder;
 import java.lang.reflect.Method;
 
 import chess.util.AFC;
-import chess.util.BoolPath;
+import chess.util.BooleanPath;
 import chess.util.InputVerification;
 import chess.util.IntegerPath;
 import chess.util.ObjectPath;
@@ -17,9 +17,9 @@ import javafx.scene.layout.Pane;
 import javafx.util.StringConverter;
 
 public abstract class BuildFinisher extends ChoiceBox<Method> {
-	public static BuildFinisher on(PathBuilder builder) {
-		if(builder instanceof BoolPathBuilder) {
-			return on((BoolPathBuilder) builder);
+	public static BuildFinisher getFinisherFor(PathBuilder builder) {
+		if(builder instanceof BooleanPathBuilder) {
+			return on((BooleanPathBuilder) builder);
 		}
 		else if(builder instanceof IntegerPathBuilder) {
 			return on((IntegerPathBuilder) builder);
@@ -32,15 +32,15 @@ public abstract class BuildFinisher extends ChoiceBox<Method> {
 		}
 	}
 	
-	public static BoolBuildFinisher on(BoolPathBuilder builder) {
+	private static BoolBuildFinisher on(BooleanPathBuilder builder) {
 		return new BoolBuildFinisher(builder);
 	}
 	
-	public static IntegerBuildFinisher on(IntegerPathBuilder builder) {
+	private static IntegerBuildFinisher on(IntegerPathBuilder builder) {
 		return new IntegerBuildFinisher(builder);
 	}
 	
-	public static ObjectBuildFinisher on(ObjectPathBuilder builder) {
+	private static ObjectBuildFinisher on(ObjectPathBuilder builder) {
 		return new ObjectBuildFinisher(builder);
 	}
 	
@@ -55,12 +55,12 @@ public abstract class BuildFinisher extends ChoiceBox<Method> {
 	public abstract PathBuilder getPrecedingBuilder();
 	
 	public static class BoolBuildFinisher extends BuildFinisher implements InputVerification{
-		private BoolPathBuilder precedingBuilder;
-		public BoolBuildFinisher(BoolPathBuilder precedingBuilder) {
+		private BooleanPathBuilder precedingBuilder;
+		public BoolBuildFinisher(BooleanPathBuilder precedingBuilder) {
 			super();
 			this.precedingBuilder = precedingBuilder;
 			ObservableList<Method> items = this.getItems();
-			for(Method m : BoolPath.class.getMethods()) {
+			for(Method m : BooleanPath.class.getMethods()) {
 				if(m.isAnnotationPresent(AFC.class)) {
 					//AFC afc = m.getAnnotation(AFC.class);
 					items.add(m);
@@ -74,12 +74,12 @@ public abstract class BuildFinisher extends ChoiceBox<Method> {
 			      public void changed(ObservableValue<? extends Number> observableValue, Number number, Number number2) {
 			        Method choice = BoolBuildFinisher.this.getItems().get((Integer) number2);
 			        Class<?>[] paramTypes = choice.getParameterTypes();
-			        CustomConditionBox ccb = (CustomConditionBox) precedingBuilder.nodeToAddTo;
+			        CustomConditionBox ccb = (CustomConditionBox) precedingBuilder.getParent();
 			        int myIndex = ccb.getChildren().indexOf(BoolBuildFinisher.this);
 			        ConditionBox.clearPast(ccb.getChildren(), myIndex);
 			        for(int i = 0; i < paramTypes.length; i++) {
-			        	if(paramTypes[i] == BoolPath.class) {
-			        		ccb.addDropPathPane("bool", false);
+			        	if(paramTypes[i] == BooleanPath.class) {
+			        		ccb.addBuilder(PathBuilder.BOOLEAN_BUILDER, false);
 			        	}
 			        	else {
 			        		throw new UnsupportedOperationException("Parameter type " + paramTypes[i] + " is not supported");
@@ -124,12 +124,12 @@ public abstract class BuildFinisher extends ChoiceBox<Method> {
 			      public void changed(ObservableValue<? extends Number> observableValue, Number number, Number number2) {
 			        Method choice = IntegerBuildFinisher.this.getItems().get((Integer) number2);
 			        Class<?>[] paramTypes = choice.getParameterTypes();
-			        CustomConditionBox ccb = (CustomConditionBox) precedingBuilder.nodeToAddTo;
+			        CustomConditionBox ccb = (CustomConditionBox) precedingBuilder.getParent();
 			        int myIndex = ccb.getChildren().indexOf(IntegerBuildFinisher.this);
 			        ConditionBox.clearPast(ccb.getChildren(), myIndex);
 			        for(int i = 0; i < paramTypes.length; i++) {
 			        	if(paramTypes[i] == IntegerPath.class) {
-			        		ccb.addDropPathPane("integer", false);
+			        		ccb.addBuilder(PathBuilder.INTEGER_BUILDER, false);
 			        	}
 			        	else {
 			        		throw new UnsupportedOperationException("Parameter type " + paramTypes[i] + " is not supported");
@@ -141,7 +141,7 @@ public abstract class BuildFinisher extends ChoiceBox<Method> {
 		
 		@Override
 		public void postAdd() {
-			((CustomConditionBox) precedingBuilder.nodeToAddTo).addDropPathPane("integer", false);
+			((CustomConditionBox) precedingBuilder.getParent()).addBuilder(PathBuilder.INTEGER_BUILDER, false);
 		}
 		@Override
 		public PathBuilder getPrecedingBuilder() {
@@ -170,12 +170,12 @@ public abstract class BuildFinisher extends ChoiceBox<Method> {
 			      public void changed(ObservableValue<? extends Number> observableValue, Number number, Number number2) {
 			        Method choice = ObjectBuildFinisher.this.getItems().get((Integer) number2);
 			        Class<?>[] paramTypes = choice.getParameterTypes();
-			        CustomConditionBox ccb = (CustomConditionBox) precedingBuilder.nodeToAddTo;
+			        CustomConditionBox ccb = (CustomConditionBox) precedingBuilder.getParent();
 			        int myIndex = ccb.getChildren().indexOf(ObjectBuildFinisher.this);
 			        ConditionBox.clearPast(ccb.getChildren(), myIndex);
 			        for(int i = 0; i < paramTypes.length; i++) {
 			        	if(paramTypes[i] == ObjectPath.class) {
-			        		ccb.addDropPathPane("object", false);
+			        		ccb.addBuilder(PathBuilder.OBJECT_BUILDER, false);
 			        	}
 			        	else if(paramTypes[i] == Class.class) {
 			        		ccb.getChildren().add(new ConditionActionChooser());

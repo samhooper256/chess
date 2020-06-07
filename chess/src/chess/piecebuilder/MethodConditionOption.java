@@ -19,11 +19,11 @@ public class MethodConditionOption extends ConditionOption{
 		this.method = m;
 		this.afc = method.getAnnotation(AFC.class);
 		Pane pb = super.choiceBox.nodeToAddTo;
-		if(	pb instanceof BoolPathBuilder && 
+		if(	pb instanceof BooleanPathBuilder && 
 			(afc.returnType() == boolean.class || afc.returnType() == Void.class && m.getReturnType() == boolean.class)) {
 			//TODO Green text for booleans
 		}
-		if(	pb instanceof BoolPathBuilder && 
+		if(	pb instanceof BooleanPathBuilder && 
 			(afc.returnType() == int.class || afc.returnType() == Void.class && m.getReturnType() == int.class)) {
 			//TODO Green text for ints
 		}
@@ -51,7 +51,7 @@ public class MethodConditionOption extends ConditionOption{
 		ObservableList<Node> children = pb.getChildren();
 		int myIndex = children.indexOf(super.choiceBox);
 		ConditionBox.clearPast(children, myIndex);
-		if(pb instanceof BoolPathBuilder && returnType == boolean.class) {
+		if(pb instanceof BooleanPathBuilder && returnType == boolean.class) {
 			//TODO Do something?
 		}
 		else if(pb instanceof IntegerPathBuilder && returnType == int.class) {
@@ -68,7 +68,7 @@ public class MethodConditionOption extends ConditionOption{
 				if(m.isAnnotationPresent(AFC.class)) {
 					if(pb instanceof PathBuilder) {
 						Class<?> nextReturnType = m.getReturnType();
-						if(pb instanceof BoolPathBuilder) {
+						if(pb instanceof BooleanPathBuilder) {
 							if(nextReturnType == boolean.class || !nextReturnType.isPrimitive()) {
 								newCB.addMethod(m);
 							}

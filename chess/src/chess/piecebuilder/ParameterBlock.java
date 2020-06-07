@@ -2,7 +2,7 @@ package chess.piecebuilder;
 
 import java.lang.reflect.Method;
 
-import chess.util.BoolPath;
+import chess.util.BooleanPath;
 import chess.util.InputVerification;
 import chess.util.IntTextField;
 import chess.util.IntegerPath;
@@ -17,10 +17,10 @@ public class ParameterBlock extends HBox implements Buildable<Object[]>, InputVe
 		this.method = m;
 		for(Class<?> clazz : m.getParameterTypes()) {
 			if(clazz == int.class || clazz == IntegerPath.class) {
-				this.getChildren().add(new IntegerPathBuilder(this));
+				this.getChildren().add(new IntegerPathBuilder());
 			}
-			else if(clazz == boolean.class || clazz == BoolPath.class) {
-				this.getChildren().add(new BoolPathBuilder(this));
+			else if(clazz == boolean.class || clazz == BooleanPath.class) {
+				this.getChildren().add(new BooleanPathBuilder());
 			}
 			else {
 				throw new IllegalArgumentException("this parameter type is not supported");

@@ -10,9 +10,7 @@ import javafx.scene.layout.Pane;
 import javafx.util.StringConverter;
 
 public class PremadeConditionBox extends ChoiceBox<Field> {
-	private Pane nodeToAddTo; //Will always be a conditionBox
-	public PremadeConditionBox(Pane ntad) {
-		this.nodeToAddTo = ntad;
+	public PremadeConditionBox() {
 		this.setConverter((StringConverter<Field>) ConditionBox.memberStringConverter);
 		for(Field f : Condition.class.getFields()) {
 			if(Modifier.isStatic(f.getModifiers()) && f.isAnnotationPresent(AFC.class)){

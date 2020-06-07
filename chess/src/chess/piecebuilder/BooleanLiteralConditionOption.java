@@ -1,6 +1,6 @@
 package chess.piecebuilder;
 
-import chess.util.BoolPath;
+import chess.util.BooleanPath;
 
 public class BooleanLiteralConditionOption extends ConditionOption{
 	boolean value;
@@ -13,12 +13,12 @@ public class BooleanLiteralConditionOption extends ConditionOption{
 		return value;
 	}
 	
-	public BoolPath getBooleanPath() {
+	public BooleanPath getBooleanPath() {
 		if(value) {
-			return BoolPath.trueConstantBoolPath;
+			return BooleanPath.trueConstantBoolPath;
 		}
 		else {
-			return BoolPath.falseConstantBoolPath;
+			return BooleanPath.falseConstantBoolPath;
 		}
 	}
 	

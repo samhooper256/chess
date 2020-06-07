@@ -4,17 +4,24 @@ import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 
 public class WrappedImageView extends ImageView
-{
+{	
+	private final int minWidth, minHeight;
+	public WrappedImageView(Image im, int minWidth, int minHeight) {
+		super(im);
+        setPreserveRatio(false);
+        this.minWidth = minWidth;
+        this.minHeight = minHeight;
+	}
+	
     public WrappedImageView(Image im)
     {
-    	super(im);
-        setPreserveRatio(false);
+    	this(im, 20, 20);
     }
 
     @Override
     public double minWidth(double height)
     {
-        return 20;
+        return minWidth;
     }
 
     @Override
@@ -34,7 +41,7 @@ public class WrappedImageView extends ImageView
     @Override
     public double minHeight(double width)
     {
-        return 20;
+        return minHeight;
     }
 
     @Override

@@ -11,10 +11,8 @@ import javafx.scene.layout.VBox;
 
 public class ConditionBoxWrap extends VBox implements InputVerification, Buildable<Condition>{
 	VBox esvBox;
-	private Pane nodeToAddTo;
 	private Button deleteConditionButton;
-	public ConditionBoxWrap(Pane ntad) {
-		this.nodeToAddTo = ntad;
+	public ConditionBoxWrap() {
 		esvBox = new VBox();
 		this.setFillWidth(true);
 		esvBox.setFillWidth(true);
@@ -25,7 +23,7 @@ public class ConditionBoxWrap extends VBox implements InputVerification, Buildab
 		deleteConditionButton.setStyle("-fx-background-color: transparent; -fx-border-width: 1px; -fx-border-color: #b00000;"
 				+ "-fx-border-radius: 6; -fx-text-fill: #b00000;"); //TODO Put this in CSS (and add hover effect)
 		deleteConditionButton.setOnMouseClicked(mouseEvent -> {
-			nodeToAddTo.getChildren().remove(this);
+			((Pane) getParent()).getChildren().remove(this);
 		});
 		this.getChildren().addAll(esvBox, deleteConditionButton);
 		System.out.println(this + " created, esvBox = " + esvBox + ", initial ConditionBox = " + esvBox.getChildren().get(0));

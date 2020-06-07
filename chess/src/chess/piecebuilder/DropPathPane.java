@@ -16,14 +16,12 @@ public class DropPathPane extends BorderPane implements InputVerification {
 	private Label label;
 	private String pathType;
 	private boolean addFinsiher;
-	public Pane nodeToAddTo;
 	private boolean pathHasBeenDropped;
-	public <T extends Pane> DropPathPane(boolean addFinisher, T ntad) {
+	public DropPathPane(boolean addFinisher) {
 		super();
 		this.pathHasBeenDropped = false;
 		this.addFinsiher = addFinisher;
 		this.label = new Label("Drop Any Path");
-		this.nodeToAddTo = ntad;
 		this.pathType = null;
 		label.setPadding(new Insets(5));
 		this.setCenter(label);
@@ -34,30 +32,19 @@ public class DropPathPane extends BorderPane implements InputVerification {
 	        	Set<TransferMode> transferModes = db.getTransferModes();
 	        	if(transferModes.size() == 1 && transferModes.iterator().next() == TransferMode.COPY) {
 	    			String builderName = db.getString();
-	                PathBuilder builder = null;
-	                if(builderName.equals("bool")) {
-	                	builder = new BoolPathBuilder(nodeToAddTo);
-	                }
-	                else if(builderName.equals("integer")) {
-	                	builder = new IntegerPathBuilder(nodeToAddTo);
-	                }
-	                else if(builderName.equals("object")) {
-	                	builder = new ObjectPathBuilder(nodeToAddTo);
-	                }
-	                else {
+	                PathBuilder builder = PathBuilder.getBuilderByStringNull(builderName);
+	                if(builder == null) {
+	                	System.out.println("It's null OOPS");
 	                	dragEvent.setDropCompleted(false);
 	                	return; //don't consume so it goes to MultiCondition
 	                }
-	                
-	                if(builder != null) {
-	                	ObservableList<Node> children = nodeToAddTo.getChildren();
+	                else {
+	                	CustomConditionBox ccb = ((CustomConditionBox) getParent());
+	                	ObservableList<Node> children = ccb.getChildren();
 	                	int myIndex = children.indexOf(DropPathPane.this);
 	                	DropPathPane.this.pathHasBeenDropped = true;
 	                	ConditionBox.clearPast(children, myIndex, true);
-	                	children.add(builder);
-	                	if(nodeToAddTo instanceof CustomConditionBox) {
-	                		((CustomConditionBox) nodeToAddTo).notifyBuilderAdded(builder, addFinisher);
-	                	}
+	                	ccb.addBuilder(builderName, addFinisher);
 	                	success = true;
 	                }
 	        	}
@@ -75,94 +62,12 @@ public class DropPathPane extends BorderPane implements InputVerification {
 		});
 		this.setStyle("-fx-border-width: 1px; -fx-border-color: #55ff55;");
 	}
-	
-	public DropPathPane(boolean addFinisher, Pane ntad, String pathType) {
-		super();
-		this.addFinsiher = addFinisher;
-		this.pathType = pathType;
-		this.nodeToAddTo = ntad;
-		String labelText = "???";
-		if(pathType.equals("bool")) {
-			labelText = "Boolean";
-		}
-		else if(pathType.equals("integer")) {
-			labelText = "Integer";
-		}
-		else if(pathType.equals("object")) {
-			labelText = "Object";
-		}
-		else {
-			throw new IllegalArgumentException("Invalid pathType (" + pathType + ")");
-		}
-		this.label = new Label("Drop " + labelText + " Path");
-		label.setPadding(new Insets(5));
-		this.setCenter(label);
-		this.setOnDragDropped(dragEvent -> {
-			//System.out.println("TYPE II DROPPED");
-			Dragboard db = dragEvent.getDragboard();
-	        boolean success = false;
-	        if (db.hasString() && !db.getString().equals("multi-condition")) {
-	        	Set<TransferMode> transferModes = db.getTransferModes();
-	        	if(transferModes.size() == 1 && transferModes.iterator().next() == TransferMode.COPY) {
-	    			String builderName = db.getString();
-	                PathBuilder builder = null;
-	                if(builderName.equals("bool")) {
-	                	builder = new BoolPathBuilder(nodeToAddTo);
-	                }
-	                else if(builderName.equals("integer")) {
-	                	builder = new IntegerPathBuilder(nodeToAddTo);
-	                }
-	                else if(builderName.equals("object")) {
-	                	builder = new ObjectPathBuilder(nodeToAddTo);
-	                }
-	                else {
-	                	throw new IllegalArgumentException("bad builder name: " + builderName);
-	                }
-	                
-	                if(builder != null) {
-	                	ObservableList<Node> children = nodeToAddTo.getChildren();
-	                	int myIndex = children.indexOf(DropPathPane.this);
-	                	ConditionBox.clearPast(children, myIndex, true);
-	                	children.add(builder);
-	                	if(nodeToAddTo instanceof CustomConditionBox) {
-	                		((CustomConditionBox) nodeToAddTo).notifyBuilderAdded(builder, addFinisher);
-	                	}
-	                	success = true;
-	                }
-	        	}
-	        }
-	        else {
-	        	dragEvent.setDropCompleted(false);
-	        	return; //don't consume so it goes to MutliCondition
-	        }
-	        dragEvent.setDropCompleted(success);
-	        dragEvent.consume();
-		});
-		this.setOnDragOver(dragEvent -> {
-			Dragboard db = dragEvent.getDragboard();
-	        if (db.hasString() && db.getString().equals(pathType)) {
-	        	dragEvent.acceptTransferModes(TransferMode.COPY);
-	        	dragEvent.consume();
-	        }
-		});
-		this.setStyle("-fx-border-width: 1px; -fx-border-color: #00ff00;");
-	}
 
 	@Override
 	public boolean verifyInput() {
 		if(!pathHasBeenDropped) {
 			if(pathType != null) {
-				String displayPathType = "???";
-				if(pathType.equals("bool")) {
-					displayPathType = "Boolean";
-				}
-				else if(pathType.equals("integer")) {
-					displayPathType = "Integer";
-				}
-				else if(pathType.equals("object")) {
-					displayPathType = "Anything";
-				}
-				PieceBuilder.submitError("Custom Condition needs a " + displayPathType + " Path to be dropped");
+				PieceBuilder.submitError("Custom Condition needs a " +pathType + " Path to be dropped");
 			}
 			else {
 				PieceBuilder.submitError("Custom Condition needs a path to be dropped");

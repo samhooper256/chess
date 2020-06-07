@@ -13,7 +13,7 @@ import javafx.scene.Node;
 import javafx.scene.layout.Pane;
 
 public class IntegerPathBuilder extends PathBuilder{
-	public <T extends Pane & ErrorSubmitable> IntegerPathBuilder(T ntad) {
+	public <T extends Pane> IntegerPathBuilder(T ntad) {
 		super(ntad);
 		this.setStyle("-fx-border-width: 1px; -fx-border-color: rgba(255, 149, 0, 1.0);");
 		onChoiceBox.getItems().addAll(new IntegerLiteralConditionOption(onChoiceBox));
@@ -28,7 +28,7 @@ public class IntegerPathBuilder extends PathBuilder{
 	public boolean verifyInput() {
 		boolean result = super.verifyInput();
 		if(!result) {
-			submitErrorMessage("Integer Path has no selection for the \"on\" box");
+			PieceBuilder.submitError("Integer Path has no selection for the \"on\" box");
 			return false;
 		}
 		ObservableList<Node> children = this.getChildren();
@@ -36,19 +36,19 @@ public class IntegerPathBuilder extends PathBuilder{
 		if(last instanceof ConditionChoiceBox) {
 			ConditionOption selected = ((ConditionChoiceBox) last).getValue();
 			if(selected == null) {
-				submitErrorMessage("Integer Path does have a selection");
+				PieceBuilder.submitError("Integer Path does have a selection");
 				result = false;
 			}
 			else if(selected instanceof MethodConditionOption) {
 				if(!(((MethodConditionOption) selected).method.getReturnType() == int.class)) {
-					submitErrorMessage("Integer Path does not lead to a integer property");
+					PieceBuilder.submitError("Integer Path does not lead to a integer property");
 					result = false;
 				}
 			}
 			else if(selected instanceof IntegerLiteralConditionOption) {
 				boolean inputValid = ((IntegerLiteralConditionOption) selected).verifyInput();
 				if(!inputValid) {
-					submitErrorMessage("Integer Path number input box is invalid.");
+					PieceBuilder.submitError("Integer Path number input box is invalid.");
 				}
 			}
 			else {
@@ -58,7 +58,7 @@ public class IntegerPathBuilder extends PathBuilder{
 		else if(last instanceof IntTextField) {
 			boolean verify = ((IntTextField) last).verifyInput();
 			if(!verify) {
-				submitErrorMessage("Integer Path number input box is invalid.");
+				PieceBuilder.submitError("Integer Path number input box is invalid.");
 				result = false;
 			}
 		}

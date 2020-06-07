@@ -49,19 +49,17 @@ import javafx.scene.layout.VBox;
 import javafx.scene.paint.Color;
 import javafx.scene.shape.Circle;
 
-public class ActionTreeBuilder extends StackPane implements InputVerification, ErrorSubmitable, Buildable<ActionTree>{
+public class ActionTreeBuilder extends StackPane implements InputVerification, Buildable<ActionTree>{
 	private static List<Class<? extends Action>> actionTypes = Action.getImmediateSubtypes();
 	
 	private TitledPane actionTreeTitledPane;
 	private VBox baseContent, actionTreeVBox; //actionTreeVBox is the content of the actionTreeTitledPane
 	private MenuButton addActionButton;
 	private ScrollPane bcScrollPane;
-	private PieceBuilder pieceBuilder;
 	private Button addBottleneckButton;
 	
-	public ActionTreeBuilder(PieceBuilder pieceBuilder) {
+	public ActionTreeBuilder() {
 		super();
-		this.pieceBuilder = pieceBuilder;
 		baseContent = new VBox();
 		baseContent.setFillWidth(true);
 		actionTreeVBox = new VBox(10);
@@ -223,7 +221,7 @@ public class ActionTreeBuilder extends StackPane implements InputVerification, E
 				}
 				else {
 					if(p.getType() == int.class) {
-						IntInputHBox hBox = new IntInputHBox(paramNames[i], pieceBuilder);
+						IntInputHBox hBox = new IntInputHBox(paramNames[i]);
 						vBox.getChildren().add(hBox);
 					}
 					else if(p.getType() == boolean.class) {
@@ -231,7 +229,7 @@ public class ActionTreeBuilder extends StackPane implements InputVerification, E
 						vBox.getChildren().add(hBox);
 					}
 					else if(p.getType() == ArrayList.class && ((ParameterizedType) p.getParameterizedType()).getActualTypeArguments()[0] == String.class) {
-						PieceOptionsInputHBox hBox= new PieceOptionsInputHBox(paramNames[i], pieceBuilder);
+						PieceOptionsInputHBox hBox= new PieceOptionsInputHBox(paramNames[i]);
 						vBox.getChildren().add(hBox);
 					}
 					else {
@@ -240,10 +238,10 @@ public class ActionTreeBuilder extends StackPane implements InputVerification, E
 					
 				}
 			}
-			conditionPane = new ConditionTP(pieceBuilder);
+			conditionPane = new ConditionTP();
 			vBox.getChildren().add(conditionPane);
 			if(StoppableAction.class.isAssignableFrom(creationMethod.getReturnType())) {
-				stopConditionPane = new ConditionTP("Stop Conditions", pieceBuilder);
+				stopConditionPane = new ConditionTP("Stop Conditions");
 				vBox.getChildren().add(stopConditionPane);
 			}
 			else {
@@ -352,7 +350,7 @@ public class ActionTreeBuilder extends StackPane implements InputVerification, E
 			vBox = new VBox(4);
 			this.setContent(vBox);
 			this.setText("Bottleneck");
-			conditionTP = new ConditionTP(pieceBuilder);
+			conditionTP = new ConditionTP();
 			childTP = new ChildTP();
 			deleteChokeButton = new Button("Delete Bottleneck");
 			deleteChokeButton.setStyle("-fx-background-color: transparent; -fx-border-width: 1px; -fx-border-color: #b00000;"
@@ -384,7 +382,7 @@ public class ActionTreeBuilder extends StackPane implements InputVerification, E
 		
 		public MultiActionTP(String name, VBox content, Method creationMethod) {
 			super(name, content, creationMethod, true);
-			subTP = new SubActionsTP(pieceBuilder);
+			subTP = new SubActionsTP();
 			ObservableList<Node> children = super.vBox.getChildren();
 			
 			int ctpindex = children.indexOf(conditionPane);
@@ -456,10 +454,5 @@ public class ActionTreeBuilder extends StackPane implements InputVerification, E
 			return end;
 		}
 
-	}
-	
-	@Override
-	public void submitErrorMessage(String message) {
-		pieceBuilder.submitErrorMessage(message);
 	}
 }

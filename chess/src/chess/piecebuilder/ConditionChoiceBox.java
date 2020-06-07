@@ -8,9 +8,9 @@ import javafx.scene.control.ChoiceBox;
 import javafx.scene.layout.Pane;
 
 //DON'T MAKE THIS InputVerifiable - see BoolPathBuilder.verifyInput()
-public class ConditionChoiceBox extends ChoiceBox<ConditionOption> implements ErrorSubmitable{
+public class ConditionChoiceBox extends ChoiceBox<ConditionOption>{
 	public Pane nodeToAddTo;
-	public <T extends Pane & ErrorSubmitable> ConditionChoiceBox(T ntad) {
+	public <T extends Pane> ConditionChoiceBox(T ntad) {
 		super();
 		this.nodeToAddTo = ntad;
 		ConditionChoiceBox.this.getSelectionModel().selectedIndexProperty().addListener(new ChangeListener<Number>() {
@@ -34,10 +34,5 @@ public class ConditionChoiceBox extends ChoiceBox<ConditionOption> implements Er
 	 */
 	public void addMethod(String name, Method m) {
 		this.getItems().add(new MethodConditionOption(this, name, m));
-	}
-
-	@Override
-	public void submitErrorMessage(String message) {
-		((ErrorSubmitable) nodeToAddTo).submitErrorMessage(message);
 	}
 }

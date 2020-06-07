@@ -9,10 +9,8 @@ import javafx.scene.layout.HBox;
 public class IntInputHBox extends HBox implements InputVerification{
 	private static final int SPACING = 5;
 	private TextField textField;
-	private ErrorSubmitable submitErrorsTo;
-	public IntInputHBox(String parameterName, ErrorSubmitable es) {
+	public IntInputHBox(String parameterName) {
 		super(SPACING);
-		this.submitErrorsTo = es;
 		this.setAlignment(Pos.CENTER_LEFT);
 		this.getChildren().add(new Label(String.format("%s (integer): ", parameterName)));
 		textField = new TextField();
@@ -23,7 +21,7 @@ public class IntInputHBox extends HBox implements InputVerification{
 		//System.out.println("Verifying int input");
 		boolean result = isInteger(textField.getText().strip(), 10);
 		if(!result) {
-			submitErrorsTo.submitErrorMessage(((Label) this.getChildren().get(0)).getText() + " is invalid");
+			PieceBuilder.submitError(((Label) this.getChildren().get(0)).getText() + " is invalid");
 		}
 		return result;
 	}

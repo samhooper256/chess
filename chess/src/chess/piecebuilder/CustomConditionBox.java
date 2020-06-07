@@ -21,16 +21,13 @@ import javafx.scene.layout.FlowPane;
 import javafx.scene.layout.Pane;
 import javafx.scene.layout.Region;
 import javafx.scene.layout.VBox;
-public class CustomConditionBox extends VBox implements InputVerification, ErrorSubmitable, Buildable<Condition>{
+public class CustomConditionBox extends VBox implements InputVerification, Buildable<Condition>{
 	private DropPathPane dropPathPane;
 	private BuildFinisher buildFinisher;
 	private Pane nodeToAddTo;
 	private boolean waitingForDrop;
 	public CustomConditionBox(Pane ntad) {
 		super();
-		if(!(ntad instanceof ErrorSubmitable)) {
-			throw new IllegalArgumentException("nodeToAddTo is not ErrorSubmitable");
-		}
 		this.prefWidthProperty().bind(ntad.widthProperty());
 		this.nodeToAddTo = ntad;
 		this.setStyle("-fx-border-width: 1px; -fx-border-color: #b00000;");
@@ -99,11 +96,6 @@ public class CustomConditionBox extends VBox implements InputVerification, Error
 			e.printStackTrace();
 		}
 		throw new IllegalArgumentException("Unknown Error");
-	}
-
-	@Override
-	public void submitErrorMessage(String message) {
-		((ErrorSubmitable) nodeToAddTo).submitErrorMessage(message);
 	}
 }
 

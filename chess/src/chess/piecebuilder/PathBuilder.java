@@ -13,11 +13,11 @@ import javafx.scene.control.Label;
 import javafx.scene.layout.FlowPane;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Pane;
-public abstract class PathBuilder extends HBox implements InputVerification, ErrorSubmitable{
+public abstract class PathBuilder extends HBox implements InputVerification{
 	private Label label;
 	protected ConditionChoiceBox onChoiceBox;
 	Pane nodeToAddTo;
-	public <T extends Pane & ErrorSubmitable> PathBuilder(T ntad) {
+	public <T extends Pane> PathBuilder(T ntad) {
 		super();
 		this.nodeToAddTo = ntad;
 		this.setSpacing(4);
@@ -35,11 +35,6 @@ public abstract class PathBuilder extends HBox implements InputVerification, Err
 	public abstract String getPathTypeName();
 	
 	public abstract PathBase build();
-	
-	@Override
-	public final void submitErrorMessage(String message) {
-		((ErrorSubmitable) nodeToAddTo).submitErrorMessage(message);
-	}
 	
 	@Override
 	public boolean verifyInput() {

@@ -41,7 +41,7 @@ import javafx.scene.paint.Color;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
 
-public class PieceBuilder extends Stage implements InputVerification, ErrorSubmitable{
+public class PieceBuilder extends Stage implements InputVerification{
 	private Scene scene;
 	private StackPane outerStackPane, whiteImageOuter, blackImageOuter, whiteImageInternal, blackImageInternal;
 	private VBox outermostVBox, leftVBox, leftImageVBox;
@@ -58,14 +58,84 @@ public class PieceBuilder extends Stage implements InputVerification, ErrorSubmi
 	private DoubleProperty errorFontSize;
 	private StringExpression errorFontStringExpression;
 	private static final Image WHITE_DEFAULT_IMAGE, BLACK_DEFAULT_IMAGE;
-	Collection<String> currentPieceNames; //TODO Update this whenever PieceBuilder is opened! (and when a new piece is added and PieceBuilder remains open)
+	private Collection<String> currentPieceNames; //TODO Update this whenever PieceBuilder is opened! (and when a new piece is added and PieceBuilder remains open)
 	
 	static {
 		WHITE_DEFAULT_IMAGE = new Image(PieceBuilder.class.getResourceAsStream("/resources/white_default_image.png"));
 		BLACK_DEFAULT_IMAGE = new Image(PieceBuilder.class.getResourceAsStream("/resources/black_default_image.png"));
 	}
 	
-	public PieceBuilder() {
+	private static PieceBuilder instance;
+	
+	/* *
+	 * Creates a single PieceBuilder instance and returns it.
+	 * If a PieceBuilder instance has already been created, this method throws an
+	 * UnsupportedOperationException as only one isntance of this class should exist
+	 * at any time.
+	 */
+	public static PieceBuilder make() {
+		if(instance == null) {
+			return instance = new PieceBuilder();
+		}
+		else {
+			throw new UnsupportedOperationException("A PieceBuilder instance already exists");
+		}
+	}
+	
+	/*
+	 * Returns the existing PieceBuilder instance, or creates one and returns it
+	 * if it does not exist. Does not throw any exceptions.
+	 */
+	public PieceBuilder makeOrGet() {
+		if(instance == null) {
+			return make();
+		}
+		else {
+			return instance;
+		}
+	}
+	
+	/* *
+	 * Returns the PieceBuilder instance, throwing a NullPointerException if it has
+	 * not been created yet.
+	 */
+	public PieceBuilder getInstance() {
+		if(instance == null) {
+			throw new NullPointerException("The instance does not exist.");
+		}
+		else {
+			return instance;
+		}
+	}
+	
+	public static void submitError(String message) {
+		if(instance == null) {
+			throw new NullPointerException("The instance does not exist.");
+		}
+		else {
+			instance.submitErrorMessage(message);
+		}
+	}
+	
+	public static void clearErrors() {
+		if(instance == null) {
+			throw new NullPointerException("The instance does not exist.");
+		}
+		else {
+			instance.clearErrors0();
+		}
+	}
+	
+	public static Collection<String> currentPieceNames(){
+		if(instance == null) {
+			throw new NullPointerException("The instance does not exist.");
+		}
+		else {
+			return instance.currentPieceNames0();
+		}
+	}
+	
+	private PieceBuilder() {
 		super();
 		outermostVBox = new VBox();
 		outermostVBox.setFillWidth(true);
@@ -213,7 +283,7 @@ public class PieceBuilder extends Stage implements InputVerification, ErrorSubmi
 		leftVBox.getChildren().addAll(nameHBox, leftImageVBox, createPieceButton);
 		///////////////////////////////
 		//Make right part
-		actionTreeBuilder = new ActionTreeBuilder(this);
+		actionTreeBuilder = new ActionTreeBuilder();
 		gridPane.add(actionTreeBuilder, 1, 0);
 		//actionTreeBuilder.setBlank();
 		
@@ -313,8 +383,7 @@ public class PieceBuilder extends Stage implements InputVerification, ErrorSubmi
 		return false;
 	}
 	
-	@Override
-	public void submitErrorMessage(String message) {
+	private void submitErrorMessage(String message) {
 		if(!errorsShowing) {
 			errorVBox.getChildren().add(hideErrors);
 			errorsShowing = true;
@@ -324,7 +393,7 @@ public class PieceBuilder extends Stage implements InputVerification, ErrorSubmi
 		errorVBox.getChildren().add(0, label);
 	}
 	
-	public void clearErrors() {
+	private void clearErrors0() {
 		errorVBox.getChildren().clear();
 		errorsShowing = false;
 	}
@@ -353,5 +422,9 @@ public class PieceBuilder extends Stage implements InputVerification, ErrorSubmi
 	
 	public void close0() {
 		close();
+	}
+	
+	private Collection<String> currentPieceNames0(){
+		return currentPieceNames;
 	}
 }

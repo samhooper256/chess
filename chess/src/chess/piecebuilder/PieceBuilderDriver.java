@@ -16,7 +16,7 @@ public class PieceBuilderDriver extends Application{
 		primaryStage = new PieceBuilder();
 		primaryStage.show();
 		*/
-		ActionTreeBuilder atb = new ActionTreeBuilder(null);
+		ActionTreeBuilder atb = new ActionTreeBuilder();
 		Scene scene = new Scene(atb, 600, 400);
 		primaryStage.setScene(scene);
 		primaryStage.show();

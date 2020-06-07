@@ -18,7 +18,7 @@ import javafx.scene.layout.FlowPane;
 import javafx.scene.layout.Pane;
 
 public class BoolPathBuilder extends PathBuilder{
-	public <T extends Pane & ErrorSubmitable> BoolPathBuilder(T ntad) {
+	public <T extends Pane> BoolPathBuilder(T ntad) {
 		super(ntad);
 		this.setStyle("-fx-border-width: 1px; -fx-border-color: rgba(228, 56, 255, 1.0);");
 		onChoiceBox.getItems().addAll(new BooleanLiteralConditionOption(onChoiceBox, true),
@@ -100,7 +100,7 @@ public class BoolPathBuilder extends PathBuilder{
 	public boolean verifyInput() {
 		boolean result = super.verifyInput();
 		if(!result) {
-			submitErrorMessage("Boolean Path has no selection for the \"on\" box");
+			PieceBuilder.submitError("Boolean Path has no selection for the \"on\" box");
 			return false;
 		}
 		ObservableList<Node> children = this.getChildren(); //BoolPathBuilders are Panes
@@ -108,12 +108,12 @@ public class BoolPathBuilder extends PathBuilder{
 		if(last instanceof ConditionChoiceBox) {
 			ConditionOption selected = ((ConditionChoiceBox) last).getValue();
 			if(selected == null) {
-				submitErrorMessage("Boolean Path does have a selection");
+				PieceBuilder.submitError("Boolean Path does have a selection");
 				result = false;
 			}
 			else if(selected instanceof MethodConditionOption) {
 				if(!(((MethodConditionOption) selected).method.getReturnType() == boolean.class)) {
-					submitErrorMessage("Boolean Path does not lead to a boolean property");
+					PieceBuilder.submitError("Boolean Path does not lead to a boolean property");
 					result = false;
 				}
 			}

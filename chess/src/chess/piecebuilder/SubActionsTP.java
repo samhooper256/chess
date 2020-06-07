@@ -28,7 +28,7 @@ import javafx.scene.layout.HBox;
 import javafx.scene.layout.Pane;
 import javafx.scene.layout.VBox;
 
-public class SubActionsTP extends TitledPane implements InputVerification, ErrorSubmitable, Buildable<List<Pair<SubMulti, Boolean>>>{
+public class SubActionsTP extends TitledPane implements InputVerification, Buildable<List<Pair<SubMulti, Boolean>>>{
 	private static final List<Method> subMultiCreationMethods;
 	static {
 		subMultiCreationMethods = new ArrayList<>();
@@ -43,10 +43,8 @@ public class SubActionsTP extends TitledPane implements InputVerification, Error
 	private VBox vBox; //content of this SubActiosnTP
 	private MenuButton addActionButton;
 	private CheckBox necessaryCheckBox;
-	private PieceBuilder pieceBuilder;
-	public SubActionsTP(PieceBuilder pb) {
+	public SubActionsTP() {
 		super();
-		this.pieceBuilder = pb;
 		vBox = new VBox(10);
 		vBox.setPadding(new Insets(10,0,10,10));
 		addActionButton = new MenuButton("Add action");
@@ -141,7 +139,7 @@ public class SubActionsTP extends TitledPane implements InputVerification, Error
 				}
 				else {
 					if(p.getType() == int.class) {
-						IntInputHBox hBox = new IntInputHBox(paramNames[paramIndex], pieceBuilder);
+						IntInputHBox hBox = new IntInputHBox(paramNames[paramIndex]);
 						subVBox.getChildren().add(hBox);
 					}
 					else if(p.getType() == boolean.class) {
@@ -149,7 +147,7 @@ public class SubActionsTP extends TitledPane implements InputVerification, Error
 						subVBox.getChildren().add(hBox);
 					}
 					else if(p.getType() == ArrayList.class && ((ParameterizedType) p.getParameterizedType()).getActualTypeArguments()[0] == String.class) {
-						PieceOptionsInputHBox hBox= new PieceOptionsInputHBox(paramNames[paramIndex], pieceBuilder);
+						PieceOptionsInputHBox hBox= new PieceOptionsInputHBox(paramNames[paramIndex]);
 						subVBox.getChildren().add(hBox);
 					}
 					else {
@@ -157,7 +155,7 @@ public class SubActionsTP extends TitledPane implements InputVerification, Error
 					}
 				}
 			}
-			subVBox.getChildren().add(conditionTP = new ConditionTP(pieceBuilder));
+			subVBox.getChildren().add(conditionTP = new ConditionTP());
 			deleteActionButton = new Button("Delete Sub-Action");
 			deleteActionButton.setStyle("-fx-background-color: transparent; -fx-border-width: 1px; -fx-border-color: #b00000;"
 					+ "-fx-border-radius: 6; -fx-text-fill: #b00000;"); //TODO Put this in CSS (and add hover effect)
@@ -226,7 +224,7 @@ public class SubActionsTP extends TitledPane implements InputVerification, Error
 		public boolean verifyInput() {
 			boolean result = true;
 			if(flagChoice != null && flagChoice.getSelectionModel().isEmpty()) {
-				submitErrorMessage("relative to (in a Multi's Sub-Action): has no selection");
+				PieceBuilder.submitError("relative to (in a Multi's Sub-Action): has no selection");
 				result = false;
 			}
 			for(Node fxNode : subVBox.getChildren()) {
@@ -238,13 +236,5 @@ public class SubActionsTP extends TitledPane implements InputVerification, Error
 			}
 			return result;
 		}
-		
-		
-		
-	}
-
-	@Override
-	public void submitErrorMessage(String message) {
-		pieceBuilder.submitErrorMessage(message);
 	}
 }

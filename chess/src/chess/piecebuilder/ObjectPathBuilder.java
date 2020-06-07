@@ -13,7 +13,7 @@ import javafx.scene.layout.Pane;
 
 public class ObjectPathBuilder extends PathBuilder{
 
-	public <T extends Pane & ErrorSubmitable> ObjectPathBuilder(T ntad) {
+	public ObjectPathBuilder(Pane ntad) {
 		super(ntad);
 		this.setStyle("-fx-border-width: 1px; -fx-border-color: rgba(255, 235, 59, 1.0);");
 	}
@@ -27,7 +27,7 @@ public class ObjectPathBuilder extends PathBuilder{
 	public boolean verifyInput() {
 		boolean result = super.verifyInput();
 		if(!result) {
-			submitErrorMessage("Anything Path has no selection for the \"on\" box");
+			PieceBuilder.submitError("Anything Path has no selection for the \"on\" box");
 			return false;
 		}
 		ObservableList<Node> children = this.getChildren();
@@ -40,7 +40,7 @@ public class ObjectPathBuilder extends PathBuilder{
 					ConditionOption previousCO = ((ConditionChoiceBox) previousNode).getValue();
 					if(previousCO instanceof MethodConditionOption) {
 						if(((MethodConditionOption) previousCO).method.getReturnType().isPrimitive()) {
-							submitErrorMessage("Anything path does not lead to valid property");
+							PieceBuilder.submitError("Anything path does not lead to valid property");
 							result = false;
 						}
 					}
@@ -50,13 +50,13 @@ public class ObjectPathBuilder extends PathBuilder{
 				}
 				else {
 					System.out.println("\n\n**" + previousNode.getClass() + "**\n\n");
-					submitErrorMessage("Anything Path does not have a selection");
+					PieceBuilder.submitError("Anything Path does not have a selection");
 					result = false;
 				}
 			}
 			else if(selected instanceof MethodConditionOption) {
 				if(((MethodConditionOption) selected).method.getReturnType().isPrimitive()) {
-					submitErrorMessage("Anything path does not lead to valid property");
+					PieceBuilder.submitError("Anything path does not lead to valid property");
 					result = false;
 				}
 			}

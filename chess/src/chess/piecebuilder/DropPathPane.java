@@ -12,13 +12,13 @@ import javafx.scene.input.TransferMode;
 import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.Pane;
 
-public class DropPathPane extends BorderPane implements InputVerification, ErrorSubmitable {
+public class DropPathPane extends BorderPane implements InputVerification {
 	private Label label;
 	private String pathType;
 	private boolean addFinsiher;
 	public Pane nodeToAddTo;
 	private boolean pathHasBeenDropped;
-	public <T extends Pane & ErrorSubmitable> DropPathPane(boolean addFinisher, T ntad) {
+	public <T extends Pane> DropPathPane(boolean addFinisher, T ntad) {
 		super();
 		this.pathHasBeenDropped = false;
 		this.addFinsiher = addFinisher;
@@ -36,13 +36,13 @@ public class DropPathPane extends BorderPane implements InputVerification, Error
 	    			String builderName = db.getString();
 	                PathBuilder builder = null;
 	                if(builderName.equals("bool")) {
-	                	builder = new BoolPathBuilder((Pane & ErrorSubmitable) nodeToAddTo);
+	                	builder = new BoolPathBuilder(nodeToAddTo);
 	                }
 	                else if(builderName.equals("integer")) {
-	                	builder = new IntegerPathBuilder((Pane & ErrorSubmitable) nodeToAddTo);
+	                	builder = new IntegerPathBuilder(nodeToAddTo);
 	                }
 	                else if(builderName.equals("object")) {
-	                	builder = new ObjectPathBuilder((Pane & ErrorSubmitable) nodeToAddTo);
+	                	builder = new ObjectPathBuilder(nodeToAddTo);
 	                }
 	                else {
 	                	dragEvent.setDropCompleted(false);
@@ -107,13 +107,13 @@ public class DropPathPane extends BorderPane implements InputVerification, Error
 	    			String builderName = db.getString();
 	                PathBuilder builder = null;
 	                if(builderName.equals("bool")) {
-	                	builder = new BoolPathBuilder((Pane & ErrorSubmitable) nodeToAddTo);
+	                	builder = new BoolPathBuilder(nodeToAddTo);
 	                }
 	                else if(builderName.equals("integer")) {
-	                	builder = new IntegerPathBuilder((Pane & ErrorSubmitable) nodeToAddTo);
+	                	builder = new IntegerPathBuilder(nodeToAddTo);
 	                }
 	                else if(builderName.equals("object")) {
-	                	builder = new ObjectPathBuilder((Pane & ErrorSubmitable) nodeToAddTo);
+	                	builder = new ObjectPathBuilder(nodeToAddTo);
 	                }
 	                else {
 	                	throw new IllegalArgumentException("bad builder name: " + builderName);
@@ -149,11 +149,6 @@ public class DropPathPane extends BorderPane implements InputVerification, Error
 	}
 
 	@Override
-	public void submitErrorMessage(String message) {
-		((ErrorSubmitable) nodeToAddTo).submitErrorMessage(message);
-	}
-
-	@Override
 	public boolean verifyInput() {
 		if(!pathHasBeenDropped) {
 			if(pathType != null) {
@@ -167,10 +162,10 @@ public class DropPathPane extends BorderPane implements InputVerification, Error
 				else if(pathType.equals("object")) {
 					displayPathType = "Anything";
 				}
-				submitErrorMessage("Custom Condition needs a " + displayPathType + " Path to be dropped");
+				PieceBuilder.submitError("Custom Condition needs a " + displayPathType + " Path to be dropped");
 			}
 			else {
-				submitErrorMessage("Custom Condition needs a path to be dropped");
+				PieceBuilder.submitError("Custom Condition needs a path to be dropped");
 			}
 			return false;
 		}

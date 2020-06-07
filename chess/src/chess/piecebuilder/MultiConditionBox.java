@@ -24,7 +24,6 @@ import javafx.scene.layout.VBox;
 import javafx.util.StringConverter;
 
 public class MultiConditionBox extends VBox implements MultiConditionPart{
-	private Pane nodeToAddTo;
 	private ChoiceBox<Method> choiceBox;
 	private ConditionBoxWrap conditionBoxWrap;
 	private static final StringConverter<Method> methodStringConverter = new StringConverter<>() {
@@ -39,20 +38,17 @@ public class MultiConditionBox extends VBox implements MultiConditionPart{
 			return null;
 		}
 	};
-	public MultiConditionBox(MultiConditionPart first){
+	public <T extends Node & MultiConditionPart> MultiConditionBox(T first){
 		super(4);
 		System.out.println("Entered MCP constructor, mcp passed was: " + first);
 		this.setFillWidth(true);
-		this.conditionBoxWrap = first.getWrap();
 		MultiConditionPart mcp1, mcp2;
 		mcp1 = first;
-		mcp2 = new ConditionBox(conditionBoxWrap, this);
-		this.nodeToAddTo = mcp1.getNodeToAddTo();
-		int mcp1index = this.nodeToAddTo.getChildren().indexOf(mcp1);
-		//System.out.println("\tmcp1's ntad was: " + nodeToAddTo + ", but now that's my ntad");
-		mcp1.setNodeToAddTo(this);
-		//System.out.println("\now mcp1's ntad is" + this + " (this)");
-		nodeToAddTo.getChildren().remove(mcp1);
+		mcp2 = new ConditionBox();
+		Pane myParent = (Pane) ((Node) mcp1).getParent();
+		int mcp1index = myParent.getChildren().indexOf(mcp1);
+		//System.out.println("\mcp1's ntad is" + this + " (this)");
+		myParent.getChildren().remove(mcp1);
 		//System.out.println("\tmy ntad's children (after removing mcp1):" + nodeToAddTo.getChildren());
 		choiceBox = new ChoiceBox<>();
 		choiceBox.getItems().addAll(Condition.postConstructionModifierMethods);
@@ -60,7 +56,7 @@ public class MultiConditionBox extends VBox implements MultiConditionPart{
 		choiceBox.setValue(Condition.postConstructionModifierMethods[0]);
 		this.getChildren().addAll((Node) mcp1, choiceBox, (Node) mcp2);
 		//System.out.println("\tmy children (after add 3 things):" + getChildren());
-		nodeToAddTo.getChildren().add(mcp1index, this);
+		myParent.getChildren().add(mcp1index, this);
 		//System.out.println("\tfinally, my ntad's children (after ntad.getChildren().add(mcp1index, this)): " + nodeToAddTo.getChildren());
 		
 		//TODO COde from this line to *** is the exact same as in CustomConditionBox - fix?
@@ -97,14 +93,6 @@ public class MultiConditionBox extends VBox implements MultiConditionPart{
 	}
 	
 	@Override
-	public Pane getNodeToAddTo() {
-		return nodeToAddTo;
-	}
-	@Override
-	public void setNodeToAddTo(Pane node) {
-		this.nodeToAddTo = node;
-	}
-	@Override
 	public Condition build() {
 		try {
 			return (Condition) choiceBox.getValue().invoke(null, ((Buildable<Condition>) getChildren().get(0)).build(), ((Buildable<Condition>) getChildren().get(0)).build());
@@ -113,14 +101,6 @@ public class MultiConditionBox extends VBox implements MultiConditionPart{
 			e.printStackTrace();
 		}
 		throw new IllegalArgumentException("Unkown error");
-	}
-	@Override
-	public void submitErrorMessage(String message) {
-		((ErrorSubmitable) nodeToAddTo).submitErrorMessage(message);
-	}
-	@Override
-	public ConditionBoxWrap getWrap() {
-		return conditionBoxWrap;
 	}
 	@Override
 	public String toString() {

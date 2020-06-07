@@ -9,20 +9,16 @@ import javafx.scene.control.Label;
 import javafx.scene.layout.Pane;
 import javafx.scene.layout.VBox;
 
-public class ConditionBoxWrap extends VBox implements InputVerification, ErrorSubmitable, Buildable<Condition>{
-	ESVBox esvBox;
+public class ConditionBoxWrap extends VBox implements InputVerification, Buildable<Condition>{
+	VBox esvBox;
 	private Pane nodeToAddTo;
 	private Button deleteConditionButton;
 	public ConditionBoxWrap(Pane ntad) {
-		if(!(ntad instanceof ErrorSubmitable)) {
-			throw new IllegalArgumentException("nodeToAddTo is not ErrorSubmitable");
-		}
 		this.nodeToAddTo = ntad;
-		esvBox = new ESVBox(this);
+		esvBox = new VBox();
 		this.setFillWidth(true);
 		esvBox.setFillWidth(true);
-		ConditionBox initialCB = new ConditionBox(this, this.esvBox);
-		esvBox.getChildren().add((Node) initialCB);
+		esvBox.getChildren().add(new ConditionBox());
 		
 		this.setStyle("-fx-border-color: pink;");
 		deleteConditionButton = new Button("Delete Condition");
@@ -32,7 +28,7 @@ public class ConditionBoxWrap extends VBox implements InputVerification, ErrorSu
 			nodeToAddTo.getChildren().remove(this);
 		});
 		this.getChildren().addAll(esvBox, deleteConditionButton);
-		System.out.println(this + " created, esvBox = " + esvBox + ", initial ConditionBox = " + initialCB);
+		System.out.println(this + " created, esvBox = " + esvBox + ", initial ConditionBox = " + esvBox.getChildren().get(0));
 	}
 	@Override
 	public Condition build() {
@@ -47,10 +43,6 @@ public class ConditionBoxWrap extends VBox implements InputVerification, ErrorSu
 		else {
 			return ((InputVerification) esvBox.getChildren().get(0)).verifyInput();
 		}
-	}
-	@Override
-	public void submitErrorMessage(String message) {
-		((ErrorSubmitable) nodeToAddTo).submitErrorMessage(message);
 	}
 
 }

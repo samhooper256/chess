@@ -54,7 +54,7 @@ public abstract class BuildFinisher extends ChoiceBox<Method> {
 	
 	public abstract PathBuilder getPrecedingBuilder();
 	
-	public static class BoolBuildFinisher extends BuildFinisher implements InputVerification, ErrorSubmitable{
+	public static class BoolBuildFinisher extends BuildFinisher implements InputVerification{
 		private BoolPathBuilder precedingBuilder;
 		public BoolBuildFinisher(BoolPathBuilder precedingBuilder) {
 			super();
@@ -93,14 +93,10 @@ public abstract class BuildFinisher extends ChoiceBox<Method> {
 			return precedingBuilder;
 		}
 		@Override
-		public void submitErrorMessage(String message) {
-			precedingBuilder.submitErrorMessage(message);
-		}
-		@Override
 		public boolean verifyInput() {
 			boolean result = true;
 			if(BoolBuildFinisher.this.getSelectionModel().isEmpty()) {
-				submitErrorMessage("Boolean Path finisher has no selection");
+				PieceBuilder.submitError("Boolean Path finisher has no selection");
 				result = false;
 			}
 			return result;

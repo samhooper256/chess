@@ -11,12 +11,10 @@ import javafx.scene.Node;
 import javafx.scene.control.CheckBox;
 import javafx.scene.layout.HBox;
 
-public class ParameterBlock extends HBox implements Buildable<Object[]>, InputVerification, ErrorSubmitable{
+public class ParameterBlock extends HBox implements Buildable<Object[]>, InputVerification{
 	private Method method;
-	private ErrorSubmitable submitErrorsTo;
-	public ParameterBlock(Method m, ErrorSubmitable es) {
+	public ParameterBlock(Method m) {
 		this.method = m;
-		this.submitErrorsTo = es;
 		for(Class<?> clazz : m.getParameterTypes()) {
 			if(clazz == int.class || clazz == IntegerPath.class) {
 				this.getChildren().add(new IntegerPathBuilder(this));
@@ -41,10 +39,7 @@ public class ParameterBlock extends HBox implements Buildable<Object[]>, InputVe
 		}
 		return params;
 	}
-	@Override
-	public void submitErrorMessage(String message) {
-		submitErrorsTo.submitErrorMessage(message);
-	}
+	
 	@Override
 	public boolean verifyInput() {
 		boolean result = true;

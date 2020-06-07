@@ -64,7 +64,10 @@ public class Board extends StackPane{
 	private final int BOARD_SIZE;
 	private Tile[][] board;
 	private int moveNumber, playNumber, movesSincePawnOrCapture;
-	private int[][] kingLocations; //kingLocations[0] is white king, kingLocations[1] is black king
+	/**
+	 * kingLocations[0] is white king, kingLocations[1] is black king
+	 */
+	private int[][] kingLocations;
 	private Tile currentlySelectedTile;
 	private BoardPreset preset;
 	private boolean turn;
@@ -370,7 +373,7 @@ public class Board extends StackPane{
 			selectionPiece = null;
 			return thePiece;
 		}
-		/* *
+		/**
 		 * Should NOT be called from FX Thread.
 		 */
 		public LegalAction selectAction(Collection<LegalAction> options) {
@@ -741,10 +744,6 @@ public class Board extends StackPane{
 			}
 		}
 		
-		private Set<LegalAction> getLegalActions() {
-			return legalActions;
-		}
-		
 		void printDetailedData(PrintStream out){
 			out.printf("---------------%nDetailed Data for Tile at (%d, %d) :%n", row, col);
 			out.printf("Piece >> %s%n", currentPiece);
@@ -752,8 +751,12 @@ public class Board extends StackPane{
 			out.printf("legalActions >> %s%n", legalActions);
 			out.printf("---------------%n");
 		}
-		/* *
-		 * returns true iff one or more legal moves are found, false otherwise.
+		/**
+		 * Calculates the {@code Set<LegalAction>} available to the piece on this tile by calling
+		 * {@link Piece#getLegalActions(Board, int, int)}. Stores the result in {@code Tile.this.legalActions}
+		 * (private instance variable).
+		 * 
+		 * @return true if one or more legal moves are found, false otherwise.
 		 */
 		private boolean calculateLegalActions() {
 			this.legalActions = currentPiece == null ? null : currentPiece.getLegalActions(Board.this, row, col);
@@ -762,8 +765,9 @@ public class Board extends StackPane{
 			
 		}
 		
-		/* *
+		/**
 		 * Interacts with scene graph. MUST BE CALLED FROM FX APPLICATION THREAD.
+		 * @param p
 		 */
 		Piece setPiece(Piece p) {
 			if(p == null && currentPiece == null) return null;
@@ -786,8 +790,9 @@ public class Board extends StackPane{
 			return temp;
 		}
 		
-		/* *
-		 * Interacts with scene graph. MUST BE CALLED FROM FX APPLICATION THREAD.
+		/**
+		 * Interacts with scene graph. <b>Must be called from the FX Application Thread.</b>
+		 * @param value
 		 */
 		private void setHighlighted(boolean value) {
 			if(value == isHighlighted) {
@@ -886,8 +891,9 @@ public class Board extends StackPane{
 			return color == Piece.WHITE ? row + 1 : BOARD_SIZE - row;
 		}
 		
-		/* *
-		 * Returns TRUE if this is a light square, false if it's a dark square.
+		/**
+		 * Return the color of this tile.
+		 * @return true if this is a light square, false if it's a dark square.
 		 */
 		public boolean tileColor() {
 			return (row+col) % 2 == 0;
@@ -1206,8 +1212,8 @@ public class Board extends StackPane{
 		kingLocations[0][0] = kingLocations[0][1] = kingLocations[1][0] = kingLocations[1][1] = -1;
 	}
 
-	/* *
-	 * Precondition: kingLocations holds accurate values.
+	/**
+	 * Precondition: {@code kingLocations} holds accurate values.
 	 * 
 	 * BLOCKS until it is done.
 	 * If it needs to be called from FX Thread, it Should ONLY be called through MovePreparer.prepare().
@@ -1564,7 +1570,15 @@ public class Board extends StackPane{
 		return result;
 	}
 
-	//PRECONDITION: rows & cols are valid, startRow/startCol represents a NON-KING piece.
+	/**
+	 * PRECONDITION: rows & cols are valid, startRow/startCol represents a NON-KING piece.
+	 * @param startRow
+	 * @param startCol
+	 * @param action
+	 * @throws ArrayIndexOutOfBoundsException if startRow or startCol are out of bounds.
+	 * @throws IllegalArgumentException if startRow/startCol holds a king Piece.
+	 * @return
+	 */
 	private boolean tryMoveForLegalityNonKing(int startRow, int startCol, LegalAction action) {
 		if(action instanceof LegalMoveAndCapture) {
 			return tryMoveForLegalityMNCNonKing(startRow, startCol, action.destRow(), action.destCol());
@@ -1575,6 +1589,9 @@ public class Board extends StackPane{
 		}
 		int destRow = action.destRow(), destCol = action.destCol();
 		Piece p = getPieceAt(startRow, startCol);
+		if(p instanceof King) {
+			throw new IllegalArgumentException("Piece on startRow/startCol is a king");
+		}
 		Piece onTile = getPieceAt(destRow, destCol);
 		int[] kingSpot = p.getColor() == Piece.WHITE ? kingLocations[0] : kingLocations[1];
 		boolean myColor = p.getColor();
@@ -1682,7 +1699,7 @@ public class Board extends StackPane{
 		}
 	}
 
-	/* *
+	/**
 	 * Precondition: All rows and columns are valid, startRow/startCol represents the location of a king.
 	 */
 	private boolean tryMoveForLegalityKing(int startRow, int startCol, LegalAction action) {
@@ -1844,7 +1861,8 @@ public class Board extends StackPane{
 	}
 	
 	
-	/* This method will find the current locations of the kings and so DOES NOT REQUIRE KINGLOCATIONS TO BE ACCURATE.
+	/**
+	 *  This method will find the current locations of the kings and so DOES NOT REQUIRE KINGLOCATIONS TO BE ACCURATE.
 	 * */
 	private boolean isCurrentStateLegalFor(boolean color) {
 		int[] kings = findKings()[color == Piece.WHITE ? 0 : 1];
@@ -1920,7 +1938,7 @@ public class Board extends StackPane{
 		});
 	}
 	
-	/*
+	/**
 	 * MUST BE CALLED FROM FX THREAD.
 	 * */
 	public void reset() {
@@ -1968,6 +1986,14 @@ public class Board extends StackPane{
 		return orientation;
 	}
 	
+	/**
+	 * Returns the piece on the tile indicated by row/col.
+	 * @param row the row of the tile
+	 * @param col the column of the tile
+	 * @throws ArrayIndexOutOfBoundsException if row/col is out of bounds for this board
+	 * ({@code row < 0 || row >= getBoardSize() || col < 0 || col >= getBoardSize()})
+	 * @return the piece on the Tile indicated by row/col, or null if that tile is empty.
+	 */
 	public Piece getPieceAt(int row, int col) {
 		return board[row][col].currentPiece;
 	}

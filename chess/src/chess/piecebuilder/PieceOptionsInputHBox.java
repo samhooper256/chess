@@ -14,10 +14,8 @@ import javafx.scene.layout.TilePane;
 class PieceOptionsInputHBox extends HBox implements InputVerification{
 	private static final int SPACING = 5;
 	private TilePane tilePane;
-	private PieceBuilder associatedPieceBuilder;
-	public PieceOptionsInputHBox(String parameterName, PieceBuilder pb) {
+	public PieceOptionsInputHBox(String parameterName) {
 		super(SPACING);
-		this.associatedPieceBuilder = pb;
 		this.setAlignment(Pos.CENTER_LEFT);
 		tilePane = new TilePane();
 		tilePane.setSnapToPixel(true);
@@ -25,7 +23,7 @@ class PieceOptionsInputHBox extends HBox implements InputVerification{
 		tilePane.setVgap(5);
 		tilePane.setHgap(5);
 		ObservableList<Node> tilePaneChildren = tilePane.getChildren();
-		for(String s : associatedPieceBuilder.currentPieceNames) {
+		for(String s : PieceBuilder.currentPieceNames()) {
 			if(!s.equals("King")) {
 				tilePaneChildren.add(new CheckBox(s));
 			}
@@ -52,7 +50,7 @@ class PieceOptionsInputHBox extends HBox implements InputVerification{
 				return true;
 			}
 		}
-		associatedPieceBuilder.submitErrorMessage(((Label) this.getChildren().get(0)).getText() + " needs at least one piece");
+		PieceBuilder.submitError(((Label) this.getChildren().get(0)).getText() + " needs at least one piece");
 		return false;
 	}
 }

@@ -10,20 +10,19 @@ import javafx.scene.Node;
 import javafx.scene.control.Button;
 import javafx.scene.control.TitledPane;
 import javafx.scene.layout.Pane;
+import javafx.scene.layout.VBox;
 
-public class ConditionTP extends TitledPane implements InputVerification, ErrorSubmitable, Buildable<Collection<Condition>>{
-	private ESVBox esvBox;
+public class ConditionTP extends TitledPane implements InputVerification, Buildable<Collection<Condition>>{
+	private VBox esvBox;
 	private Button addConditionButton;
-	PieceBuilder pieceBuilder;
 	private ConditionUtilFlowPane conditionUtilFlowPane;
-	public ConditionTP(PieceBuilder pieceBuilder) {
-		this("Conditions", pieceBuilder);
+	public ConditionTP() {
+		this("Conditions");
 	}
 	
-	public ConditionTP(String name, PieceBuilder pieceBuilder) {
+	public ConditionTP(String name) {
 		super();
-		this.pieceBuilder = pieceBuilder;
-		esvBox = new ESVBox(this, 10);
+		esvBox = new VBox(10);
 		esvBox.setPadding(new Insets(10));
 		conditionUtilFlowPane = new ConditionUtilFlowPane();
 		addConditionButton = new Button("Add condition");
@@ -69,10 +68,4 @@ public class ConditionTP extends TitledPane implements InputVerification, ErrorS
 		
 		return result;
 	}
-
-	@Override
-	public void submitErrorMessage(String message) {
-		this.pieceBuilder.submitErrorMessage(message);
-	}
-	
 }

@@ -77,7 +77,7 @@ public class GamePanel extends StackPane{
 	private Mode mode;
 	
 	public GamePanel() {
-		pieceBuilder = new PieceBuilder();
+		pieceBuilder = PieceBuilder.make();
 		hBox = new HBox();
 		hBox.setMinHeight(400);
 		hBox.alignmentProperty().set(Pos.CENTER);
@@ -504,11 +504,11 @@ public class GamePanel extends StackPane{
 		private VBox vBox;
 		private HBox lowerBox;
 		private Label errorMessage;
-		/* Auto-flip Setting */
+		/** Auto-flip Setting */
 		private CheckBox autoFlipCheckBox;
-		/* Draw by insufficient material Setting*/
+		/** Draw by insufficient material Setting*/
 		private CheckBox insufficientMaterialCheckBox;
-		/* N-move rule Setting*/
+		/** N-move rule Setting*/
 		private HBox moveRuleHBox;
 		private CheckBox moveRuleCheckBox;
 		private TextField moveRuleTextField;

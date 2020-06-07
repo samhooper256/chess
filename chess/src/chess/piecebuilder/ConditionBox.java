@@ -73,21 +73,14 @@ public class ConditionBox extends VBox implements InputVerification, MultiCondit
 	private CustomConditionBox customConditionBox;
 	private PremadeConditionBox premadeConditionBox;
 	private boolean isOnPremade;
-	private ESFlow flow;
+	private FlowPane flow;
 	private FlowPane settingsFlow;
-	private Pane nodeToAddTo;
 	private HBox defaultValueHBox, invertedHBox;
 	private ChoiceBox<Boolean> defaultValueChoiceBox;
 	private CheckBox invertedCheckBox;
-	private ConditionBoxWrap conditionBoxWrap;
-	public ConditionBox(ConditionBoxWrap wrap, Pane ntad) {
-		if(!(ntad instanceof ErrorSubmitable)) {
-			throw new IllegalArgumentException("nodeToAddTo is not ErrorSubmitable");
-		}
-		this.conditionBoxWrap = wrap;
-		this.nodeToAddTo = ntad;
+	public ConditionBox() {
 		this.setFillWidth(true);
-		flow = new ESFlow(this);
+		flow = new FlowPane();
 		conditionNameLabel = new Label("Condition: ");
 		box1 = new ChoiceBox<>();
 		box1.getItems().addAll("Premade", "Custom");
@@ -216,13 +209,13 @@ public class ConditionBox extends VBox implements InputVerification, MultiCondit
 	@Override
 	public boolean verifyInput() {
 		if(box1.getSelectionModel().isEmpty()) {
-			submitErrorMessage("Condition type (Premade/Custom) has not been selected.");
+			PieceBuilder.submitError("Condition type (Premade/Custom) has not been selected.");
 			return false;
 		}
 		
 		if(isOnPremade) {
 			if(premadeConditionBox.getSelectionModel().isEmpty()) {
-				submitErrorMessage("Premade condition has not been selected.");
+				PieceBuilder.submitError("Premade condition has not been selected.");
 				return false;
 			}
 			else {
@@ -235,26 +228,7 @@ public class ConditionBox extends VBox implements InputVerification, MultiCondit
 		}
 		
 	}
-
-	@Override
-	public Pane getNodeToAddTo() {
-		return nodeToAddTo;
-	}
-
-	@Override
-	public void setNodeToAddTo(Pane node) {
-		this.nodeToAddTo = node;
-	}
-
-	@Override
-	public void submitErrorMessage(String message) {
-		((ErrorSubmitable) nodeToAddTo).submitErrorMessage(message);
-	}
-
-	@Override
-	public ConditionBoxWrap getWrap() {
-		return conditionBoxWrap;
-	}
+	
 	@Override
 	public String toString() {
 		return "[ConditionBox@"+hashCode()+", children="+getChildren()+"]";

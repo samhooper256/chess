@@ -1,5 +1,6 @@
 package chess.util;
 
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -10,7 +11,11 @@ import java.util.Set;
 import chess.base.Board;
 import chess.base.LegalAction;
 
-public abstract class Action {
+public abstract class Action implements Serializable {
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = -7670901325804547489L;
 	private static List<Class<? extends Action>> immediateSubtypes = 
 			Collections.unmodifiableList(Arrays.asList(
 				MoveAndCaptureAction.class,

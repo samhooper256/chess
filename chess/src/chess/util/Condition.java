@@ -1,10 +1,7 @@
 package chess.util;
 
-import java.lang.reflect.Field;
-import java.lang.reflect.InvocationTargetException;
-import java.lang.reflect.Member;
+import java.io.Serializable;
 import java.lang.reflect.Method;
-import java.util.ArrayList;
 
 import chess.base.Board;
 import chess.base.Piece;
@@ -42,7 +39,12 @@ a.addCondition(Condition.andAll(
 */
 
 
-public abstract class Condition{
+public abstract class Condition implements Serializable{
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = -2544194942472379599L;
+
 	public static final Method[] postConstructionModifierMethods;
 	static {
 		postConstructionModifierMethods = new Method[3];
@@ -65,21 +67,14 @@ public abstract class Condition{
 	/*EOE = "Enemy or Empty." Standard MoveAndCapture and Capture condition.
 	 * Destination tile must be either empty or have a piece of the opposite color.*/
 	@AFC(name="Destination is empty or has an enemy")
-	public static final Condition EOE = new Condition() {
-		boolean eval(Board b, int startRow, int startCol, int destRow, int destCol) {
-			Piece p = b.getPieceAt(destRow, destCol);
-			return p == null || p.getColor() != b.getPieceAt(startRow, startCol).getColor();
-		}
-	};
+	public static final Condition EOE = Condition.or(
+			Condition.onDest().call("isEmpty").toBooleanPath().toCond(),
+			Condition.onDest().call("getPiece").call("getColor").toBooleanPath().isEnemy()
+	);
 	
 	/*POD = "Piece on Destination." Evals to true if there is a piece of any color on the destination.*/
 	@AFC(name="Piece on destination")
-	public static final Condition POD = new Condition() {
-		boolean eval(Board b, int startRow, int startCol, int destRow, int destCol) {
-			Piece p = b.getPieceAt(destRow, destCol);
-			return p != null;
-		}
-	};
+	public static final Condition POD = Condition.onDest().call("getPiece").toObjectPath().isNotNull();
 	
 	/* *
 	 * POS = "Piece on Start". Evals to true if there is a piece of any color on the start tile.
@@ -87,52 +82,27 @@ public abstract class Condition{
 	 * guaranteed to be a piece on the start.
 	 */
 	@AFC(name="Piece on start")
-	public static final Condition POS = new Condition() {
-		boolean eval(Board b, int startRow, int startCol, int destRow, int destCol) {
-			Piece p = b.getPieceAt(startRow, startCol);
-			return p != null;
-		}
-	};
+	public static final Condition POS = Condition.onSelf().toObjectPath().isNotNull();
 	
 	/*DIE = "Destination is Empty." Evals to true if there is NOT a piece of any color on the destination.
 	 * It is the inverse of POD. It has a very nice acronym :) */
 	@AFC(name="Destination is empty")
-	public static final Condition DIE = new Condition() {
-		boolean eval(Board b, int startRow, int startCol, int destRow, int destCol) {
-			Piece p = b.getPieceAt(destRow, destCol);
-			return p == null;
-		}
-	};
+	public static final Condition DIE = Condition.onDest().call("getPiece").toObjectPath().isNull();
 	
 	/* *
 	 * SIE = "Start is Empty." For the same reason as POS, this is only useful for
 	 * OtherMoveAndCaptures.
 	 */
 	@AFC(name="Start is empty")
-	public static final Condition SIE = new Condition() {
-		boolean eval(Board b, int startRow, int startCol, int destRow, int destCol) {
-			Piece p = b.getPieceAt(startRow, startCol);
-			return p == null;
-		}
-	};
+	public static final Condition SIE = Condition.onSelf().toObjectPath().isNull();
 	
 	/*EOD = "Enemy on Destination." Evals to true if there is a piece of the opposite color on the destination.*/
 	@AFC(name="Enemy on destination")
-	public static final Condition EOD = new Condition() {
-		boolean eval(Board b, int startRow, int startCol, int destRow, int destCol) {
-			Piece p = b.getPieceAt(destRow, destCol);
-			return p != null && p.getColor() != b.getPieceAt(startRow, startCol).getColor();
-		}
-	};
+	public static final Condition EOD = Condition.onDest().call("getPiece").call("getColor").toBooleanPath().isEnemy();
 	
 	/*TOD = "Teammate on Destination." Evals to true if there is a piece of the same color on the destination.*/
 	@AFC(name="Teammate on destination")
-	public static final Condition TOD = new Condition() {
-		boolean eval(Board b, int startRow, int startCol, int destRow, int destCol) {
-			Piece p = b.getPieceAt(destRow, destCol);
-			return p != null && p.getColor() == b.getPieceAt(startRow, startCol).getColor();
-		}
-	};
+	public static final Condition TOD = Condition.onDest().call("getPiece").call("getColor").toBooleanPath().isAlly();
 	
 	//////////////////////////////
 	/* End of common conditions */
@@ -145,14 +115,18 @@ public abstract class Condition{
 	
 	public void setDefault(boolean newDV) {
 		this.defaultValue = newDV;
-	}	
-	
+	}
 	/* *
 	 * THIS CONDITION MUST ONLY BE USED ON KINGS,
 	 * or paradoxical loops (StackOverflow Errors) will occur.
 	 */
 	public static Condition onStartRelativeCheckable(int relRow, int relCol) {
 		return new Condition() {
+			/**
+			 * 
+			 */
+			private static final long serialVersionUID = 4101657849303538089L;
+
 			@Override
 			boolean eval(Board b, int startRow, int startCol, int destRow, int destCol) {
 				boolean myColor = b.getPieceAt(startRow, startCol).getColor();
@@ -293,7 +267,54 @@ class RelativeTile{
 	}
 }
 
+class CopyCondition extends Condition{
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = 7152776211214638386L;
+
+	public Condition getCopy() {
+		return copy;
+	}
+
+	public void setCopy(Condition copy) {
+		this.copy = copy;
+	}
+
+	private Condition copy;
+	
+	public CopyCondition() {}
+
+	@Override
+	boolean eval(Board b, int startRow, int startCol, int destRow, int destCol) {
+		return copy.eval(b, startRow, startCol, destRow, destCol);
+	}
+	
+}
+
 class SingleBooleanCondition extends Condition{
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = 7370733400023991771L;
+	public BooleanPath getPath() {
+		return path;
+	}
+
+	public void setPath(BooleanPath path) {
+		this.path = path;
+	}
+
+	public boolean isInverted() {
+		return isInverted;
+	}
+
+	public void setInverted(boolean isInverted) {
+		this.isInverted = isInverted;
+	}
+	
+	public SingleBooleanCondition() {}
+	
 	BooleanPath path;
 	private boolean isInverted;
 	public SingleBooleanCondition(BooleanPath path, boolean invert) {
@@ -313,6 +334,10 @@ class SingleBooleanCondition extends Condition{
 }
 
 class BooleanEqualsCondition extends Condition{
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = -1913366544593682445L;
 	BooleanPath path1, path2;
 	public BooleanEqualsCondition(BooleanPath path1, BooleanPath path2) {
 		this.path1 = path1;
@@ -327,6 +352,10 @@ class BooleanEqualsCondition extends Condition{
 }
 
 class BooleanNotEqualsCondition extends Condition{
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = -2639436480352335867L;
 	BooleanPath path1, path2;
 	public BooleanNotEqualsCondition(BooleanPath path1, BooleanPath path2) {
 		this.path1 = path1;
@@ -341,6 +370,10 @@ class BooleanNotEqualsCondition extends Condition{
 }
 
 class BooleanIsEnemyCondition extends Condition{
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = -4695878215035150876L;
 	BooleanPath path;
 	public BooleanIsEnemyCondition(BooleanPath path) {
 		this.path = path;
@@ -354,6 +387,10 @@ class BooleanIsEnemyCondition extends Condition{
 }
 
 class BooleanIsAllyCondition extends Condition{
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = 3834724608305686972L;
 	BooleanPath path;
 	public BooleanIsAllyCondition(BooleanPath path) {
 		this.path = path;
@@ -367,6 +404,10 @@ class BooleanIsAllyCondition extends Condition{
 }
 
 class IntegerGreaterThanCondition extends Condition{
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = -8834890196662283482L;
 	IntegerPath path1, path2;
 	public IntegerGreaterThanCondition(IntegerPath path1, IntegerPath path2) {
 		this.path1 = path1;
@@ -380,6 +421,10 @@ class IntegerGreaterThanCondition extends Condition{
 }
 
 class IntegerLessThanCondition extends Condition{
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = 2846848638933806135L;
 	IntegerPath path1, path2;
 	public IntegerLessThanCondition(IntegerPath path1, IntegerPath path2) {
 		this.path1 = path1;
@@ -393,6 +438,10 @@ class IntegerLessThanCondition extends Condition{
 }
 
 class IntegerGreaterThanOrEqualCondition extends Condition{
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = 6791049172165444346L;
 	IntegerPath path1, path2;
 	public IntegerGreaterThanOrEqualCondition(IntegerPath path1, IntegerPath path2) {
 		this.path1 = path1;
@@ -406,6 +455,10 @@ class IntegerGreaterThanOrEqualCondition extends Condition{
 }
 
 class IntegerLessThanOrEqualCondition extends Condition{
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = 5092626488745968229L;
 	IntegerPath path1, path2;
 	public IntegerLessThanOrEqualCondition(IntegerPath path1, IntegerPath path2) {
 		this.path1 = path1;
@@ -419,6 +472,10 @@ class IntegerLessThanOrEqualCondition extends Condition{
 }
 
 class IntegerEqualsCondition extends Condition{
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = 7832125727388222734L;
 	IntegerPath path1, path2;
 	public IntegerEqualsCondition(IntegerPath path1, IntegerPath path2) {
 		this.path1 = path1;
@@ -432,6 +489,10 @@ class IntegerEqualsCondition extends Condition{
 }
 
 class IntegerNotEqualsCondition extends Condition{
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = 5997723352136973125L;
 	IntegerPath path1, path2;
 	public IntegerNotEqualsCondition(IntegerPath path1, IntegerPath path2) {
 		this.path1 = path1;
@@ -445,6 +506,10 @@ class IntegerNotEqualsCondition extends Condition{
 }
 
 class ObjectEqualsCondition extends Condition{
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = -365220130739916568L;
 	ObjectPath path1, path2;
 	public ObjectEqualsCondition(ObjectPath path1, ObjectPath path2) {
 		this.path1 = path1;
@@ -458,6 +523,10 @@ class ObjectEqualsCondition extends Condition{
 }
 
 class ObjectNotEqualsConditions extends Condition{
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = -4458720357778347839L;
 	ObjectPath path1, path2;
 	public ObjectNotEqualsConditions(ObjectPath path1, ObjectPath path2) {
 		this.path1 = path1;
@@ -471,6 +540,10 @@ class ObjectNotEqualsConditions extends Condition{
 }
 
 class ObjectIsNullCondition extends Condition{
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = 9026549054957151877L;
 	ObjectPath path;
 	public ObjectIsNullCondition(ObjectPath path) {
 		this.path = path;
@@ -482,7 +555,18 @@ class ObjectIsNullCondition extends Condition{
 }
 
 class ObjectIsNotNullCondition extends Condition{
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = 5096607902070365755L;
+	public ObjectPath getPath() {
+		return path;
+	}
+	public void setPath(ObjectPath path) {
+		this.path = path;
+	}
 	ObjectPath path;
+	public ObjectIsNotNullCondition() {}
 	public ObjectIsNotNullCondition(ObjectPath path) {
 		this.path = path;
 	}
@@ -493,6 +577,10 @@ class ObjectIsNotNullCondition extends Condition{
 }
 
 class ObjectInstanceOfCondition extends Condition{
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = 1920027248961903582L;
 	ObjectPath path;
 	Class<?> caster;
 	
@@ -507,6 +595,10 @@ class ObjectInstanceOfCondition extends Condition{
 }
 
 class ObjectIsPieceCondition extends Condition{
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = 8092481768362985408L;
 	ObjectPath path;
 	String pieceName;
 	
@@ -527,6 +619,10 @@ class ObjectIsPieceCondition extends Condition{
 
 
 class ANDCondition extends Condition{
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = -8781760452433119891L;
 	Condition c1, c2;
 	
 	public ANDCondition(Condition c1, Condition c2) {
@@ -543,6 +639,10 @@ class ANDCondition extends Condition{
 }
 
 class ORCondition extends Condition{
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = -5333062990919125832L;
 	Condition c1, c2;
 	
 	public ORCondition(Condition c1, Condition c2) {
@@ -559,6 +659,10 @@ class ORCondition extends Condition{
 }
 
 class XORCondition extends Condition{
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = -2320943957306912375L;
 	Condition c1, c2;
 	
 	public XORCondition(Condition c1, Condition c2) {
@@ -575,6 +679,10 @@ class XORCondition extends Condition{
 }
 
 class NOTCondition extends Condition{
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = 2020623859815942516L;
 	Condition c1;
 	
 	public NOTCondition(Condition c1) {

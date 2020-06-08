@@ -19,14 +19,15 @@ public class Bishop extends Piece {
 	public static final Image BLACK_IMAGE;
 	public static final Image WHITE_IMAGE;
 	
-	private static final int POINT_VALUE = 3;
+	private static final PieceData data;
 	
-	private static ActionTree tree;
 	static {
+		
 		BLACK_IMAGE = new Image(Piece.class.getResourceAsStream("/resources/bishop_black.png"));
 		WHITE_IMAGE = new Image(Piece.class.getResourceAsStream("/resources/bishop_white.png"));
-		
-		tree = new ActionTree(Arrays.asList(
+		data = new PieceData("Bishop", WHITE_IMAGE, BLACK_IMAGE);
+		data.setTree(
+		new ActionTree(Arrays.asList(
 			new ActionTree.Node(MoveAndCaptureAction.line(1, 1, Condition.EOE).stops(Condition.POD)),
 			new ActionTree.Node(MoveAndCaptureAction.line(1, -1, Condition.EOE).stops(Condition.POD)),
 			new ActionTree.Node(MoveAndCaptureAction.line(-1, 1, Condition.EOE).stops(Condition.POD)),
@@ -36,7 +37,9 @@ public class Bishop extends Piece {
 				.addAction(SubMulti.omnc(Flag.ORIGIN, 0, -1, -2, -1, Condition.POS), false)
 				.addAction(SubMulti.omnc(Flag.ORIGIN, 0, 1, -2, 1, Condition.POS), false)
 			)
-		));
+		))
+		);
+		data.setPointValue(3);
 	}
 	
 	public Bishop(boolean color) {
@@ -46,7 +49,7 @@ public class Bishop extends Piece {
 	@Override
 	public Set<LegalAction> getLegalActions(Board b, int row, int col) {
 		//System.out.printf("Getting legal moves for a Bishop ::%n");
-		Set<LegalAction> legals = tree.getLegals(b, row, col);
+		Set<LegalAction> legals = data.getTree().getLegals(b, row, col);
 		//System.out.printf("\tBefore filtering = %s%n", legals);
 		legals.removeIf(x -> !b.tryMoveForLegality(row, col, x));
 		//System.out.printf("\tAfter filtering  = %s%n", legals);
@@ -54,7 +57,7 @@ public class Bishop extends Piece {
 	}
 	@Override
 	public boolean canCheck(Board b, int startRow, int startCol, int destRow, int destCol) {
-		return tree.canCheck(b, startRow, startCol, destRow, destCol);
+		return data.getTree().canCheck(b, startRow, startCol, destRow, destCol);
 	}
 
 	@Override
@@ -68,13 +71,19 @@ public class Bishop extends Piece {
 	
 	@Override
 	public int getPointValue() {
-		return POINT_VALUE;
+		return data.getPointValue();
 	}
-	
-	private static final PieceType pieceType = PieceType.define("Bishop", false);
 	@Override
 	public PieceType getPieceType() {
-		return pieceType;
+		return data.getPieceType();
 	}
 
+	@Override
+	public PieceData getPieceData() {
+		return data;
+	}
+	
+	public static PieceData getData() {
+		return data;
+	}
 }

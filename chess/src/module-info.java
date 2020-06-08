@@ -3,8 +3,10 @@ module chess {
 	exports chess.base;
 	exports chess.piecebuilder;
 
+	opens chess.base;
+	opens chess.util;
+	
 	requires javafx.base;
 	requires javafx.controls;
-	requires javafx.graphics;
-	requires jakarta.xml.bind;
+	requires transitive javafx.graphics;
 }

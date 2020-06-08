@@ -16,6 +16,10 @@ import chess.base.LegalCapture;
 import chess.base.Piece;
 
 public abstract class CaptureAction extends chess.util.Action{
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = -1468552990586649613L;
 	private CaptureAction() {}
 	
 	@User(params={"relative row", "relative column"})
@@ -63,6 +67,10 @@ public abstract class CaptureAction extends chess.util.Action{
 	}
 	
 	public static class RelativeCaptureAction extends CaptureAction implements RelativeJumpAction{
+		/**
+		 * 
+		 */
+		private static final long serialVersionUID = 8353535313029856877L;
 		private int relRow, relCol;
 		public RelativeCaptureAction(int relRow, int relCol, Condition... cons) {
 			this.relRow = relRow;
@@ -97,6 +105,10 @@ public abstract class CaptureAction extends chess.util.Action{
 	}
 
 	public static class LineCaptureAction extends CaptureAction implements LineAction{
+		/**
+		 * 
+		 */
+		private static final long serialVersionUID = 6584141374081901533L;
 		protected int deltaRow, deltaCol;
 		private ArrayList<Condition> stopConditions;
 		
@@ -150,6 +162,10 @@ public abstract class CaptureAction extends chess.util.Action{
 	}
 	
 	public static class RelativeLineCaptureAction extends LineCaptureAction{
+		/**
+		 * 
+		 */
+		private static final long serialVersionUID = -7904039124287966499L;
 		private int relStartRow, relStartCol;
 		private boolean requiresOnBoardStart;
 		
@@ -227,6 +243,10 @@ public abstract class CaptureAction extends chess.util.Action{
 	
 	public static class RelativeSegmentCaptureAction extends CaptureAction
 			implements RelativeSegmentAction{
+		/**
+		 * 
+		 */
+		private static final long serialVersionUID = 7121333223961890443L;
 		private int relStartRow, relStartCol, deltaRow, deltaCol, length;
 		private boolean requiresOnBoardStart;
 		private ArrayList<Condition> stopConditions;
@@ -323,6 +343,10 @@ public abstract class CaptureAction extends chess.util.Action{
 	}
 	
 	public static class RadiusCaptureAction extends CaptureAction implements RadiusAction{
+		/**
+		 * 
+		 */
+		private static final long serialVersionUID = -4480635918843039304L;
 		private int radius;
 		private boolean includeSelf;
 		private boolean fill;

@@ -16,6 +16,10 @@ import chess.util.SummonAction.RelativeSummonAction;
 
 public abstract class PromotionAction extends Action{
 	
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = 2954238791691219273L;
 	protected ArrayList<String> options;
 	
 	@User(params={"promotion options"})
@@ -44,6 +48,11 @@ public abstract class PromotionAction extends Action{
 	
 	public static class ConcretePromotionAction extends PromotionAction{
 		
+		/**
+		 * 
+		 */
+		private static final long serialVersionUID = -3377596962210324410L;
+
 		private ConcretePromotionAction(ArrayList<String> options, Condition... cons) {
 			this.options = options;
 			this.addAllConditions(cons);

@@ -1,5 +1,9 @@
 package chess.base;
 
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.IOException;
+import java.io.ObjectInputStream;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -97,40 +101,38 @@ public class GamePanel extends StackPane{
 				{"+Pawn","+Pawn",null,null,null,null,null,null,null},
 				{"+King","+Pawn",null,null,null,null,null,null,null}});
 		
-		CustomPiece.PieceData ghostData = new CustomPiece.PieceData("Ghost");
-		ghostData.whiteImage = new Image(Piece.class.getResourceAsStream("/resources/ghost_white.png"));
-		ghostData.blackImage = new Image(Piece.class.getResourceAsStream("/resources/ghost_black.png"));
-		ghostData.pointValue = 5;
-		ghostData.tree = new ActionTree(Arrays.asList(
-			/*
-			new ActionTree.Node(MoveAndCaptureAction.segment(1, 1, 1, 1, 3),
-				new ActionTree.Node(MoveAndCaptureAction.relLine(3, 4, 0, 1)),
-				new ActionTree.Node(MoveAndCaptureAction.relLine(4, 3, 1, 0))
-			)*/
+		PieceData ghostData = new PieceData("Ghost");
+		ghostData.setPointValue(5);
+		ghostData.setTree(new ActionTree(Arrays.asList(
 				/*
-			new ActionTree.Node(MoveAndCaptureAction.segment(0, 1, 0, 1, 2).stops(Condition.POD),
-				new ActionTree.Node(MoveAndCaptureAction.relLine(0, 2, 1, 0)),
-				new ActionTree.Node(MoveAndCaptureAction.relLine(0, 2, -1, 0))
-			),
-			new ActionTree.Node(MoveAndCaptureAction.segment(0, -1, 0, -1, 2).stops(Condition.POD),
-				new ActionTree.Node(MoveAndCaptureAction.relLine(0, -2, 1, 0)),
-				new ActionTree.Node(MoveAndCaptureAction.relLine(0, -2, -1, 0))
-			),
-			new ActionTree.Node(MoveAndCaptureAction.segment(1, 0, 1, 0, 2).stops(Condition.POD),
-				new ActionTree.Node(MoveAndCaptureAction.relLine(2, 0, 0, 1)),
-				new ActionTree.Node(MoveAndCaptureAction.relLine(2, 0, 0, -1))
-			),
-			new ActionTree.Node(MoveAndCaptureAction.segment(-1, 0, -1, 0, 2).stops(Condition.POD),
-				new ActionTree.Node(MoveAndCaptureAction.relLine(-2, 0, 0, 1)),
-				new ActionTree.Node(MoveAndCaptureAction.relLine(-2, 0, 0, -1))
-			)*/
-			new ActionTree.Node(CaptureAction.radius(3, false, false)),
-			new ActionTree.Node(MoveAndCaptureAction.radius(2, true, false)),
-			new ActionTree.Node(SummonAction.radius(1, true, false, new ArrayList<String>(Arrays.asList("Bishop")), Condition.DIE))
-		));
+				new ActionTree.Node(MoveAndCaptureAction.segment(1, 1, 1, 1, 3),
+					new ActionTree.Node(MoveAndCaptureAction.relLine(3, 4, 0, 1)),
+					new ActionTree.Node(MoveAndCaptureAction.relLine(4, 3, 1, 0))
+				)*/
+					/*
+				new ActionTree.Node(MoveAndCaptureAction.segment(0, 1, 0, 1, 2).stops(Condition.POD),
+					new ActionTree.Node(MoveAndCaptureAction.relLine(0, 2, 1, 0)),
+					new ActionTree.Node(MoveAndCaptureAction.relLine(0, 2, -1, 0))
+				),
+				new ActionTree.Node(MoveAndCaptureAction.segment(0, -1, 0, -1, 2).stops(Condition.POD),
+					new ActionTree.Node(MoveAndCaptureAction.relLine(0, -2, 1, 0)),
+					new ActionTree.Node(MoveAndCaptureAction.relLine(0, -2, -1, 0))
+				),
+				new ActionTree.Node(MoveAndCaptureAction.segment(1, 0, 1, 0, 2).stops(Condition.POD),
+					new ActionTree.Node(MoveAndCaptureAction.relLine(2, 0, 0, 1)),
+					new ActionTree.Node(MoveAndCaptureAction.relLine(2, 0, 0, -1))
+				),
+				new ActionTree.Node(MoveAndCaptureAction.segment(-1, 0, -1, 0, 2).stops(Condition.POD),
+					new ActionTree.Node(MoveAndCaptureAction.relLine(-2, 0, 0, 1)),
+					new ActionTree.Node(MoveAndCaptureAction.relLine(-2, 0, 0, -1))
+				)*/
+				new ActionTree.Node(CaptureAction.radius(3, false, false)),
+				new ActionTree.Node(MoveAndCaptureAction.radius(2, true, false)),
+				new ActionTree.Node(SummonAction.radius(1, true, false, new ArrayList<String>(Arrays.asList("Bishop")), Condition.DIE))
+		)));
 		
 		CustomPiece.defineNewPiece(ghostData);
-	    
+		
 	    boardBox = new VBox();
 	    boardBox.alignmentProperty().set(Pos.CENTER); 
 	    boardBox.prefWidthProperty().bind(binding);

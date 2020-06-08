@@ -11,7 +11,7 @@ import chess.base.Piece;
 
 public class ConditionBuilder{
 	Object base;
-	ArrayList<MemberAccess> accesses;
+	ArrayList<MethodAccess> accesses;
 	Class<?> currentClass;
 	
 	public ConditionBuilder(Object base){
@@ -39,27 +39,11 @@ public class ConditionBuilder{
 		}
 	}
 	
-	public ConditionBuilder property(String name) {
-		Field f;
-		try {
-			f = currentClass.getField(name);
-			accesses.add(new MemberAccess(f));
-			currentClass = f.getType();
-		} catch (NoSuchFieldException e) {
-			// Auto-generated catch block
-			e.printStackTrace();
-		} catch (SecurityException e) {
-			// Auto-generated catch block
-			e.printStackTrace();
-		}
-		return this;
-	}
-	
 	public ConditionBuilder call(String name, Object...args) {
 		Method m;
 		try {
 			m = currentClass.getMethod(name);
-			accesses.add(new MemberAccess(m, args));
+			accesses.add(new MethodAccess(m, args));
 			currentClass = m.getReturnType();
 			if(currentClass == null) {
 				throw new IllegalArgumentException("no void method calls.");
@@ -78,7 +62,7 @@ public class ConditionBuilder{
 	
 	public ConditionBuilder call(Method m, Object...args) {
 		try {
-			accesses.add(new MemberAccess(m, args));
+			accesses.add(new MethodAccess(m, args));
 			currentClass = m.getReturnType();
 			if(currentClass == null) {
 				throw new IllegalArgumentException("no void method calls.");

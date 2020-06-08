@@ -15,6 +15,10 @@ import chess.base.LegalMoveAndCapture;
 import chess.base.Piece;
 
 public abstract class MoveAndCaptureAction extends chess.util.Action{
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = -6375374161332505955L;
 	private MoveAndCaptureAction() {}
 	
 	@User(params={"relative row", "relative column"})
@@ -62,6 +66,10 @@ public abstract class MoveAndCaptureAction extends chess.util.Action{
 	}
 	
 	public static class RelativeMoveAndCaptureAction extends MoveAndCaptureAction implements RelativeJumpAction{
+		/**
+		 * 
+		 */
+		private static final long serialVersionUID = -7727897891431792350L;
 		private int relRow, relCol;
 		public RelativeMoveAndCaptureAction(int relRow, int relCol, Condition... cons) {
 			this.relRow = relRow;
@@ -96,6 +104,10 @@ public abstract class MoveAndCaptureAction extends chess.util.Action{
 	}
 
 	public static class LineMoveAndCaptureAction extends MoveAndCaptureAction implements LineAction{
+		/**
+		 * 
+		 */
+		private static final long serialVersionUID = 3123733457832673828L;
 		protected int deltaRow, deltaCol;
 		private ArrayList<Condition> stopConditions;
 		
@@ -149,6 +161,10 @@ public abstract class MoveAndCaptureAction extends chess.util.Action{
 	}
 	
 	public static class RelativeLineMoveAndCaptureAction extends LineMoveAndCaptureAction{
+		/**
+		 * 
+		 */
+		private static final long serialVersionUID = 976011474500244109L;
 		private int relStartRow, relStartCol;
 		private boolean requiresOnBoardStart;
 		
@@ -226,6 +242,10 @@ public abstract class MoveAndCaptureAction extends chess.util.Action{
 	
 	public static class RelativeSegmentMoveAndCaptureAction extends MoveAndCaptureAction
 			implements RelativeSegmentAction{
+		/**
+		 * 
+		 */
+		private static final long serialVersionUID = 8208817534795868704L;
 		private int relStartRow, relStartCol, deltaRow, deltaCol, length;
 		private boolean requiresOnBoardStart;
 		private ArrayList<Condition> stopConditions;
@@ -322,6 +342,10 @@ public abstract class MoveAndCaptureAction extends chess.util.Action{
 	}
 	
 	public static class RadiusMoveAndCaptureAction extends MoveAndCaptureAction implements RadiusAction{
+		/**
+		 * 
+		 */
+		private static final long serialVersionUID = 325912317449977068L;
 		private int radius;
 		private boolean includeSelf;
 		private boolean fill;

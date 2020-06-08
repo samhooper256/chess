@@ -7,7 +7,12 @@ import chess.base.Board;
 
 public class ObjectPath extends PathBase{
 
-	public ObjectPath(Object base, ArrayList<MemberAccess> calls) {
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = -1584609769677799028L;
+
+	public ObjectPath(Object base, ArrayList<MethodAccess> calls) {
 		super(base, calls);
 	}
 	

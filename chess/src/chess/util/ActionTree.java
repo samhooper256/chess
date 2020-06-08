@@ -1,5 +1,6 @@
 package chess.util;
 
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -12,7 +13,11 @@ import chess.base.LegalCapture;
 import chess.base.LegalMoveAndCapture;
 import chess.base.LegalMulti;
 
-public class ActionTree {
+public class ActionTree implements Serializable{
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = 39304872760544913L;
 	private Node root;
 	
 	public ActionTree(Collection<TreeNode> primaryNodes) {
@@ -66,7 +71,11 @@ public class ActionTree {
 		
 	}
 	
-	public abstract static class TreeNode{
+	public abstract static class TreeNode implements Serializable{
+		/**
+		 * 
+		 */
+		private static final long serialVersionUID = -3433443613140889365L;
 		protected ArrayList<TreeNode> children;
 		
 		public abstract Set<LegalAction> getLegals(Board b, int startRow, int startCol);
@@ -95,6 +104,10 @@ public class ActionTree {
 	}
 	
 	public static class Node extends TreeNode{
+		/**
+		 * 
+		 */
+		private static final long serialVersionUID = 5169350659726304648L;
 		Action action;
 		private Node(Action a, boolean ignoreNullCheck) {
 			if(!ignoreNullCheck && a == null) {
@@ -225,6 +238,10 @@ public class ActionTree {
 	}
 	
 	public static class Choke extends TreeNode{
+		/**
+		 * 
+		 */
+		private static final long serialVersionUID = -7266910654873937379L;
 		private ArrayList<Condition> conditions;
 		public Choke(Collection<Condition> cons, Collection<TreeNode> children) {
 			this.conditions = new ArrayList<>(cons);

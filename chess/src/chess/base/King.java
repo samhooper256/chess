@@ -21,84 +21,85 @@ public class King extends Piece{
 	public static final Image BLACK_IMAGE;
 	public static final Image WHITE_IMAGE;
 	
-	private static final int POINT_VALUE = 0;
-	
-	
-	private static ActionTree tree;
+	private static final PieceData data;
 	static {
 		BLACK_IMAGE = new Image(Piece.class.getResourceAsStream("/resources/king_black.png"));
 		WHITE_IMAGE = new Image(Piece.class.getResourceAsStream("/resources/king_white.png"));
 		
+		data = new PieceData("King", WHITE_IMAGE, BLACK_IMAGE);
 		/* *
 		 * The king's action tree is set up so that he can castle with a rook that is 3 or 4 spaces
 		 * away on his left OR right. This behaves correctly for a standard chess game with the normal
 		 * starting setup, but it is important to note that he can castle with a rook 3 or 4 spaces
 		 * away in EITHER direction.
 		 */
-		tree = new ActionTree(Arrays.asList(
-				
-			new ActionTree.Node(MoveAndCaptureAction.relative(0, 1, Condition.EOE)),
-			new ActionTree.Node(MoveAndCaptureAction.relative(1, 1, Condition.EOE)),
-			new ActionTree.Node(MoveAndCaptureAction.relative(1, 0, Condition.EOE)),
-			new ActionTree.Node(MoveAndCaptureAction.relative(1, -1, Condition.EOE)),
-			new ActionTree.Node(MoveAndCaptureAction.relative(0, -1, Condition.EOE)),
-			new ActionTree.Node(MoveAndCaptureAction.relative(-1, -1, Condition.EOE)),
-			new ActionTree.Node(MoveAndCaptureAction.relative(-1, 0, Condition.EOE)),
-			new ActionTree.Node(MoveAndCaptureAction.relative(-1, 1, Condition.EOE)),
-			new ActionTree.Choke(
-				new ArrayList<>(Arrays.asList(
-					Condition.onSelf().call("hasMoved").toBooleanPath().invert().toCond()
-				)),
-				new ArrayList<>(Arrays.asList(
-					new ActionTree.Choke(
-						new ArrayList<>(Arrays.asList(
-							Condition.onStartRelative(0, 1).call("isEmpty").toBooleanPath().toCond(),
-							Condition.onStartRelativeCheckable(0, 1).not()
-						)),
-						new ArrayList<>(Arrays.asList(
-							new ActionTree.Node(MultiAction.relative(0, 2,
-								Condition.DIE,
-								Condition.onStartRelative(0, 3).call("getPiece").toObjectPath().instanceOf(Rook.class),
-								Condition.onStartRelative(0, 3).call("getPiece").call("hasMoved").toBooleanPath().invert().toCond()
-								).addAction(SubMulti.mnc(Flag.ORIGIN, 0, 2))
-								.addAction(SubMulti.omnc(Flag.ORIGIN, 0,3,0,1))
-							),
-							new ActionTree.Node(MultiAction.relative(0, 2,
-								Condition.DIE,
-								Condition.onStartRelative(0, 3).call("isEmpty").toBooleanPath().toCond(),
-								Condition.onStartRelative(0, 4).call("getPiece").toObjectPath().instanceOf(Rook.class),
-								Condition.onStartRelative(0, 4).call("getPiece").call("hasMoved").toBooleanPath().invert().toCond()
-								).addAction(SubMulti.mnc(Flag.ORIGIN, 0, 2))
-								.addAction(SubMulti.omnc(Flag.DESTINATION, 0,4,0,1))
-							)
-						))
-					),
-					new ActionTree.Choke(
-						new ArrayList<>(Arrays.asList(
-							Condition.onStartRelative(0, -1).call("isEmpty").toBooleanPath().toCond(),
-							Condition.onStartRelativeCheckable(0, -1).not()
-						)),
-						new ArrayList<>(Arrays.asList(
-							new ActionTree.Node(MultiAction.relative(0, -2,
-								Condition.DIE,
-								Condition.onStartRelative(0, -3).call("getPiece").toObjectPath().instanceOf(Rook.class),
-								Condition.onStartRelative(0, -3).call("getPiece").call("hasMoved").toBooleanPath().invert().toCond()
-								).addAction(SubMulti.mnc(Flag.ORIGIN, 0, -2))
-								.addAction(SubMulti.omnc(Flag.ORIGIN, 0,-3,0,-1))
-							),
-							new ActionTree.Node(MultiAction.relative(0, -2,
-								Condition.DIE,
-								Condition.onStartRelative(0, -3).call("isEmpty").toBooleanPath().toCond(),
-								Condition.onStartRelative(0, -4).call("getPiece").toObjectPath().instanceOf(Rook.class),
-								Condition.onStartRelative(0, -4).call("getPiece").call("hasMoved").toBooleanPath().invert().toCond()
-								).addAction(SubMulti.mnc(Flag.ORIGIN, 0, -2))
-								.addAction(SubMulti.omnc(Flag.ORIGIN, 0,-4,0,-1))
-							)
-						))
-					)
-				))
-			)
-		));
+		data.setTree(
+			new ActionTree(Arrays.asList(
+					
+				new ActionTree.Node(MoveAndCaptureAction.relative(0, 1, Condition.EOE)),
+				new ActionTree.Node(MoveAndCaptureAction.relative(1, 1, Condition.EOE)),
+				new ActionTree.Node(MoveAndCaptureAction.relative(1, 0, Condition.EOE)),
+				new ActionTree.Node(MoveAndCaptureAction.relative(1, -1, Condition.EOE)),
+				new ActionTree.Node(MoveAndCaptureAction.relative(0, -1, Condition.EOE)),
+				new ActionTree.Node(MoveAndCaptureAction.relative(-1, -1, Condition.EOE)),
+				new ActionTree.Node(MoveAndCaptureAction.relative(-1, 0, Condition.EOE)),
+				new ActionTree.Node(MoveAndCaptureAction.relative(-1, 1, Condition.EOE)),
+				new ActionTree.Choke(
+					new ArrayList<>(Arrays.asList(
+						Condition.onSelf().call("hasMoved").toBooleanPath().invert().toCond()
+					)),
+					new ArrayList<>(Arrays.asList(
+						new ActionTree.Choke(
+							new ArrayList<>(Arrays.asList(
+								Condition.onStartRelative(0, 1).call("isEmpty").toBooleanPath().toCond(),
+								Condition.onStartRelativeCheckable(0, 1).not()
+							)),
+							new ArrayList<>(Arrays.asList(
+								new ActionTree.Node(MultiAction.relative(0, 2,
+									Condition.DIE,
+									Condition.onStartRelative(0, 3).call("getPiece").toObjectPath().instanceOf(Rook.class),
+									Condition.onStartRelative(0, 3).call("getPiece").call("hasMoved").toBooleanPath().invert().toCond()
+									).addAction(SubMulti.mnc(Flag.ORIGIN, 0, 2))
+									.addAction(SubMulti.omnc(Flag.ORIGIN, 0,3,0,1))
+								),
+								new ActionTree.Node(MultiAction.relative(0, 2,
+									Condition.DIE,
+									Condition.onStartRelative(0, 3).call("isEmpty").toBooleanPath().toCond(),
+									Condition.onStartRelative(0, 4).call("getPiece").toObjectPath().instanceOf(Rook.class),
+									Condition.onStartRelative(0, 4).call("getPiece").call("hasMoved").toBooleanPath().invert().toCond()
+									).addAction(SubMulti.mnc(Flag.ORIGIN, 0, 2))
+									.addAction(SubMulti.omnc(Flag.ORIGIN, 0,4,0,1))
+								)
+							))
+						),
+						new ActionTree.Choke(
+							new ArrayList<>(Arrays.asList(
+								Condition.onStartRelative(0, -1).call("isEmpty").toBooleanPath().toCond(),
+								Condition.onStartRelativeCheckable(0, -1).not()
+							)),
+							new ArrayList<>(Arrays.asList(
+								new ActionTree.Node(MultiAction.relative(0, -2,
+									Condition.DIE,
+									Condition.onStartRelative(0, -3).call("getPiece").toObjectPath().instanceOf(Rook.class),
+									Condition.onStartRelative(0, -3).call("getPiece").call("hasMoved").toBooleanPath().invert().toCond()
+									).addAction(SubMulti.mnc(Flag.ORIGIN, 0, -2))
+									.addAction(SubMulti.omnc(Flag.ORIGIN, 0,-3,0,-1))
+								),
+								new ActionTree.Node(MultiAction.relative(0, -2,
+									Condition.DIE,
+									Condition.onStartRelative(0, -3).call("isEmpty").toBooleanPath().toCond(),
+									Condition.onStartRelative(0, -4).call("getPiece").toObjectPath().instanceOf(Rook.class),
+									Condition.onStartRelative(0, -4).call("getPiece").call("hasMoved").toBooleanPath().invert().toCond()
+									).addAction(SubMulti.mnc(Flag.ORIGIN, 0, -2))
+									.addAction(SubMulti.omnc(Flag.ORIGIN, 0,-4,0,-1))
+								)
+							))
+						)
+					))
+				)
+			))
+		);
+		data.setPointValue(0);
 	}
 	
 	public King(boolean color) {
@@ -129,23 +130,30 @@ public class King extends Piece{
 	
 	@Override
 	public int getPointValue() {
-		return POINT_VALUE;
+		return data.getPointValue();
 	}
 
 	@Override
 	public Set<LegalAction> getLegalActions(Board b, int row, int col) {
 		//System.out.printf("Getting legal moves for a King ::%n");
-		Set<LegalAction> legals = tree.getLegals(b, row, col);
+		Set<LegalAction> legals = data.getTree().getLegals(b, row, col);
 		//System.out.printf("\tBefore filtering = %s%n", legals);
 		legals.removeIf(x -> !b.tryMoveForLegality(row, col, x));
 		//System.out.printf("\tAfter filtering  = %s%n", legals);
 		return legals;
 	}
 	
-	private static final PieceType pieceType = PieceType.define("King", false);
 	@Override
 	public PieceType getPieceType() {
-		return pieceType;
+		return data.getPieceType();
+	}
+
+	@Override
+	public PieceData getPieceData() {
+		return data;
 	}
 	
+	public static PieceData getData() {
+		return data;
+	}
 }

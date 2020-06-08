@@ -19,6 +19,10 @@ import chess.util.SummonAction.RelativeSummonAction;
 
 public abstract class MultiAction extends chess.util.Action{
 	
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = -717815859325937989L;
 	protected ArrayList<SubMulti> actions;
 	protected ArrayList<Boolean> states;
 	boolean hasMoveAndCapture = false;
@@ -105,6 +109,10 @@ public abstract class MultiAction extends chess.util.Action{
 	
 	public static class RelativeMultiAction extends MultiAction implements RelativeJumpAction{
 		
+		/**
+		 * 
+		 */
+		private static final long serialVersionUID = 7365243869927755382L;
 		int relRow, relCol;
 		RelativeMultiAction(int relRow, int relCol, Condition... cons) {
 			this.actions = new ArrayList<>();

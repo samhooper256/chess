@@ -17,6 +17,10 @@ import chess.base.Piece;
 
 public abstract class SubMulti extends Action{
 	
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = 1996745756513613004L;
 	@AFC(name="Move And Capture", paramDescriptions={"relative to", "relative row", "relative column"})
 	public static MNC mnc(Flag relativeTo, int relRow, int relCol, Condition... cons) {
 		return new MNC(relativeTo, relRow, relCol, cons);
@@ -55,6 +59,10 @@ public abstract class SubMulti extends Action{
 	}
 	
 	public static class MNC extends SubMulti implements RelativeJumpAction{
+		/**
+		 * 
+		 */
+		private static final long serialVersionUID = -4576845262225150818L;
 		private int relRow, relCol;
 		private Flag relativeTo;
 		private MNC(Flag rt, int rr, int rc, Condition... cons) {
@@ -89,6 +97,10 @@ public abstract class SubMulti extends Action{
 	}
 	
 	public static class CapRel extends SubMulti implements RelativeJumpAction{
+		/**
+		 * 
+		 */
+		private static final long serialVersionUID = 1423861083679743582L;
 		private int relRow, relCol;
 		private Flag relativeTo;
 		private CapRel(Flag rt, int rr, int rc, Condition... cons) {
@@ -123,6 +135,10 @@ public abstract class SubMulti extends Action{
 	}
 	
 	public static class CapRad extends SubMulti implements RadiusAction{
+		/**
+		 * 
+		 */
+		private static final long serialVersionUID = 6194146969384968159L;
 		private int radius;
 		private boolean fill, includeSelf;
 		private Flag relativeTo;
@@ -207,6 +223,10 @@ public abstract class SubMulti extends Action{
 	}
 	
 	public static class Promo extends SubMulti{
+		/**
+		 * 
+		 */
+		private static final long serialVersionUID = 6958577812004211549L;
 		private ArrayList<String> options;
 		public Promo(ArrayList<String> options, Condition... cons) {
 			this.options = options;
@@ -226,6 +246,10 @@ public abstract class SubMulti extends Action{
 	}
 	
 	public static class OMNC extends SubMulti implements RelativeJumpAction{
+		/**
+		 * 
+		 */
+		private static final long serialVersionUID = -755367866536044169L;
 		private int otherRelStartRow, otherRelStartCol, otherRelDestRow, otherRelDestCol;
 		private Flag relativeTo;
 		private OMNC(Flag rt, int orsr, int orsc, int ordr, int ordc, Condition... cons) {
@@ -277,6 +301,10 @@ public abstract class SubMulti extends Action{
 	}
 	
 	public static class SummonRel extends SubMulti implements RelativeJumpAction{
+		/**
+		 * 
+		 */
+		private static final long serialVersionUID = -8645706655336055337L;
 		private int relativeRow, relativeCol;
 		private Flag relativeTo;
 		private ArrayList<String> options;
@@ -313,6 +341,10 @@ public abstract class SubMulti extends Action{
 	}
 	
 	public static class SummonRad extends SubMulti implements RadiusAction{
+		/**
+		 * 
+		 */
+		private static final long serialVersionUID = 2775004933263978789L;
 		private int radius;
 		private boolean fill, includeSelf;
 		private Flag relativeTo;

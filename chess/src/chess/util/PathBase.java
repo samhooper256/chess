@@ -1,21 +1,22 @@
 package chess.util;
 
-import java.lang.reflect.Field;
-import java.lang.reflect.InvocationTargetException;
-import java.lang.reflect.Member;
-import java.lang.reflect.Method;
+import java.io.Serializable;
 import java.util.ArrayList;
 
 import chess.base.Board;
 import chess.base.Piece;
 
-public abstract class PathBase{
+public abstract class PathBase implements Serializable{
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = -8556832703486034225L;
 	protected Object base;
 	/*
 	 * If calls is empty OR null, base can be used
 	 * */
-	protected ArrayList<MemberAccess> calls;
-	public PathBase(Object base, ArrayList<MemberAccess> calls) {
+	protected ArrayList<MethodAccess> calls;
+	public PathBase(Object base, ArrayList<MethodAccess> calls) {
 		this.base = base;
 		this.calls = calls;
 	}

@@ -1,27 +1,79 @@
 package chess.base;
 
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
+import java.io.FileWriter;
+import java.io.IOException;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
+import java.io.Serializable;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
 
+import chess.piecebuilder.PieceBuilder;
 import chess.util.ActionTree;
 import javafx.scene.image.Image;
 
 public class CustomPiece extends Piece{
 	
 	private static HashMap<String, CPFactory> definedPieces = new HashMap<>();
-	private String name;
-	private ActionTree tree;
-	private Image image;
-	private int pointValue;
-	private final PieceType pieceType;
+	private PieceData data;
 	
+	static {
+		loadPieceData();
+	}
 	public static void defineNewPiece(PieceData data) {
-		definedPieces.put(data.name,
+		definedPieces.put(data.getName(),
 			new CPFactory(data)
 		);
+	}
+	
+	public static PieceData getDataFor(String name) {
+		CPFactory factory = definedPieces.get(name);
+		if(factory == null) {
+			throw new IllegalArgumentException("Invalid piece name:\""+name+"\"");
+		}
+		else {
+			return factory.getPieceData();
+		}
+	}
+	
+	private static void deleteFolderContents(File folder) {
+	    File[] files = folder.listFiles();
+	    if(files!=null) { //some JVMs return null for empty dirs
+	        for(File f: files) {
+	            if(f.isDirectory()) {
+	            	deleteFolderContents(f);
+	            } else {
+	                f.delete();
+	            }
+	        }
+	    }
+	}
+	
+	private static void loadPieceData() {
+		File userpieces = new File("userpieces");
+		for(File datFile : userpieces.listFiles()) {
+			ObjectInputStream ois = null;
+			try {
+				ois = new ObjectInputStream(new FileInputStream(datFile));
+				Object readObject = ois.readObject();
+				if(readObject instanceof PieceData) {
+					PieceData data = (PieceData) readObject;
+					data.updateImages();
+					CustomPiece.defineNewPiece(data);
+				}
+				ois.close();
+			} catch (IOException | ClassNotFoundException e) {
+				e.printStackTrace();
+			}
+			
+		}
 	}
 	
 	public static Piece forName(String name, boolean color) {
@@ -48,34 +100,11 @@ public class CustomPiece extends Piece{
 	
 	private CustomPiece(PieceData data, boolean color) {
 		super(color);
-		name = data.name;
-		tree = data.tree;
-		image = color == Piece.WHITE ? data.whiteImage : data.blackImage;
-		pointValue = data.pointValue;
-		pieceType = data.pieceType;
-	}
-	
-	public static class PieceData{
-		
-		public final String name;
-		public int pointValue;
-		public Image whiteImage;
-		public Image blackImage;
-		public ActionTree tree;
-		public final PieceType pieceType;
-		
-		public PieceData(String name) {
-			this.name = name;
-			whiteImage = null;
-			blackImage = null;
-			tree = null;
-			pointValue = 5;
-			pieceType = PieceType.define(name, true);
-		}
+		this.data = data;
 	}
 	
 	private static class CPFactory{
-		private PieceData data;
+		private final PieceData data;
 		public CPFactory(PieceData data) {
 			this.data = data;
 		}
@@ -83,30 +112,39 @@ public class CustomPiece extends Piece{
 		public CustomPiece make(boolean color) {
 			return new CustomPiece(data, color);
 		}
+		
+		public PieceData getPieceData() {
+			return data;
+		}
 	}
 	
 	@Override
 	public Set<LegalAction> getLegalActions(Board b, int row, int col) {
-		Set<LegalAction> legals = tree.getLegals(b, row, col);
+		Set<LegalAction> legals = data.getTree().getLegals(b, row, col);
 		legals.removeIf(x -> !b.tryMoveForLegality(row, col, x));
 		return legals;
 	}
 	@Override
 	public boolean canCheck(Board b, int startRow, int startCol, int destRow, int destCol) {
-		return tree.canCheck(b, startRow, startCol, destRow, destCol);
+		return data.getTree().canCheck(b, startRow, startCol, destRow, destCol);
 	}
 	@Override
 	public Image getImage() {
-		return image;
+		return data.getImage(this.getColor());
 	}
 	@Override
 	public int getPointValue() {
-		return pointValue;
+		return data.getPointValue();
 	}
 	
 	@Override
 	public String getPieceName(){
-		return name;
+		return data.getName();
+	}
+	
+	@Override
+	public PieceData getPieceData() {
+		return data;
 	}
 	
 	public static Collection<Piece> getInstancesOfDefinedPieces(){
@@ -120,6 +158,10 @@ public class CustomPiece extends Piece{
 
 	@Override
 	public PieceType getPieceType() {
-		return pieceType;
+		return data.getPieceType();
+	}
+
+	public static boolean isDefinedPieceName(String name) {
+		return definedPieces.containsKey(name);
 	}
 }

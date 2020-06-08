@@ -17,6 +17,10 @@ import chess.util.SummonAction.RelativeSummonAction;
 
 
 public abstract class OtherMoveAndCaptureAction extends chess.util.Action{
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = -4915045398456006475L;
 	@User(params={"relative start row of other piece", "relative start column of other piece",
 			"relative destination row of other piece", "relative destination column of other piece"})
 	public static RelativeOtherMoveAndCaptureAction relative(int otherRelStartRow,
@@ -38,6 +42,10 @@ public abstract class OtherMoveAndCaptureAction extends chess.util.Action{
 	}
 	
 	public static class RelativeOtherMoveAndCaptureAction extends OtherMoveAndCaptureAction implements RelativeJumpAction{
+		/**
+		 * 
+		 */
+		private static final long serialVersionUID = -701615069952124077L;
 		int relStartRow, relStartCol, relDestRow, relDestCol;
 		public RelativeOtherMoveAndCaptureAction(int otherRelStartRow,
 			int otherRelStartCol, int otherRelDestRow, int otherRelDestCol, Condition... cons) {

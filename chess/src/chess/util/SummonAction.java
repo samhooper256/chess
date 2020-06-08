@@ -20,6 +20,10 @@ import chess.util.MoveAndCaptureAction.RelativeLineMoveAndCaptureAction;
 import chess.util.MoveAndCaptureAction.RelativeSegmentMoveAndCaptureAction;
 
 public abstract class SummonAction extends Action{
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = -7028404081965570002L;
 	protected ArrayList<String> options;
 	
 	@User(params={"relative row", "relative column", "summon options"})
@@ -86,6 +90,10 @@ public abstract class SummonAction extends Action{
 	}
 	
 	public static class RelativeSummonAction extends SummonAction implements RelativeJumpAction{
+		/**
+		 * 
+		 */
+		private static final long serialVersionUID = 525503007331799059L;
 		private int relRow;
 		private int relCol;
 		
@@ -120,6 +128,10 @@ public abstract class SummonAction extends Action{
 	}
 	
 	public static class LineSummonAction extends SummonAction implements LineAction {
+		/**
+		 * 
+		 */
+		private static final long serialVersionUID = 6964271500790227250L;
 		protected int deltaRow, deltaCol;
 		private ArrayList<Condition> stopConditions;
 		
@@ -170,6 +182,10 @@ public abstract class SummonAction extends Action{
 	}
 	
 	public static class RelativeLineSummonAction extends LineSummonAction{
+		/**
+		 * 
+		 */
+		private static final long serialVersionUID = 3665438309855629292L;
 		private int relStartRow, relStartCol;
 		private boolean requiresOnBoardStart;
 		
@@ -248,6 +264,10 @@ public abstract class SummonAction extends Action{
 	
 	public static class RelativeSegmentSummonAction extends SummonAction
 			implements RelativeSegmentAction{
+		/**
+		 * 
+		 */
+		private static final long serialVersionUID = 4828990037209511659L;
 		private int relStartRow, relStartCol, deltaRow, deltaCol, length;
 		private boolean requiresOnBoardStart;
 		private ArrayList<Condition> stopConditions;
@@ -344,6 +364,10 @@ public abstract class SummonAction extends Action{
 	}
 	
 	public static class RadiusSummonAction extends SummonAction implements RadiusAction{
+		/**
+		 * 
+		 */
+		private static final long serialVersionUID = 1707015099806534041L;
 		private int radius;
 		private boolean includeSelf;
 		private boolean fill;

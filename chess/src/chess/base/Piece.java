@@ -171,5 +171,19 @@ public abstract class Piece {
 	public static final int getPieceCount() {
 		return 6 + CustomPiece.getDefinedPieceCount();
 	}
+
+	public abstract PieceData getPieceData();
+	
+	public static PieceData getDataFor(String name) {
+		switch(name) {
+		case "Pawn" : return Pawn.getData();
+		case "Knight" : return Knight.getData();
+		case "Bishop" : return Bishop.getData();
+		case "Rook" : return Rook.getData();
+		case "Queen" : return Queen.getData();
+		case "King" : return King.getData();
+		default : return CustomPiece.getDataFor(name);
+		}
+	}
 }
 

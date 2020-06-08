@@ -19,36 +19,37 @@ import javafx.scene.image.Image;
  */
 public class Knight extends Piece{
 	
-	private static int moveA;
-	private static int moveB;
+	private static final int moveA;
+	private static final int moveB;
 	public static final Image BLACK_IMAGE;
 	public static final Image WHITE_IMAGE;
-	
-	private static final int POINT_VALUE = 3;
-	
-	private static ActionTree tree;
+
+	private static PieceData data;
 	static {
 		BLACK_IMAGE = new Image(Piece.class.getResourceAsStream("/resources/knight_black.png"));
 		WHITE_IMAGE = new Image(Piece.class.getResourceAsStream("/resources/knight_white.png"));
+		data = new PieceData("Knight", WHITE_IMAGE, BLACK_IMAGE);
 		moveA = 1;
 		moveB = 2;
-		
-		tree = new ActionTree(Arrays.asList(
-			new ActionTree.Node(MoveAndCaptureAction.relative( moveA,	moveB, Condition.EOE)),
-			new ActionTree.Node(MoveAndCaptureAction.relative( moveA,  -moveB, Condition.EOE)),
-			new ActionTree.Node(MoveAndCaptureAction.relative(-moveA,   moveB, Condition.EOE)),
-			new ActionTree.Node(MoveAndCaptureAction.relative(-moveA,  -moveB, Condition.EOE)),
-			new ActionTree.Node(MoveAndCaptureAction.relative( moveB, 	moveA, Condition.EOE)),
-			new ActionTree.Node(MoveAndCaptureAction.relative( moveB,  -moveA, Condition.EOE)),
-			new ActionTree.Node(MoveAndCaptureAction.relative(-moveB, 	moveA, Condition.EOE)),
-			new ActionTree.Node(MoveAndCaptureAction.relative(-moveB,  -moveA, Condition.EOE)),
-			
-			new ActionTree.Node(MoveAndCaptureAction.relative(-1, 0)),
-			new ActionTree.Node(SummonAction.relative(-1, 0, new ArrayList<>(Arrays.asList("Rook","Queen")))),
-			new ActionTree.Node(CaptureAction.relative(-1, 0)),
-			new ActionTree.Node(MultiAction.relative(-1, 0).addAction(SubMulti.promo(
-					new ArrayList<>(Arrays.asList("Ghost")))))
-		));
+		data.setTree(
+			new ActionTree(Arrays.asList(
+				new ActionTree.Node(MoveAndCaptureAction.relative( moveA,	moveB, Condition.EOE)),
+				new ActionTree.Node(MoveAndCaptureAction.relative( moveA,  -moveB, Condition.EOE)),
+				new ActionTree.Node(MoveAndCaptureAction.relative(-moveA,   moveB, Condition.EOE)),
+				new ActionTree.Node(MoveAndCaptureAction.relative(-moveA,  -moveB, Condition.EOE)),
+				new ActionTree.Node(MoveAndCaptureAction.relative( moveB, 	moveA, Condition.EOE)),
+				new ActionTree.Node(MoveAndCaptureAction.relative( moveB,  -moveA, Condition.EOE)),
+				new ActionTree.Node(MoveAndCaptureAction.relative(-moveB, 	moveA, Condition.EOE)),
+				new ActionTree.Node(MoveAndCaptureAction.relative(-moveB,  -moveA, Condition.EOE)),
+				
+				new ActionTree.Node(MoveAndCaptureAction.relative(-1, 0)),
+				new ActionTree.Node(SummonAction.relative(-1, 0, new ArrayList<>(Arrays.asList("Rook","Queen")))),
+				new ActionTree.Node(CaptureAction.relative(-1, 0)),
+				new ActionTree.Node(MultiAction.relative(-1, 0).addAction(SubMulti.promo(
+						new ArrayList<>(Arrays.asList("Ghost")))))
+			))
+		);
+		data.setPointValue(3);
 	}
 	
 	
@@ -56,7 +57,7 @@ public class Knight extends Piece{
 	@Override
 	public Set<LegalAction> getLegalActions(Board b, int row, int col) {
 		//System.out.printf("Getting legal moves for a Knight ::%n");
-		Set<LegalAction> legals = tree.getLegals(b, row, col);
+		Set<LegalAction> legals = data.getTree().getLegals(b, row, col);
 		//System.out.printf("\tBefore filtering = %s%n", legals);
 		legals.removeIf(x -> !b.tryMoveForLegality(row, col, x));
 		//System.out.printf("\tAfter filtering  = %s%n", legals);
@@ -69,7 +70,7 @@ public class Knight extends Piece{
 	
 	@Override
 	public boolean canCheck(Board b, int startRow, int startCol, int destRow, int destCol) {
-		return tree.canCheck(b, startRow, startCol, destRow, destCol);
+		return data.getTree().canCheck(b, startRow, startCol, destRow, destCol);
 		/*
 		int aDiff = Math.abs(startRow - destRow);
 		int bDiff = Math.abs(startCol - destCol);
@@ -87,13 +88,21 @@ public class Knight extends Piece{
 	
 	@Override
 	public int getPointValue() {
-		return POINT_VALUE;
-	}
+		return data.getPointValue();
 	
-	private static final PieceType pieceType = PieceType.define("Knight", false);
+	}
 	@Override
 	public PieceType getPieceType() {
-		return pieceType;
+		return data.getPieceType();
+	}
+	
+	@Override
+	public PieceData getPieceData() {
+		return data;
+	}
+	
+	public static PieceData getData() {
+		return data;
 	}
 
 }

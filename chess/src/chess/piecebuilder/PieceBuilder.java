@@ -1,11 +1,16 @@
 package chess.piecebuilder;
 
 import java.io.File;
+import java.io.FileOutputStream;
+import java.io.FileWriter;
+import java.io.IOException;
+import java.io.ObjectOutputStream;
 import java.util.Collection;
 import java.util.List;
 
 import chess.base.CustomPiece;
 import chess.base.Piece;
+import chess.base.PieceData;
 import chess.base.WrappedImageView;
 import chess.util.InputVerification;
 import javafx.beans.binding.Bindings;
@@ -44,11 +49,13 @@ import javafx.stage.Modality;
 import javafx.stage.Stage;
 
 public class PieceBuilder extends Stage implements InputVerification{
-	private static final Image WHITE_DEFAULT_IMAGE, BLACK_DEFAULT_IMAGE;
+	public static final Image WHITE_DEFAULT_IMAGE, BLACK_DEFAULT_IMAGE;
+	public static final String WHITE_DEFAULT_URI, BLACK_DEFAULT_URI;
+	//TODO Maybe make an "error loading" image to use when the file path is wrong?
 	
 	static {
-		WHITE_DEFAULT_IMAGE = new Image(PieceBuilder.class.getResourceAsStream("/resources/white_default_image.png"), 240, 240, false, true);
-		BLACK_DEFAULT_IMAGE = new Image(PieceBuilder.class.getResourceAsStream("/resources/black_default_image.png"), 240, 240, false, true);
+		WHITE_DEFAULT_IMAGE = new Image(PieceBuilder.class.getResourceAsStream(WHITE_DEFAULT_URI = "/resources/white_default_image.png"), 240, 240, false, true);
+		BLACK_DEFAULT_IMAGE = new Image(PieceBuilder.class.getResourceAsStream(BLACK_DEFAULT_URI = "/resources/black_default_image.png"), 240, 240, false, true);
 	}
 	
 	private static PieceBuilder instance;
@@ -140,9 +147,12 @@ public class PieceBuilder extends Stage implements InputVerification{
 	private FileChooser fileChooser;
 	private AnchorPane whiteXAnchor, blackXAnchor;
 	private Label whiteX, blackX;
+	private String whiteImageURIString, blackImageURIString;
 	
 	private PieceBuilder() {
 		super();
+		whiteImageURIString = null;
+		blackImageURIString = null;
 		outermostVBox = new VBox();
 		outermostVBox.setFillWidth(true);
 		outerStackPane = new StackPane();
@@ -224,8 +234,7 @@ public class PieceBuilder extends Stage implements InputVerification{
 			fileChooser.setTitle("Select White Piece Image");
 			File selectedFile = fileChooser.showOpenDialog(PieceBuilder.this);
 			if(selectedFile != null) {
-				Image newWhiteImage = new Image(selectedFile.toURI().toString(), 240, 240, false, true);
-				setCustomWhiteImage(newWhiteImage);
+				setCustomWhiteImage(selectedFile);
 			}
 		});
 		whiteImageInternal.setOnDragOver(dragEvent -> {
@@ -245,8 +254,7 @@ public class PieceBuilder extends Stage implements InputVerification{
 					File file = files.get(0);
 					if(isValidImage(file)) {
 						try {
-							Image newWhiteImage = new Image(file.toURI().toString(), 240, 240, false, true);
-							setCustomWhiteImage(newWhiteImage);
+							setCustomWhiteImage(file);
 							success = true;
 						}
 						catch(Exception e) {
@@ -268,8 +276,7 @@ public class PieceBuilder extends Stage implements InputVerification{
 			fileChooser.setTitle("Select Black Piece Image");
 			File selectedFile = fileChooser.showOpenDialog(PieceBuilder.this);
 			if(selectedFile != null) {
-				Image newBlackImage = new Image(selectedFile.toURI().toString(), 240, 240, false, true);
-				setCustomBlackImage(newBlackImage);
+				setCustomBlackImage(selectedFile);
 			}
 		});
 		blackImageInternal.setOnDragOver(dragEvent -> {
@@ -288,8 +295,7 @@ public class PieceBuilder extends Stage implements InputVerification{
 					File file = files.get(0);
 					if(isValidImage(file)) {
 						try {
-							blackImage = new Image(file.toURI().toString(), 240, 240, false, true);
-							blackImageView.setImage(blackImage);
+							setCustomBlackImage(file);
 							success = true;
 						}
 						catch(Exception e) {
@@ -381,13 +387,13 @@ public class PieceBuilder extends Stage implements InputVerification{
 			return false;
 		}
 	}
-	private void setCustomWhiteImage(Image newWhiteImage) {
-		whiteImage = newWhiteImage;
+	private void setCustomWhiteImage(File imageFile) {
+		whiteImage = new Image(whiteImageURIString = imageFile.toURI().toString(), 240, 240, false, true);
 		whiteImageView.setImage(whiteImage);
 		whiteXAnchor.setVisible(true);
 	}
-	private void setCustomBlackImage(Image newBlackImage) {
-		blackImage = newBlackImage;
+	private void setCustomBlackImage(File imageFile) {
+		blackImage = new Image(blackImageURIString = imageFile.toURI().toString(), 240, 240, false, true);
 		blackImageView.setImage(blackImage);
 		blackXAnchor.setVisible(true);
 	}
@@ -419,12 +425,27 @@ public class PieceBuilder extends Stage implements InputVerification{
 		if(blackImage == BLACK_DEFAULT_IMAGE) {
 			//TODO warning message about using the default image
 		}
-		CustomPiece.PieceData pieceData = new CustomPiece.PieceData(nameTextField.getText().strip());
-		pieceData.whiteImage = whiteImage;
-		pieceData.blackImage = blackImage;
-		pieceData.tree = actionTreeBuilder.build();
-		pieceData.pointValue = 5;
-		CustomPiece.defineNewPiece(pieceData);
+		PieceData pieceData = new PieceData(nameTextField.getText().strip());
+		pieceData.setWhiteImageURIString(whiteImageURIString);
+		pieceData.setBlackImageURIString(blackImageURIString);
+		pieceData.setTree(actionTreeBuilder.build());
+		pieceData.setPointValue(5);
+		
+		File file = new File("userpieces/" + pieceData.getName() + ".dat");
+		try {
+			file.createNewFile();
+			FileWriter temp = new FileWriter(file, false);
+			temp.flush();
+			temp.close();
+			FileOutputStream fos = new FileOutputStream(file); 
+			ObjectOutputStream oos = new ObjectOutputStream(fos);
+			oos.writeObject(pieceData);
+			oos.flush();
+			oos.close();
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
 		this.hide(); //TODO popup window saying it was a success?
 		
 	}
@@ -437,8 +458,11 @@ public class PieceBuilder extends Stage implements InputVerification{
 				submitErrorMessage("name field is blank");
 				result &= false;
 			}
+			if(CustomPiece.isDefinedPieceName(name)) {
+				submitErrorMessage("A piece with this name already exists.");
+			}
 			if(name.indexOf('+') >= 0 || name.indexOf('-') >= 0) {
-				submitErrorMessage("Bad name (contains plus or minus"); //TODO actual error message
+				submitErrorMessage("Piece names cannot contain a plus (+) or minus (-)"); //TODO actual error message
 				result &= false;
 			}
 			result &= actionTreeBuilder.verifyInput();
@@ -457,7 +481,7 @@ public class PieceBuilder extends Stage implements InputVerification{
 		}
 		return false;
 	}
-	
+
 	private void submitErrorMessage(String message) {
 		if(!errorsShowing) {
 			errorVBox.getChildren().add(hideErrors);
@@ -489,8 +513,24 @@ public class PieceBuilder extends Stage implements InputVerification{
 		this.show();
 	}
 	
-	public void open(Piece p) {
-		this.show();
+	public static void open(Piece p) {
+		if(p == null) {
+			throw new NullPointerException();
+		}
+		open(p.getPieceData());
+	}
+	
+	public static void open(String pieceName) {
+		if(pieceName == null) {
+			throw new NullPointerException();
+		}
+		open(Piece.getDataFor(pieceName));
+	}
+	
+	public static void open(PieceData data) {
+		if(data == null) {
+			throw new NullPointerException();
+		}
 	}
 	
 	public void attemptClose() {

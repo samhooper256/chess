@@ -1,12 +1,18 @@
 package chess.base;
 
+import java.io.Serializable;
+
 import chess.util.AFC;
 
 /* *
  * Immutable class representing a piece type (Pawn, Rook, Knight, etc.)
  * One PieceType should be shared across all instances of a certain piece.
  */
-public class PieceType {
+public class PieceType implements Serializable{
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = -2481262942460331792L;
 	private boolean isCustom;
 	private String name;
 	

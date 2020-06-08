@@ -6,8 +6,12 @@ import java.util.ArrayList;
 import chess.base.Board;
 
 public class BooleanPath extends PathBase{
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = 5129853734669038191L;
 	boolean isInverted = false;
-	public BooleanPath(Object base, ArrayList<MemberAccess> calls) {
+	public BooleanPath(Object base, ArrayList<MethodAccess> calls) {
 		super(base, calls);
 	}
 	

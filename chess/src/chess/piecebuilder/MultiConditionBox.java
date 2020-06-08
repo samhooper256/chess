@@ -38,27 +38,8 @@ public class MultiConditionBox extends VBox implements MultiConditionPart{
 			return null;
 		}
 	};
-	public <T extends Node & MultiConditionPart> MultiConditionBox(T first){
-		super(4);
-		System.out.println("Entered MCP constructor, mcp passed was: " + first);
-		this.setFillWidth(true);
-		MultiConditionPart mcp1, mcp2;
-		mcp1 = first;
-		mcp2 = new ConditionBox();
-		Pane myParent = (Pane) ((Node) mcp1).getParent();
-		int mcp1index = myParent.getChildren().indexOf(mcp1);
-		//System.out.println("\mcp1's ntad is" + this + " (this)");
-		myParent.getChildren().remove(mcp1);
-		//System.out.println("\tmy ntad's children (after removing mcp1):" + nodeToAddTo.getChildren());
-		choiceBox = new ChoiceBox<>();
-		choiceBox.getItems().addAll(Condition.postConstructionModifierMethods);
-		choiceBox.setConverter(methodStringConverter);
-		choiceBox.setValue(Condition.postConstructionModifierMethods[0]);
-		this.getChildren().addAll((Node) mcp1, choiceBox, (Node) mcp2);
-		//System.out.println("\tmy children (after add 3 things):" + getChildren());
-		myParent.getChildren().add(mcp1index, this);
-		//System.out.println("\tfinally, my ntad's children (after ntad.getChildren().add(mcp1index, this)): " + nodeToAddTo.getChildren());
-		
+	
+	{
 		//TODO COde from this line to *** is the exact same as in CustomConditionBox - fix?
 		this.setOnDragOver(dragEvent -> {
 			//System.out.println("MultiConditionBox drag over");
@@ -84,7 +65,36 @@ public class MultiConditionBox extends VBox implements MultiConditionPart{
 		//***
 		
 		this.setStyle("-fx-border-width: 1px; -fx-border-color: rgba(38, 38, 255, 1.0);"); //TODO put in CSS (this and elsewhere)
+	}
+	public <T extends Node & MultiConditionPart> MultiConditionBox(T first){
+		super(4);
+		System.out.println("Entered MCP constructor, mcp passed was: " + first);
+		this.setFillWidth(true);
+		MultiConditionPart mcp1, mcp2;
+		mcp1 = first;
+		mcp2 = new ConditionBox();
+		Pane myParent = (Pane) ((Node) mcp1).getParent();
+		int mcp1index = myParent.getChildren().indexOf(mcp1);
+		//System.out.println("\mcp1's ntad is" + this + " (this)");
+		myParent.getChildren().remove(mcp1);
+		//System.out.println("\tmy ntad's children (after removing mcp1):" + nodeToAddTo.getChildren());
+		choiceBox = new ChoiceBox<>();
+		choiceBox.getItems().addAll(Condition.postConstructionModifierMethods);
+		choiceBox.setConverter(methodStringConverter);
+		choiceBox.setValue(Condition.postConstructionModifierMethods[0]);
+		this.getChildren().addAll((Node) mcp1, choiceBox, (Node) mcp2);
+		//System.out.println("\tmy children (after add 3 things):" + getChildren());
+		myParent.getChildren().add(mcp1index, this);
+		//System.out.println("\tfinally, my ntad's children (after ntad.getChildren().add(mcp1index, this)): " + nodeToAddTo.getChildren());
 		System.out.println("created: " +this );
+	}
+	public <T extends Node & MultiConditionPart> MultiConditionBox(T first, T second) {
+		this.setFillWidth(true);
+		choiceBox = new ChoiceBox<>();
+		choiceBox.getItems().addAll(Condition.postConstructionModifierMethods);
+		choiceBox.setConverter(methodStringConverter);
+		choiceBox.setValue(Condition.postConstructionModifierMethods[0]);
+		this.getChildren().addAll((Node) first, choiceBox, (Node) second);
 	}
 	@Override
 	public boolean verifyInput() {

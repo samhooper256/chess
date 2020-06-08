@@ -32,6 +32,10 @@ public class ActionTree implements Serializable{
 		root.addChild(primaryNode);
 	}
 	
+	public Collection<TreeNode> getPrimaryNodes() {
+		return Collections.unmodifiableCollection(root.getChildren());
+	}
+	
 	public Set<LegalAction> getLegals(Board b, int startRow, int startCol){
 		//System.out.printf("****** start passed to tree as (%d,%d)%n", startRow,startCol);
 		return getLegalsOnNode(root, b, startRow, startCol);
@@ -100,7 +104,7 @@ public class ActionTree implements Serializable{
 	
 	@Override
 	public String toString() {
-		return root.toString();
+		return "[ActionTree@"+hashCode()+":root="+root.toString()+"]";
 	}
 	
 	public static class Node extends TreeNode{
@@ -233,7 +237,7 @@ public class ActionTree implements Serializable{
 		
 		@Override
 		public String toString() {
-			return String.format("[Node (%s), (%s)]", action, children); 
+			return String.format("[Node@%x:action=%s, children=%s]", hashCode(), action, children); 
 		}
 	}
 	

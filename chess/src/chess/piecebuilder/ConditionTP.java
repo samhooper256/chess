@@ -1,5 +1,6 @@
 package chess.piecebuilder;
 
+import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.Collection;
 
@@ -13,7 +14,7 @@ import javafx.scene.layout.Pane;
 import javafx.scene.layout.VBox;
 
 public class ConditionTP extends TitledPane implements InputVerification, Buildable<Collection<Condition>>{
-	private VBox esvBox;
+	private VBox esvBox; //content of this ConditionTP
 	private Button addConditionButton;
 	private ConditionUtilFlowPane conditionUtilFlowPane;
 	public ConditionTP() {
@@ -35,6 +36,7 @@ public class ConditionTP extends TitledPane implements InputVerification, Builda
 		this.setContent(esvBox);
 		this.setExpanded(false);
 	}
+	
 	
 	@Override
 	public Collection<Condition> build(){
@@ -67,5 +69,13 @@ public class ConditionTP extends TitledPane implements InputVerification, Builda
 		}
 		
 		return result;
+	}
+	
+	public static void reconstruct(Collection<Condition> conditions, ConditionTP whereToAdd) {
+		int addIndex = 1;
+		for(Condition con : conditions) {
+			whereToAdd.esvBox.getChildren().add(addIndex, ConditionBoxWrap.reconstructCondition(con));
+			addIndex++;
+		}
 	}
 }

@@ -17,6 +17,9 @@ public class BooleanInputHBox extends HBox{
 		this.getChildren().add(checkBox);
 	}
 	
+	public void setValue(boolean newValue) {
+		checkBox.setSelected(newValue);
+	}
 	public boolean getBoolean() {
 		return checkBox.isSelected();
 	}

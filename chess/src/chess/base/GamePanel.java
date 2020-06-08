@@ -344,7 +344,7 @@ public class GamePanel extends StackPane{
         pieceBuilderButton.setWrapText(true);
         pieceBuilderButton.setAlignment(Pos.CENTER);
         pieceBuilderButton.setOnMouseClicked(mouseEvent -> {
-        	pieceBuilder.open();
+        	PieceBuilder.open("Knight");
         });
         leftAnchor.getChildren().add(pieceBuilderButton);
         

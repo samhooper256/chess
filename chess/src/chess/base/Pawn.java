@@ -36,7 +36,7 @@ public class Pawn extends Piece{
 						Arrays.asList(
 							new ActionTree.Node(MoveAndCaptureAction.relative(-1, 0, Condition.DIE),
 								new ActionTree.Node(MoveAndCaptureAction.relative(-2, 0, Condition.DIE,
-								Condition.onSelf().call("hasMoved").toBooleanPath().invert().toCond()))),
+								Condition.onSelf().call("hasMoved").toBooleanPath().invert().toCondition()))),
 							new ActionTree.Node(MoveAndCaptureAction.relative(-1, 1, Condition.EOD)),
 							new ActionTree.Node(MoveAndCaptureAction.relative(-1, -1, Condition.EOD))
 						)
@@ -58,7 +58,7 @@ public class Pawn extends Piece{
 							)
 					),
 					new ActionTree.Choke(Arrays.asList(
-							Condition.onBoard().call("hasPlay").toBooleanPath().toCond(),
+							Condition.onBoard().call("hasPlay").toBooleanPath().toCondition(),
 							Condition.onBoard().call("lastPlay").call("distance").toIntegerPath().isEquals(new IntegerPath(2)),
 							Condition.onBoard().call("lastPlay").call("getPiece").toObjectPath().instanceOf(Pawn.class),
 							Condition.onBoard().call("lastPlay").call("getPlay").toObjectPath().instanceOf(LegalMoveAndCapture.class)),

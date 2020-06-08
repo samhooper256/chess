@@ -8,7 +8,7 @@ import javafx.scene.Node;
 import javafx.scene.layout.Pane;
 
 public class IntegerLiteralConditionOption extends ConditionOption implements InputVerification{
-	private IntTextField followingIntTextField;
+	protected IntTextField followingIntTextField;
 	protected IntegerLiteralConditionOption(ConditionChoiceBox choiceBox) {
 		super(choiceBox);
 	}
@@ -19,7 +19,7 @@ public class IntegerLiteralConditionOption extends ConditionOption implements In
 	}
 	
 	@Override
-	public void updatePane() {
+	public void updatePaneImpl() {
 		Pane pb = super.choiceBox.nodeToAddTo;
 		ObservableList<Node> children = pb.getChildren();
 		int myIndex = children.indexOf(super.choiceBox);

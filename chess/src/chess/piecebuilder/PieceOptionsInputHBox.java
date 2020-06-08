@@ -53,4 +53,16 @@ class PieceOptionsInputHBox extends HBox implements InputVerification{
 		PieceBuilder.submitError(((Label) this.getChildren().get(0)).getText() + " needs at least one piece");
 		return false;
 	}
+
+	public void selectAll(ArrayList<String> pieceNames) {
+		OUTER:
+		for(String name : pieceNames) {
+			for(Node fxNode : tilePane.getChildren()) {
+				if(fxNode instanceof CheckBox && ((CheckBox) fxNode).getText().equals(name)) {
+					((CheckBox) fxNode).setSelected(true);
+					continue OUTER;
+				}
+			}
+		}
+	}
 }

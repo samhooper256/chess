@@ -40,6 +40,10 @@ public abstract class Action implements Serializable {
 		conditions.add(c);
 	}
 	
+	public Collection<Condition> getConditions(){
+		return Collections.unmodifiableCollection(conditions);
+	}
+	
 	public void addAllConditions(Condition... cons) {
 		for(int i = 0; i < cons.length; i++) {
 			conditions.add(cons[i]);
@@ -96,11 +100,18 @@ public abstract class Action implements Serializable {
 	
 	public abstract Set<? extends LegalAction> getLegals(Board b, int startRow, int startCol);
 	
+	public abstract Object[] getReconstructionParameters();
+	
 	public static String getActionName() {
 		return "???";
 	}
 	
 	public static String getVariant() {
 		return "";
+	}
+	
+	@Override
+	public String toString() {
+		return String.format("[%s@%d:conditions=%s]", getClass().getName(), hashCode(), getConditions());
 	}
 }

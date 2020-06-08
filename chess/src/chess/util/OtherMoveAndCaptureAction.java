@@ -46,7 +46,7 @@ public abstract class OtherMoveAndCaptureAction extends chess.util.Action{
 		 * 
 		 */
 		private static final long serialVersionUID = -701615069952124077L;
-		int relStartRow, relStartCol, relDestRow, relDestCol;
+		public final int relStartRow, relStartCol, relDestRow, relDestCol;
 		public RelativeOtherMoveAndCaptureAction(int otherRelStartRow,
 			int otherRelStartCol, int otherRelDestRow, int otherRelDestCol, Condition... cons) {
 			this.relStartRow = otherRelStartRow;
@@ -92,6 +92,13 @@ public abstract class OtherMoveAndCaptureAction extends chess.util.Action{
 				return s;
 			}
 		}
+
+		@Override
+		public Object[] getReconstructionParameters() {
+			return new Object[] {relStartRow, relStartCol, relDestRow, relDestCol};
+		}
+		
+		
 	}
 	
 	/* *

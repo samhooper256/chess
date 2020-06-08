@@ -22,17 +22,21 @@ import javafx.scene.layout.Pane;
 import javafx.scene.layout.Region;
 import javafx.scene.layout.VBox;
 public class CustomConditionBox extends VBox implements InputVerification, Buildable<Condition>{
-	private DropPathPane dropPathPane;
 	private BuildFinisher buildFinisher;
 	private Pane nodeToAddTo;
 	private boolean waitingForDrop;
-	public CustomConditionBox(Pane ntad) {
+	public CustomConditionBox(Pane ntad, boolean addDrop) {
 		super();
 		this.prefWidthProperty().bind(ntad.widthProperty());
 		this.nodeToAddTo = ntad;
 		this.setStyle("-fx-border-width: 1px; -fx-border-color: #b00000;");
-		dropPathPane = new DropPathPane(true);
-		this.getChildren().add(dropPathPane);
+		if(addDrop) {
+			System.out.println("ccb +drop");
+			this.getChildren().add(new DropPathPane(true));
+		}
+		else {
+			System.out.println("ccb no drop");
+		}
 		waitingForDrop = true;
 	}
 	
@@ -54,6 +58,19 @@ public class CustomConditionBox extends VBox implements InputVerification, Build
 			}
 		}
 		System.out.println("children after: " + getChildren());
+	}
+	
+	public void addFinisherEx(BuildFinisher fin, boolean doPostAdd) {
+		if(buildFinisher == null) {
+			buildFinisher = fin;
+			this.getChildren().add(buildFinisher);
+			if(doPostAdd) {
+				buildFinisher.postAdd();
+			}
+		}
+		else {
+			throw new IllegalArgumentException("CustomConditionBox already has finisher");
+		}
 	}
 	
 	@Override

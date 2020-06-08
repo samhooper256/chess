@@ -13,10 +13,17 @@ public class ConditionBoxWrap extends VBox implements InputVerification, Buildab
 	VBox esvBox;
 	private Button deleteConditionButton;
 	public ConditionBoxWrap() {
+		this((MultiConditionPart) (new ConditionBox()));
+	}
+	
+	public ConditionBoxWrap(MultiConditionPart part) {
+		if(!(part instanceof Node)) {
+			throw new IllegalArgumentException("part does not extend javafx Node: " + part + "(class="+part.getClass()+")");
+		}
 		esvBox = new VBox();
 		this.setFillWidth(true);
 		esvBox.setFillWidth(true);
-		esvBox.getChildren().add(new ConditionBox());
+		esvBox.getChildren().add((Node) (part));
 		
 		this.setStyle("-fx-border-color: pink;");
 		deleteConditionButton = new Button("Delete Condition");
@@ -27,6 +34,7 @@ public class ConditionBoxWrap extends VBox implements InputVerification, Buildab
 		});
 		this.getChildren().addAll(esvBox, deleteConditionButton);
 		System.out.println(this + " created, esvBox = " + esvBox + ", initial ConditionBox = " + esvBox.getChildren().get(0));
+		
 	}
 	@Override
 	public Condition build() {
@@ -42,5 +50,9 @@ public class ConditionBoxWrap extends VBox implements InputVerification, Buildab
 			return ((InputVerification) esvBox.getChildren().get(0)).verifyInput();
 		}
 	}
-
+	
+	static ConditionBoxWrap reconstructCondition(Condition con) {
+		//System.out.println("(WRAP)RECONSTRUCTING="+con);
+		return new ConditionBoxWrap(ConditionBox.reconstruct(con));
+	}
 }

@@ -1,6 +1,6 @@
 package chess.util;
 
-import java.lang.reflect.Member;
+import java.lang.reflect.Method;
 import java.util.ArrayList;
 
 import chess.base.Board;
@@ -18,6 +18,24 @@ public class ObjectPath extends PathBase{
 	
 	public ObjectPath(Object val) {
 		super(val, null);
+	}
+	
+public static final Method[] creationMethods;
+	
+	static {
+		creationMethods = new Method[6];
+		
+		try {
+			creationMethods[0] = ObjectPath.class.getMethod("isEquals", ObjectPath.class);
+			creationMethods[1] = ObjectPath.class.getMethod("notEquals", ObjectPath.class);
+			creationMethods[2] = ObjectPath.class.getMethod("isNotNull");
+			creationMethods[3] = ObjectPath.class.getMethod("isNull");
+			creationMethods[4] = ObjectPath.class.getMethod("instanceOf", Class.class);
+			creationMethods[5] = ObjectPath.class.getMethod("isPiece", String.class);
+		} catch (NoSuchMethodException | SecurityException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
 	}
 	
 	@AFC(name="equals")

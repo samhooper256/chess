@@ -1,6 +1,7 @@
 package chess.util;
 
 import java.lang.reflect.Member;
+import java.lang.reflect.Method;
 import java.util.ArrayList;
 
 import chess.base.Board;
@@ -17,7 +18,21 @@ public class BooleanPath extends PathBase{
 	
 	public static final BooleanPath trueConstantBoolPath;
 	public static final BooleanPath falseConstantBoolPath;
+	public static final Method[] creationMethods;
 	static {
+		creationMethods = new Method[5];
+
+		try {
+			creationMethods[0] = BooleanPath.class.getMethod("toCondition");
+			creationMethods[1] = BooleanPath.class.getMethod("isEquals", BooleanPath.class);
+			creationMethods[2] = BooleanPath.class.getMethod("notEquals", BooleanPath.class);
+			creationMethods[3] = BooleanPath.class.getMethod("isEnemy");
+			creationMethods[4] = BooleanPath.class.getMethod("isAlly");
+		} catch (NoSuchMethodException | SecurityException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		//creationMethods[1] = BooleanPath.class.getMethod("toCondition");
 		trueConstantBoolPath = new BooleanPath(true);
 		falseConstantBoolPath = new BooleanPath(false);
 	}
@@ -25,13 +40,15 @@ public class BooleanPath extends PathBase{
 		super(Boolean.valueOf(constant), null);
 	}
 	
+	
+	
 	@AFC(name="to condition")
-	public Condition toCond() {
+	public Condition toCondition() {
 		return new SingleBooleanCondition(this, isInverted);
 	}
 	
 	@AFC(name="equals")
-	public Condition equals(BooleanPath other) {
+	public Condition isEquals(BooleanPath other) {
 		if(isInverted) {
 			return new BooleanNotEqualsCondition(this, other);
 		}

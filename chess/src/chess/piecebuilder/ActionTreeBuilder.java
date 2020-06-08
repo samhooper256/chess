@@ -13,6 +13,7 @@ import java.util.List;
 import chess.util.Action;
 import chess.util.ActionTree;
 import chess.util.ActionTree.Choke;
+import chess.util.MoveAndCaptureAction.RadiusMoveAndCaptureAction;
 import chess.util.Condition;
 import chess.util.InputVerification;
 import chess.util.MoveAndCaptureAction;
@@ -78,6 +79,130 @@ public class ActionTreeBuilder extends StackPane implements InputVerification, B
 		this.getChildren().addAll(bcScrollPane);
 	}
 	
+	public void loadTree(ActionTree tree) {
+		//System.out.println("ATB Loading tree:"+tree);
+		ConditionOption.setUpdatesAllowed(false);
+		BuildFinisher.setListenersOn(false);
+		this.reset();
+		int index = 0;
+		ObservableList<Node> children = actionTreeVBox.getChildren();
+		for(ActionTree.TreeNode tnode : tree.getPrimaryNodes()) {
+			if(tnode instanceof ActionTree.Node) {
+				Action action = ((ActionTree.Node) tnode).getAction();
+				children.add(index, loadActionTP(action));
+				index++;
+			}
+			else if(tnode instanceof ActionTree.Choke) {
+				//children.add(index++, ChokeTP.loadChoke((ActionTree.Node) tnode)); //TODO
+			}
+			else {
+				throw new UnsupportedOperationException("Unsupported subclass of ActionTree.TreeNode: " + tree.getClass());
+			}
+		}
+		BuildFinisher.setListenersOn(true);
+		ConditionOption.setUpdatesAllowed(true);
+	}
+	
+	private ActionTP loadActionTP(Action a) {
+		//System.out.println("Loading action to ActionTP:"+a);
+		if(a instanceof MultiAction) {
+			return loadMultiActionTP((MultiAction) a);
+		}
+		Class<? extends Action> clazz = a.getClass();
+		String title = "???";
+		try {
+			title = 
+				(String) clazz.getMethod("getVariant").invoke(null) + " " +
+				(String) clazz.getMethod("getActionName").invoke(null);
+		} catch (IllegalAccessException | IllegalArgumentException | InvocationTargetException | NoSuchMethodException
+				| SecurityException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		ActionTP tp = null;
+		try {
+			tp = new ActionTP(title, (Method) clazz.getMethod("getCreationMethod").invoke(null), ActionTree.supportsChildren(a));
+		} catch (IllegalAccessException | IllegalArgumentException | InvocationTargetException
+				| NoSuchMethodException | SecurityException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		if(tp == null) {
+			return null;
+		}
+		Object[] reconstructionParams = a.getReconstructionParameters();
+		//System.out.println("recon params = " + Arrays.toString(reconstructionParams));
+		ObservableList<Node> tpChildren = tp.vBox.getChildren();
+		for(int rpIndex = 0, tpIndex = 0; rpIndex < reconstructionParams.length; rpIndex++) {
+			//System.out.println("\tentered loop, rpIndex = " + rpIndex + ", tpIndex = " + tpIndex);
+			if(reconstructionParams[rpIndex].getClass() == int.class || reconstructionParams[rpIndex].getClass() == Integer.class) {
+				//System.out.println("twas an int");
+				while(!(tpChildren.get(tpIndex) instanceof IntInputHBox)) {
+					tpIndex++;
+				}
+				if(tpIndex >= tpChildren.size()) {
+					throw new IllegalArgumentException("Could not find an IntInputHBox for "
+							+ "reconstruction param at index " + rpIndex);
+				}
+				((IntInputHBox) tpChildren.get(tpIndex)).setValue((int) reconstructionParams[rpIndex]);
+				tpIndex++;
+			}
+			else if(reconstructionParams[rpIndex].getClass() == boolean.class || reconstructionParams[rpIndex].getClass() == Boolean.class) {
+				while(!(tpChildren.get(tpIndex) instanceof BooleanInputHBox)) {
+					tpIndex++;
+				}
+				if(tpIndex >= tpChildren.size()) {
+					throw new IllegalArgumentException("Could not find a BooleanInputHBox for "
+							+ "reconstruction param at index " + rpIndex);
+				}
+				((BooleanInputHBox) tpChildren.get(tpIndex)).setValue((boolean) reconstructionParams[rpIndex]);
+				tpIndex++;
+			}
+			else if(reconstructionParams[rpIndex].getClass() == ArrayList.class) {
+				while(!(tpChildren.get(tpIndex) instanceof PieceOptionsInputHBox)) {
+					tpIndex++;
+				}
+				if(tpIndex >= tpChildren.size()) {
+					throw new IllegalArgumentException("Could not find a PieceOptionsInputHBox for "
+							+ "reconstruction param at index " + rpIndex);
+				}
+				((PieceOptionsInputHBox) tpChildren.get(tpIndex)).selectAll((ArrayList<String>) reconstructionParams[rpIndex]);
+			}
+			else {
+				System.out.println("twas " + reconstructionParams[rpIndex].getClass());
+			}
+		}
+		//System.out.println("passing cons:"+a.getConditions());
+		ConditionTP.reconstruct(a.getConditions(), tp.conditionPane);
+		return tp;
+	}
+	
+	private MultiActionTP loadMultiActionTP(MultiAction a) {
+		String title = "???";
+		Class<? extends Action> clazz = a.getClass();
+		try {
+			title = 
+				(String) clazz.getMethod("getVariant").invoke(null) + " " +
+				(String) clazz.getMethod("getActionName").invoke(null);
+		} catch (IllegalAccessException | IllegalArgumentException | InvocationTargetException | NoSuchMethodException
+				| SecurityException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		MultiActionTP tp = null;
+		try {
+			tp = new MultiActionTP(title, (Method) clazz.getMethod("getCreationMethod").invoke(null));
+		} catch (IllegalAccessException | IllegalArgumentException | InvocationTargetException
+				| NoSuchMethodException | SecurityException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		if(tp == null) {
+			return null;
+		}
+		return tp;
+		
+	}
 	private void setupAddActionButton(MenuButton button, ObservableList<Node> whereToAddActionTPs) {
 		setupAddActionButton(button, whereToAddActionTPs, true, true);
 	}
@@ -452,6 +577,5 @@ public class ActionTreeBuilder extends StackPane implements InputVerification, B
 			}
 			return end;
 		}
-
 	}
 }

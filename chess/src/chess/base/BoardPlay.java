@@ -24,6 +24,7 @@ public class BoardPlay{
 	public int getStartRow() {return startRow;}
 	@AFC(name="start column")
 	public int getStartCol() {return startCol;}
+	@AFC(name="action played")
 	public LegalAction getPlay() {return play;}
 	@AFC(name="acting piece")
 	public Piece getPiece() {return piece;}

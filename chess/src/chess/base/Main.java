@@ -1,5 +1,6 @@
 package chess.base;
 
+import chess.util.Condition;
 import javafx.application.Application;
 import javafx.scene.Scene;
 import javafx.stage.Stage;

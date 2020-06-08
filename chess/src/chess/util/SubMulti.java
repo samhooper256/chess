@@ -63,8 +63,9 @@ public abstract class SubMulti extends Action{
 		 * 
 		 */
 		private static final long serialVersionUID = -4576845262225150818L;
-		private int relRow, relCol;
-		private Flag relativeTo;
+		public final Flag relativeTo;
+		public final int relRow, relCol;
+		
 		private MNC(Flag rt, int rr, int rc, Condition... cons) {
 			if(rt != Flag.ORIGIN && rt != Flag.DESTINATION) {
 				throw new IllegalArgumentException("Flag must be Flag.ORIGIN or Flag.DESTINATION. Flag was: " + rt);
@@ -94,6 +95,10 @@ public abstract class SubMulti extends Action{
 				return Collections.emptySet();
 			}
 		}
+		@Override
+		public Object[] getReconstructionParameters() {
+			return new Object[] {relativeTo, relRow, relCol};
+		}
 	}
 	
 	public static class CapRel extends SubMulti implements RelativeJumpAction{
@@ -101,8 +106,8 @@ public abstract class SubMulti extends Action{
 		 * 
 		 */
 		private static final long serialVersionUID = 1423861083679743582L;
-		private int relRow, relCol;
-		private Flag relativeTo;
+		public final Flag relativeTo;
+		public final int relRow, relCol;
 		private CapRel(Flag rt, int rr, int rc, Condition... cons) {
 			if(rt != Flag.ORIGIN && rt != Flag.DESTINATION) {
 				throw new IllegalArgumentException("Flag must be Flag.ORIGIN or Flag.DESTINATION. Flag was: " + rt);
@@ -132,6 +137,10 @@ public abstract class SubMulti extends Action{
 				return Collections.emptySet();
 			}
 		}
+		@Override
+		public Object[] getReconstructionParameters() {
+			return new Object[] {relativeTo, relRow, relCol};
+		}
 	}
 	
 	public static class CapRad extends SubMulti implements RadiusAction{
@@ -139,9 +148,9 @@ public abstract class SubMulti extends Action{
 		 * 
 		 */
 		private static final long serialVersionUID = 6194146969384968159L;
-		private int radius;
-		private boolean fill, includeSelf;
-		private Flag relativeTo;
+		public final Flag relativeTo;
+		public final int radius;
+		public final boolean fill, includeSelf;
 		public CapRad(Flag rt, int rad, boolean fil, boolean is, Condition... cons) {
 			if(rt != Flag.ORIGIN && rt != Flag.DESTINATION) {
 				throw new IllegalArgumentException("Flag must be Flag.ORIGIN or Flag.DESTINATION. Flag was: " + rt);
@@ -220,6 +229,10 @@ public abstract class SubMulti extends Action{
 			
 			return legals;
 		}
+		@Override
+		public Object[] getReconstructionParameters() {
+			return new Object[] {relativeTo, radius, fill, includeSelf};
+		}
 	}
 	
 	public static class Promo extends SubMulti{
@@ -227,7 +240,7 @@ public abstract class SubMulti extends Action{
 		 * 
 		 */
 		private static final long serialVersionUID = 6958577812004211549L;
-		private ArrayList<String> options;
+		public final ArrayList<String> options;
 		public Promo(ArrayList<String> options, Condition... cons) {
 			this.options = options;
 			this.addAllConditions(cons);
@@ -243,6 +256,11 @@ public abstract class SubMulti extends Action{
 				return Collections.emptySet();
 			}
 		}
+		
+		@Override
+		public Object[] getReconstructionParameters() {
+			return new Object[] {options};
+		}
 	}
 	
 	public static class OMNC extends SubMulti implements RelativeJumpAction{
@@ -250,8 +268,8 @@ public abstract class SubMulti extends Action{
 		 * 
 		 */
 		private static final long serialVersionUID = -755367866536044169L;
-		private int otherRelStartRow, otherRelStartCol, otherRelDestRow, otherRelDestCol;
-		private Flag relativeTo;
+		public final Flag relativeTo;
+		public final int otherRelStartRow, otherRelStartCol, otherRelDestRow, otherRelDestCol;
 		private OMNC(Flag rt, int orsr, int orsc, int ordr, int ordc, Condition... cons) {
 			if(rt != Flag.ORIGIN && rt != Flag.DESTINATION) {
 				throw new IllegalArgumentException("Flag must be Flag.ORIGIN or Flag.DESTINATION. Flag was: " + rt);
@@ -298,6 +316,11 @@ public abstract class SubMulti extends Action{
 				return Collections.emptySet();
 			}
 		}
+		
+		@Override
+		public Object[] getReconstructionParameters() {
+			return new Object[] {relativeTo, otherRelStartRow, otherRelStartCol, otherRelDestRow, otherRelDestCol};
+		}
 	}
 	
 	public static class SummonRel extends SubMulti implements RelativeJumpAction{
@@ -305,9 +328,9 @@ public abstract class SubMulti extends Action{
 		 * 
 		 */
 		private static final long serialVersionUID = -8645706655336055337L;
-		private int relativeRow, relativeCol;
-		private Flag relativeTo;
-		private ArrayList<String> options;
+		public final Flag relativeTo;
+		public final int relativeRow, relativeCol;
+		public final ArrayList<String> options;
 		private SummonRel(Flag rt, int rr, int rc, ArrayList<String> ops, Condition... cons) {
 			if(rt != Flag.ORIGIN && rt != Flag.DESTINATION) {
 				throw new IllegalArgumentException("Flag must be Flag.ORIGIN or Flag.DESTINATION. Flag was: " + rt);
@@ -338,6 +361,11 @@ public abstract class SubMulti extends Action{
 				return Collections.emptySet();
 			}
 		}
+		
+		@Override
+		public Object[] getReconstructionParameters() {
+			return new Object[] {relativeTo, relativeRow, relativeCol, options};
+		}
 	}
 	
 	public static class SummonRad extends SubMulti implements RadiusAction{
@@ -345,10 +373,10 @@ public abstract class SubMulti extends Action{
 		 * 
 		 */
 		private static final long serialVersionUID = 2775004933263978789L;
-		private int radius;
-		private boolean fill, includeSelf;
-		private Flag relativeTo;
-		private ArrayList<String> options;
+		public final Flag relativeTo;
+		public final int radius;
+		public final boolean fill, includeSelf;
+		public final ArrayList<String> options;
 		public SummonRad(Flag rt, int rad, boolean fil, boolean is, ArrayList<String> ops, Condition... cons) {
 			if(rt != Flag.ORIGIN && rt != Flag.DESTINATION) {
 				throw new IllegalArgumentException("Flag must be Flag.ORIGIN or Flag.DESTINATION. Flag was: " + rt);
@@ -427,6 +455,11 @@ public abstract class SubMulti extends Action{
 			}
 			
 			return legals;
+		}
+		
+		@Override
+		public Object[] getReconstructionParameters() {
+			return new Object[] {relativeTo, radius, fill, includeSelf, options};
 		}
 	}
 	

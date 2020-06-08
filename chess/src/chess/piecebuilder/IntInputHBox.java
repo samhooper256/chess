@@ -26,6 +26,10 @@ public class IntInputHBox extends HBox implements InputVerification{
 		return result;
 	}
 	
+	public void setValue(int val) {
+		textField.setText(String.valueOf(val));
+	}
+	
 	//isValid should be called right before this to avoid an exception
 	public int getInt() {
 		return Integer.parseInt(textField.getText().strip());

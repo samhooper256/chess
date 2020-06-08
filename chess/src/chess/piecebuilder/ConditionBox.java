@@ -8,9 +8,18 @@ import java.util.List;
 import java.util.Set;
 
 import chess.util.AFC;
+import chess.util.BooleanPath;
+import chess.util.CombinerCondition;
 import chess.util.Condition;
 import chess.util.ConditionClass;
+import chess.util.DoublePathed;
 import chess.util.InputVerification;
+import chess.util.IntegerPath;
+import chess.util.NOTCondition;
+import chess.util.ObjectPath;
+import chess.util.PathBase;
+import chess.util.PathedWith;
+import chess.util.SinglePathed;
 import javafx.beans.value.ChangeListener;
 import javafx.beans.value.ObservableValue;
 import javafx.collections.ObservableList;
@@ -30,7 +39,7 @@ import javafx.util.StringConverter;
 
 public class ConditionBox extends VBox implements InputVerification, MultiConditionPart{
 	private Label conditionNameLabel;
-	private ChoiceBox<String> box1;
+	ChoiceBox<String> box1;
 	public static StringConverter<? extends Member> memberStringConverter = new StringConverter<>() {
 
 		@Override
@@ -71,32 +80,35 @@ public class ConditionBox extends VBox implements InputVerification, MultiCondit
 	};
 	
 	private CustomConditionBox customConditionBox;
-	private PremadeConditionBox premadeConditionBox;
+	PremadeConditionBox premadeConditionBox;
 	private boolean isOnPremade;
 	private FlowPane flow;
 	private FlowPane settingsFlow;
 	private HBox defaultValueHBox, invertedHBox;
 	private ChoiceBox<Boolean> defaultValueChoiceBox;
 	private CheckBox invertedCheckBox;
+	private volatile boolean shouldAddDrop;
+	private ChangeListener<Number> box1Listener = new ChangeListener<Number>() {
+		@Override
+		public void changed(ObservableValue<? extends Number> observableValue, Number number, Number number2) {
+			String choice = box1.getItems().get((Integer) number2);
+        	if(choice.equals("Premade")) {
+        		setupForPremade();
+        	}
+        	else if(choice.equals("Custom")) {
+        		setupForCustom(shouldAddDrop);
+        	}
+		}
+	};
 	public ConditionBox() {
 		this.setFillWidth(true);
 		flow = new FlowPane();
+		shouldAddDrop = true;
 		conditionNameLabel = new Label("Condition: ");
 		box1 = new ChoiceBox<>();
 		box1.getItems().addAll("Premade", "Custom");
 		box1.setValue("Select Type");
-		box1.getSelectionModel().selectedIndexProperty().addListener(new ChangeListener<Number>() {
-			@Override
-			public void changed(ObservableValue<? extends Number> observableValue, Number number, Number number2) {
-				String choice = box1.getItems().get((Integer) number2);
-	        	if(choice.equals("Premade")) {
-	        		setupForPremade();
-	        	}
-	        	else if(choice.equals("Custom")) {
-	        		setupForCustom();
-	        	}
-			}
-		});
+		box1.getSelectionModel().selectedIndexProperty().addListener(box1Listener);
 		
 		flow.getChildren().addAll(conditionNameLabel, box1);
 		flow.setHgap(2);
@@ -158,12 +170,12 @@ public class ConditionBox extends VBox implements InputVerification, MultiCondit
 		isOnPremade = true;
 	}
 	
-	private void setupForCustom() {
-		
+	private void setupForCustom(boolean addDrop) {
+		System.out.println("setup for custom called with addDrop="+addDrop);
 		ObservableList<Node> children = flow.getChildren();
 		int box1index = children.indexOf(box1);
 		clearPast(children, box1index);
-		customConditionBox = new CustomConditionBox(this.flow);
+		customConditionBox = new CustomConditionBox(this.flow, addDrop);
 		children.add(customConditionBox);
 		isOnPremade = false;
 	}
@@ -225,6 +237,93 @@ public class ConditionBox extends VBox implements InputVerification, MultiCondit
 			return result;
 		}
 		
+	}
+	
+	public static MultiConditionPart reconstruct(Condition con) {
+		if(con.isPremade()) {
+			ConditionBox conditionBox = new ConditionBox();
+			conditionBox.box1.getSelectionModel().select("Premade");
+			for(Field f : conditionBox.premadeConditionBox.getItems()) {
+				try {
+					if(f.get(null) == con) {
+						conditionBox.premadeConditionBox.getSelectionModel().select(f);
+						break;
+					}
+				} catch (IllegalArgumentException | IllegalAccessException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+					break;
+				}
+			}
+			conditionBox.defaultValueChoiceBox.getSelectionModel().select(con.getDefault());
+			return conditionBox;
+		}
+		else if(con instanceof NOTCondition) {
+			MultiConditionPart part = ConditionBox.reconstruct(((NOTCondition) con).getNottedCondition());
+			if(part instanceof ConditionBox) {
+				((ConditionBox) part).invertedCheckBox.setSelected(true);
+				((ConditionBox) part).defaultValueChoiceBox.getSelectionModel().select(con.getDefault());
+			}
+			else {
+				throw new UnsupportedOperationException("Cannot support : " + part); //Should never happen.
+			}
+			return part;
+		}
+		else if(con instanceof CombinerCondition) {
+			return new MultiConditionBox(
+				(Node & MultiConditionPart) ConditionBox.reconstruct(((CombinerCondition) con).get1()),
+				(Node & MultiConditionPart) ConditionBox.reconstruct(((CombinerCondition) con).get2())
+			);
+		}
+		else {
+			ConditionBox conditionBox = new ConditionBox();
+			conditionBox.shouldAddDrop = false;
+			conditionBox.box1.getSelectionModel().select("Custom");
+			conditionBox.shouldAddDrop = true;
+			conditionBox.defaultValueChoiceBox.getSelectionModel().select(con.getDefault());
+			CustomConditionBox ccb = conditionBox.customConditionBox;
+			Method creationMethod = con.getCreationMethod();
+			if(con instanceof SinglePathed) {
+				PathBase path1 = ((SinglePathed) con).getPath();
+				PathBuilder builder1 = PathBuilder.reconstruct(path1);
+				BuildFinisher finisher = BuildFinisher.reconstruct(builder1, creationMethod);
+				ccb.getChildren().addAll(builder1, finisher);
+				return conditionBox;
+			}
+			else if(con instanceof DoublePathed) {
+				PathBase path1 = ((DoublePathed) con).getPath1();
+				PathBase path2 = ((DoublePathed) con).getPath2();
+				PathBuilder builder1 = PathBuilder.reconstruct(path1);
+				BuildFinisher finisher = BuildFinisher.reconstruct(builder1, creationMethod);
+				PathBuilder builder2 = PathBuilder.reconstruct(path2);
+				
+				ccb.getChildren().addAll(builder1, finisher, builder2);
+				return conditionBox;
+			}
+			else if(con instanceof PathedWith<?>) {
+				PathBase path1 = ((PathedWith<?>) con).getPath();
+				PathBuilder builder1 = PathBuilder.reconstruct(path1);
+				BuildFinisher finisher = BuildFinisher.reconstruct(builder1, creationMethod);
+				Object with = ((PathedWith<?>) con).getWith();
+				final Node part2;
+				if(with instanceof Class<?>) {
+					part2 = new ConditionActionChooser();
+					((ConditionActionChooser) part2).getSelectionModel().select((Class<?>) with);
+				}
+				else if(with instanceof String) {
+					part2 = new ConditionPieceChooser();
+					((ConditionPieceChooser) part2).getSelectionModel().select((String) with);
+				}
+				else {
+					throw new UnsupportedOperationException("Cannot reconstruct PathWith with generic type: " + with.getClass());
+				}
+				ccb.getChildren().addAll(builder1, finisher, part2);
+				return conditionBox;
+			}
+			else {
+				throw new UnsupportedOperationException("Custom cons cannot be reconstructed yet: " + con);
+			}
+		}
 	}
 	
 	@Override

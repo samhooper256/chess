@@ -20,7 +20,7 @@ public abstract class PromotionAction extends Action{
 	 * 
 	 */
 	private static final long serialVersionUID = 2954238791691219273L;
-	protected ArrayList<String> options;
+	
 	
 	@User(params={"promotion options"})
 	public static PromotionAction withOptions(ArrayList<String> options, Condition... cons) {
@@ -52,7 +52,8 @@ public abstract class PromotionAction extends Action{
 		 * 
 		 */
 		private static final long serialVersionUID = -3377596962210324410L;
-
+		public final ArrayList<String> options;
+		
 		private ConcretePromotionAction(ArrayList<String> options, Condition... cons) {
 			this.options = options;
 			this.addAllConditions(cons);
@@ -70,6 +71,11 @@ public abstract class PromotionAction extends Action{
 			else {
 				return Collections.emptySet();
 			}
+		}
+		
+		@Override
+		public Object[] getReconstructionParameters() {
+			return new Object[] {options};
 		}
 	}
 }

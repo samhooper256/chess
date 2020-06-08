@@ -113,7 +113,7 @@ public abstract class MultiAction extends chess.util.Action{
 		 * 
 		 */
 		private static final long serialVersionUID = 7365243869927755382L;
-		int relRow, relCol;
+		public final int relRow, relCol;
 		RelativeMultiAction(int relRow, int relCol, Condition... cons) {
 			this.actions = new ArrayList<>();
 			this.states = new ArrayList<>();
@@ -166,6 +166,11 @@ public abstract class MultiAction extends chess.util.Action{
 		@Override
 		public RelativeMultiAction addAction(SubMulti a) {
 			return (RelativeMultiAction) super.addAction(a);
+		}
+
+		@Override
+		public Object[] getReconstructionParameters() {
+			return new Object[] {relRow, relCol};
 		}
 	}
 	

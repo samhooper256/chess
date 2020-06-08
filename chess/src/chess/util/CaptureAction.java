@@ -20,7 +20,6 @@ public abstract class CaptureAction extends chess.util.Action{
 	 * 
 	 */
 	private static final long serialVersionUID = -1468552990586649613L;
-	private CaptureAction() {}
 	
 	@User(params={"relative row", "relative column"})
 	public static RelativeCaptureAction relative(int relRow, int relCol, Condition... cons) {
@@ -32,10 +31,10 @@ public abstract class CaptureAction extends chess.util.Action{
 		return new LineCaptureAction(deltaRow, deltaCol, cons);
 	}
 	
-	@User(params={"relative start row", "relative start column", "delta row", "delta column"})
-	public static RelativeLineCaptureAction relLine(int relStartRow, int relStartCol, int dr, int dc,
+	@User(params={"relative start row", "relative start column", "delta row", "delta column", "requires start to be on board"})
+	public static RelativeLineCaptureAction relLine(int relStartRow, int relStartCol, int dr, int dc, boolean requiresOnBoardStart,
 			Condition... cons) {
-		return new RelativeLineCaptureAction(relStartRow, relStartCol, dr, dc, cons);
+		return new RelativeLineCaptureAction(relStartRow, relStartCol, dr, dc, requiresOnBoardStart, cons);
 	}
 	
 	@User(params={"relative start row", "relative start column", "delta row", "delta column", "length", "segment length", "requires start to be on board"})
@@ -71,7 +70,7 @@ public abstract class CaptureAction extends chess.util.Action{
 		 * 
 		 */
 		private static final long serialVersionUID = 8353535313029856877L;
-		private int relRow, relCol;
+		public final int relRow, relCol;
 		public RelativeCaptureAction(int relRow, int relCol, Condition... cons) {
 			this.relRow = relRow;
 			this.relCol = relCol;
@@ -102,6 +101,11 @@ public abstract class CaptureAction extends chess.util.Action{
 				return s;
 			}
 		}
+		
+		@Override
+		public Object[] getReconstructionParameters() {
+			return new Object[] {relRow, relCol};
+		}
 	}
 
 	public static class LineCaptureAction extends CaptureAction implements LineAction{
@@ -109,7 +113,7 @@ public abstract class CaptureAction extends chess.util.Action{
 		 * 
 		 */
 		private static final long serialVersionUID = 6584141374081901533L;
-		protected int deltaRow, deltaCol;
+		public final int deltaRow, deltaCol;
 		private ArrayList<Condition> stopConditions;
 		
 		public LineCaptureAction(int dr, int dc, Condition... cons) {
@@ -159,6 +163,10 @@ public abstract class CaptureAction extends chess.util.Action{
 		public Collection<Condition> getStopConditions() {
 			return stopConditions;
 		}
+		@Override
+		public Object[] getReconstructionParameters() {
+			return new Object[] {deltaRow, deltaCol};
+		}
 	}
 	
 	public static class RelativeLineCaptureAction extends LineCaptureAction{
@@ -166,15 +174,8 @@ public abstract class CaptureAction extends chess.util.Action{
 		 * 
 		 */
 		private static final long serialVersionUID = -7904039124287966499L;
-		private int relStartRow, relStartCol;
-		private boolean requiresOnBoardStart;
-		
-		public RelativeLineCaptureAction(int relsr, int relsc, int dr, int dc, Condition... cons) {
-			super(dr, dc, cons);
-			relStartRow = relsr;
-			relStartCol = relsc;
-			requiresOnBoardStart = false;
-		}
+		public final int relStartRow, relStartCol;
+		public final boolean requiresOnBoardStart;
 		
 		public RelativeLineCaptureAction(int relsr, int relsc, int dr, int dc, boolean onBoardStart, Condition... cons) {
 			super(dr, dc, cons);
@@ -184,7 +185,7 @@ public abstract class CaptureAction extends chess.util.Action{
 		}
 		
 		public static Method getCreationMethod() throws NoSuchMethodException, SecurityException {
-			return CaptureAction.class.getMethod("relLine", int.class, int.class, int.class, int.class, Condition[].class);
+			return CaptureAction.class.getMethod("relLine", int.class, int.class, int.class, int.class, boolean.class, Condition[].class);
 		}
 		
 		@Override
@@ -239,6 +240,11 @@ public abstract class CaptureAction extends chess.util.Action{
 			//System.out.printf("(%d,%d) rlMNC returning legals: %s%n", startRow, startCol, legals);
 			return legals;
 		}
+		
+		@Override
+		public Object[] getReconstructionParameters() {
+			return new Object[] {relStartRow, relStartCol, deltaRow, deltaCol, requiresOnBoardStart};
+		}
 	}
 	
 	public static class RelativeSegmentCaptureAction extends CaptureAction
@@ -247,8 +253,8 @@ public abstract class CaptureAction extends chess.util.Action{
 		 * 
 		 */
 		private static final long serialVersionUID = 7121333223961890443L;
-		private int relStartRow, relStartCol, deltaRow, deltaCol, length;
-		private boolean requiresOnBoardStart;
+		public final int relStartRow, relStartCol, deltaRow, deltaCol, length;
+		public final boolean requiresOnBoardStart;
 		private ArrayList<Condition> stopConditions;
 		
 		public RelativeSegmentCaptureAction(int relStartRow, int relStartCol, int deltaRow, int deltaCol, int length,
@@ -331,14 +337,13 @@ public abstract class CaptureAction extends chess.util.Action{
 		}
 
 		@Override
-		public void setRequiresOnBoardStart(boolean newRequiresOnBoardStart) {
-			requiresOnBoardStart = newRequiresOnBoardStart;
-			
-		}
-
-		@Override
 		public boolean getRequiresOnBoardStart() {
 			return requiresOnBoardStart;
+		}
+		
+		@Override
+		public Object[] getReconstructionParameters() {
+			return new Object[] {relStartRow, relStartCol, deltaRow, deltaCol, length, requiresOnBoardStart};
 		}
 	}
 	
@@ -347,9 +352,9 @@ public abstract class CaptureAction extends chess.util.Action{
 		 * 
 		 */
 		private static final long serialVersionUID = -4480635918843039304L;
-		private int radius;
-		private boolean includeSelf;
-		private boolean fill;
+		public final int radius;
+		public final boolean includeSelf;
+		public final boolean fill;
 		
 		public RadiusCaptureAction(int radius, boolean fill, boolean includeSelf, Condition... cons) {
 			if(radius <= 0) {
@@ -426,6 +431,11 @@ public abstract class CaptureAction extends chess.util.Action{
 			}
 			
 			return legals;
+		}
+
+		@Override
+		public Object[] getReconstructionParameters() {
+			return new Object[] {radius, fill, includeSelf};
 		}
 		
 	}

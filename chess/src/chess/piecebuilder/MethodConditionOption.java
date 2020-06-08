@@ -45,8 +45,8 @@ public class MethodConditionOption extends ConditionOption{
 		return customName == null ? afc.name() : customName;
 	}
 	@Override
-	public void updatePane() {
-		Class<?> returnType = afc.returnType() == Void.class ? method.getReturnType() : afc.returnType();
+	public void updatePaneImpl() {
+		Class<?> returnType = getMethodReturnType();
 		Pane pb = super.choiceBox.nodeToAddTo;
 		ObservableList<Node> children = pb.getChildren();
 		int myIndex = children.indexOf(super.choiceBox);
@@ -59,40 +59,11 @@ public class MethodConditionOption extends ConditionOption{
 			//TODO Do something?
 		}
 		else {
-			ConditionChoiceBox newCB = new ConditionChoiceBox(super.choiceBox.nodeToAddTo);
 			if(method.getParameterCount() > 0) {
 				ParameterBlock pBlock = new ParameterBlock(method);
 				children.add(pBlock);
 			}
-			for(Method m : returnType.getMethods()) {
-				if(m.isAnnotationPresent(AFC.class)) {
-					if(pb instanceof PathBuilder) {
-						Class<?> nextReturnType = m.getReturnType();
-						if(pb instanceof BooleanPathBuilder) {
-							if(nextReturnType == boolean.class || !nextReturnType.isPrimitive()) {
-								newCB.addMethod(m);
-							}
-						}
-						else if(pb instanceof IntegerPathBuilder) {
-							if(nextReturnType == int.class || !nextReturnType.isPrimitive()) {
-								newCB.addMethod(m);
-							}
-						}
-						else if(pb instanceof ObjectPathBuilder) {
-							if(!nextReturnType.isPrimitive()) { 
-								//TODO Maybe the "anything path" should allow for anything? even primitives?
-								newCB.addMethod(m);
-							}
-						}
-						else {
-							throw new UnsupportedOperationException(pb.getClass() + " not supported");
-						}
-					}
-					else {
-						newCB.addMethod(m);
-					}
-				}
-			}
+			ConditionChoiceBox newCB = getNextCB(returnType);
 			if(newCB.getItems().isEmpty()) {
 				if(!(pb instanceof ObjectPathBuilder)) {
 					children.add(new Label("(no matches found)"));//TODO maybe set text color to red?
@@ -102,6 +73,49 @@ public class MethodConditionOption extends ConditionOption{
 				children.add(newCB);
 			}
 		}
+	}
+
+	public ConditionChoiceBox getNextCB(Class<?> returnType) {
+		Pane pb = super.choiceBox.nodeToAddTo;
+		ConditionChoiceBox newCB = new ConditionChoiceBox(super.choiceBox.nodeToAddTo);
+		for(Method m : returnType.getMethods()) {
+			if(m.isAnnotationPresent(AFC.class)) {
+				if(pb instanceof PathBuilder) {
+					Class<?> nextReturnType = m.getReturnType();
+					if(pb instanceof BooleanPathBuilder) {
+						if(nextReturnType == boolean.class || !nextReturnType.isPrimitive()) {
+							newCB.addMethod(m);
+						}
+					}
+					else if(pb instanceof IntegerPathBuilder) {
+						if(nextReturnType == int.class || !nextReturnType.isPrimitive()) {
+							newCB.addMethod(m);
+						}
+					}
+					else if(pb instanceof ObjectPathBuilder) {
+						if(!nextReturnType.isPrimitive()) { 
+							//TODO Maybe the "anything path" should allow for anything? even primitives?
+							newCB.addMethod(m);
+						}
+					}
+					else {
+						throw new UnsupportedOperationException(pb.getClass() + " not supported");
+					}
+				}
+				else {
+					newCB.addMethod(m);
+				}
+			}
+		}
+		return newCB;
+	}
+	
+	public ConditionChoiceBox getNextCB() {
+		return getNextCB(getMethodReturnType());
+	}
+	
+	public Class<?> getMethodReturnType(){
+		return afc.returnType() == Void.class ? method.getReturnType() : afc.returnType();
 	}
 	
 }

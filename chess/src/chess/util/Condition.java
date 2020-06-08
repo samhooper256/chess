@@ -46,6 +46,7 @@ public abstract class Condition implements Serializable{
 	private static final long serialVersionUID = -2544194942472379599L;
 
 	public static final Method[] postConstructionModifierMethods;
+	public static final Method[] afcOnMethods;
 	static {
 		postConstructionModifierMethods = new Method[3];
 		try {
@@ -56,6 +57,19 @@ public abstract class Condition implements Serializable{
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
+		afcOnMethods = new Method[6];
+		try {
+			afcOnMethods[0] = Condition.class.getMethod("onDest");
+			afcOnMethods[1] = Condition.class.getMethod("onStart");
+			afcOnMethods[2] = Condition.class.getMethod("onBoard");
+			afcOnMethods[3] = Condition.class.getMethod("onSelf");
+			afcOnMethods[4] = Condition.class.getMethod("onDestRelative", IntegerPath.class, IntegerPath.class);
+			afcOnMethods[5] = Condition.class.getMethod("onStartRelative", IntegerPath.class, IntegerPath.class);
+		} catch (NoSuchMethodException | SecurityException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		
 	}
 	/////////////////////////////////////////////////////////////////////////////
 	/* Common Conditions have been made as public static final variables below.*/
@@ -68,7 +82,7 @@ public abstract class Condition implements Serializable{
 	 * Destination tile must be either empty or have a piece of the opposite color.*/
 	@AFC(name="Destination is empty or has an enemy")
 	public static final Condition EOE = Condition.or(
-			Condition.onDest().call("isEmpty").toBooleanPath().toCond(),
+			Condition.onDest().call("isEmpty").toBooleanPath().toCondition(),
 			Condition.onDest().call("getPiece").call("getColor").toBooleanPath().isEnemy()
 	);
 	
@@ -104,17 +118,37 @@ public abstract class Condition implements Serializable{
 	@AFC(name="Teammate on destination")
 	public static final Condition TOD = Condition.onDest().call("getPiece").call("getColor").toBooleanPath().isAlly();
 	
+	static {
+		EOE.setIsPremade(true);
+		POD.setIsPremade(true);
+		POS.setIsPremade(true);
+		DIE.setIsPremade(true);
+		SIE.setIsPremade(true);
+		EOD.setIsPremade(true);
+		TOD.setIsPremade(true);
+	}
 	//////////////////////////////
 	/* End of common conditions */
 	//////////////////////////////
 	
 	//this will be returned if evaluating the condition throws an exception.
 	boolean defaultValue;
+	private boolean isPremade;
 	
 	public boolean getDefault() { return defaultValue; }
 	
 	public void setDefault(boolean newDV) {
 		this.defaultValue = newDV;
+	}
+	
+	public boolean isPremade() {
+		return isPremade;
+	}
+	
+	
+	
+	private void setIsPremade(boolean newIsPremade) {
+		this.isPremade = newIsPremade;
 	}
 	/* *
 	 * THIS CONDITION MUST ONLY BE USED ON KINGS,
@@ -133,10 +167,17 @@ public abstract class Condition implements Serializable{
 				int m = myColor == Piece.WHITE ? 1 : -1;
 				return b.getTileAt(startRow + m*relRow, startCol + m*relCol).isCheckableBy(myColor);
 			}
+
+			@Override
+			public Method getCreationMethod() {
+				throw new UnsupportedOperationException();
+			}
 		};
 	}
 	
 	abstract boolean eval(Board b, int startRow, int startCol, int destRow, int destCol);
+	
+	public abstract Method getCreationMethod();
 	
 	protected boolean evalOrFalse(Board b, int startRow, int startCol, int destRow, int destCol) {
 		boolean result;
@@ -214,15 +255,15 @@ public abstract class Condition implements Serializable{
 		return new NOTCondition(c1);
 	}
 	@ConditionCombiner(name="and")
-	public static Condition and(Condition c1, Condition c2) {
+	public static CombinerCondition and(Condition c1, Condition c2) {
 		return new ANDCondition(c1, c2);
 	}
 	@ConditionCombiner(name="or")
-	public static Condition or(Condition c1, Condition c2) {
+	public static CombinerCondition or(Condition c1, Condition c2) {
 		return new ORCondition(c1, c2);
 	}
 	@ConditionCombiner(name="xor")
-	public static Condition xor(Condition c1, Condition c2) {
+	public static CombinerCondition xor(Condition c1, Condition c2) {
 		return new XORCondition(c1, c2);
 	}
 	
@@ -241,68 +282,51 @@ public abstract class Condition implements Serializable{
 	public Condition not() {
 		return Condition.not(this);
 	}
-}
-
-class RelativeTile{
-	public Flag relativeTo;
-	public IntegerPath row, col;
-	
-	public RelativeTile(IntegerPath r, IntegerPath c, Flag rel) {
-		this.row = r;
-		this.col = c;
-		this.relativeTo = rel;
-	}
-	
-	public int calcRow(Board b, int startRow, int startCol, int destRow, int destCol) {
-		return row.get(b, startRow, startCol, destRow, destCol);
-	}
-	
-	public int calcCol(Board b, int startRow, int startCol, int destRow, int destCol) {
-		return col.get(b, startRow, startCol, destRow, destCol);
-	}
 	
 	@Override
 	public String toString() {
-		return "[RelativeTile:relativeTo="+relativeTo+", row="+row+", col="+col+"]";
+		return "[Condition@" + hashCode() + ":isPremade="+isPremade+"]";
+	}
+	
+	public static Method getOnMethodFromBase(Object base) {
+		if(base instanceof Flag) {
+			switch((Flag) base) {
+			case DESTINATION: return afcOnMethods[0];
+			case ORIGIN: return afcOnMethods[1];
+			case BOARD: return afcOnMethods[2];
+			case SELF: return afcOnMethods[3];
+			default: throw new UnsupportedOperationException("Unsupported flag type for getOnMethodFromBase: " + base);
+			}
+		}
+		else if(base instanceof RelativeTile) {
+			RelativeTile helper = (RelativeTile) base;
+			if(helper.relativeTo == Flag.DESTINATION) {
+				return afcOnMethods[4];
+			}
+			else if(helper.relativeTo == Flag.ORIGIN) {
+				return afcOnMethods[5];
+			}
+			else {
+				throw new UnsupportedOperationException("Unsupported flag for RelativeTiles: " + helper.relativeTo);
+			}
+		}
+		else {
+			return null;
+		}
 	}
 }
 
-class CopyCondition extends Condition{
-	/**
-	 * 
-	 */
-	private static final long serialVersionUID = 7152776211214638386L;
 
-	public Condition getCopy() {
-		return copy;
-	}
 
-	public void setCopy(Condition copy) {
-		this.copy = copy;
-	}
-
-	private Condition copy;
-	
-	public CopyCondition() {}
-
-	@Override
-	boolean eval(Board b, int startRow, int startCol, int destRow, int destCol) {
-		return copy.eval(b, startRow, startCol, destRow, destCol);
-	}
-	
-}
-
-class SingleBooleanCondition extends Condition{
+class SingleBooleanCondition extends Condition implements SinglePathed{
 	/**
 	 * 
 	 */
 	private static final long serialVersionUID = 7370733400023991771L;
+	
+	@Override
 	public BooleanPath getPath() {
 		return path;
-	}
-
-	public void setPath(BooleanPath path) {
-		this.path = path;
 	}
 
 	public boolean isInverted() {
@@ -328,12 +352,12 @@ class SingleBooleanCondition extends Condition{
 	}
 	
 	@Override
-	public String toString() {
-		return "SingleBooleanCondition on boolpath="+path;
+	public Method getCreationMethod() {
+		return BooleanPath.creationMethods[0];
 	}
 }
 
-class BooleanEqualsCondition extends Condition{
+class BooleanEqualsCondition extends Condition implements DoublePathed{
 	/**
 	 * 
 	 */
@@ -349,9 +373,24 @@ class BooleanEqualsCondition extends Condition{
 		return 	path1.get(b, startRow, startCol, destRow, destCol).booleanValue() ==
 				path2.get(b, startRow, startCol, destRow, destCol).booleanValue();
 	}
+
+	@Override
+	public BooleanPath getPath1() {
+		return path1;
+	}
+
+	@Override
+	public BooleanPath getPath2() {
+		return path2;
+	}
+
+	@Override
+	public Method getCreationMethod() {
+		return BooleanPath.creationMethods[1];
+	}
 }
 
-class BooleanNotEqualsCondition extends Condition{
+class BooleanNotEqualsCondition extends Condition implements DoublePathed{
 	/**
 	 * 
 	 */
@@ -367,9 +406,24 @@ class BooleanNotEqualsCondition extends Condition{
 		return 	path1.get(b, startRow, startCol, destRow, destCol).booleanValue() !=
 				path2.get(b, startRow, startCol, destRow, destCol).booleanValue();
 	}
+
+	@Override
+	public BooleanPath getPath1() {
+		return path1;
+	}
+
+	@Override
+	public BooleanPath getPath2() {
+		return path2;
+	}
+
+	@Override
+	public Method getCreationMethod() {
+		return BooleanPath.creationMethods[2];
+	}
 }
 
-class BooleanIsEnemyCondition extends Condition{
+class BooleanIsEnemyCondition extends Condition implements SinglePathed{
 	/**
 	 * 
 	 */
@@ -384,9 +438,19 @@ class BooleanIsEnemyCondition extends Condition{
 		return 	path.get(b, startRow, startCol, destRow, destCol).booleanValue() !=
 				b.getPieceAt(startRow, startCol).getColor();
 	}
+
+	@Override
+	public BooleanPath getPath() {
+		return path;
+	}
+
+	@Override
+	public Method getCreationMethod() {
+		return BooleanPath.creationMethods[3];
+	}
 }
 
-class BooleanIsAllyCondition extends Condition{
+class BooleanIsAllyCondition extends Condition implements SinglePathed{
 	/**
 	 * 
 	 */
@@ -401,9 +465,19 @@ class BooleanIsAllyCondition extends Condition{
 		return 	path.get(b, startRow, startCol, destRow, destCol).booleanValue() ==
 				b.getPieceAt(startRow, startCol).getColor();
 	}
+
+	@Override
+	public BooleanPath getPath() {
+		return path;
+	}
+
+	@Override
+	public Method getCreationMethod() {
+		return BooleanPath.creationMethods[4];
+	}
 }
 
-class IntegerGreaterThanCondition extends Condition{
+class IntegerGreaterThanCondition extends Condition implements DoublePathed{
 	/**
 	 * 
 	 */
@@ -418,9 +492,23 @@ class IntegerGreaterThanCondition extends Condition{
 		return 	path1.get(b, startRow, startCol, destRow, destCol).intValue() >
 				path2.get(b, startRow, startCol, destRow, destCol).intValue();
 	}
+	
+	@Override
+	public IntegerPath getPath1() {
+		return path1;
+	}
+
+	@Override
+	public IntegerPath getPath2() {
+		return path2;
+	}
+	@Override
+	public Method getCreationMethod() {
+		return IntegerPath.creationMethods[0];
+	}
 }
 
-class IntegerLessThanCondition extends Condition{
+class IntegerLessThanCondition extends Condition implements DoublePathed{
 	/**
 	 * 
 	 */
@@ -435,9 +523,23 @@ class IntegerLessThanCondition extends Condition{
 		return 	path1.get(b, startRow, startCol, destRow, destCol).intValue() < 
 				path2.get(b, startRow, startCol, destRow, destCol).intValue();
 	}
+	
+	@Override
+	public IntegerPath getPath1() {
+		return path1;
+	}
+
+	@Override
+	public IntegerPath getPath2() {
+		return path2;
+	}
+	@Override
+	public Method getCreationMethod() {
+		return IntegerPath.creationMethods[1];
+	}
 }
 
-class IntegerGreaterThanOrEqualCondition extends Condition{
+class IntegerGreaterThanOrEqualCondition extends Condition implements DoublePathed{
 	/**
 	 * 
 	 */
@@ -452,9 +554,23 @@ class IntegerGreaterThanOrEqualCondition extends Condition{
 		return 	path1.get(b, startRow, startCol, destRow, destCol).intValue() >= 
 				path2.get(b, startRow, startCol, destRow, destCol).intValue();
 	}
+	
+	@Override
+	public IntegerPath getPath1() {
+		return path1;
+	}
+
+	@Override
+	public IntegerPath getPath2() {
+		return path2;
+	}
+	@Override
+	public Method getCreationMethod() {
+		return IntegerPath.creationMethods[2];
+	}
 }
 
-class IntegerLessThanOrEqualCondition extends Condition{
+class IntegerLessThanOrEqualCondition extends Condition implements DoublePathed{
 	/**
 	 * 
 	 */
@@ -469,9 +585,23 @@ class IntegerLessThanOrEqualCondition extends Condition{
 		return 	path1.get(b, startRow, startCol, destRow, destCol).intValue() <= 
 				path2.get(b, startRow, startCol, destRow, destCol).intValue();
 	}
+	
+	@Override
+	public IntegerPath getPath1() {
+		return path1;
+	}
+
+	@Override
+	public IntegerPath getPath2() {
+		return path2;
+	}
+	@Override
+	public Method getCreationMethod() {
+		return IntegerPath.creationMethods[3];
+	}
 }
 
-class IntegerEqualsCondition extends Condition{
+class IntegerEqualsCondition extends Condition implements DoublePathed{
 	/**
 	 * 
 	 */
@@ -486,9 +616,23 @@ class IntegerEqualsCondition extends Condition{
 		return 	path1.get(b, startRow, startCol, destRow, destCol).intValue() == 
 				path2.get(b, startRow, startCol, destRow, destCol).intValue();
 	}
+	
+	@Override
+	public IntegerPath getPath1() {
+		return path1;
+	}
+
+	@Override
+	public IntegerPath getPath2() {
+		return path2;
+	}
+	@Override
+	public Method getCreationMethod() {
+		return IntegerPath.creationMethods[4];
+	}
 }
 
-class IntegerNotEqualsCondition extends Condition{
+class IntegerNotEqualsCondition extends Condition implements DoublePathed{
 	/**
 	 * 
 	 */
@@ -503,9 +647,23 @@ class IntegerNotEqualsCondition extends Condition{
 		return 	path1.get(b, startRow, startCol, destRow, destCol).intValue() != 
 				path2.get(b, startRow, startCol, destRow, destCol).intValue();
 	}
+	
+	@Override
+	public IntegerPath getPath1() {
+		return path1;
+	}
+
+	@Override
+	public IntegerPath getPath2() {
+		return path2;
+	}
+	@Override
+	public Method getCreationMethod() {
+		return IntegerPath.creationMethods[5];
+	}
 }
 
-class ObjectEqualsCondition extends Condition{
+class ObjectEqualsCondition extends Condition implements DoublePathed{
 	/**
 	 * 
 	 */
@@ -520,9 +678,21 @@ class ObjectEqualsCondition extends Condition{
 		return 	path1.get(b, startRow, startCol, destRow, destCol).equals(
 				path2.get(b, startRow, startCol, destRow, destCol));
 	}
+	@Override
+	public ObjectPath getPath1() {
+		return path1;
+	}
+	@Override
+	public ObjectPath getPath2() {
+		return path2;
+	}
+	@Override
+	public Method getCreationMethod() {
+		return ObjectPath.creationMethods[0];
+	}
 }
 
-class ObjectNotEqualsConditions extends Condition{
+class ObjectNotEqualsConditions extends Condition implements DoublePathed{
 	/**
 	 * 
 	 */
@@ -537,9 +707,50 @@ class ObjectNotEqualsConditions extends Condition{
 		return 	!path1.get(b, startRow, startCol, destRow, destCol).equals(
 				path2.get(b, startRow, startCol, destRow, destCol));
 	}
+	
+	@Override
+	public ObjectPath getPath1() {
+		return path1;
+	}
+	@Override
+	public ObjectPath getPath2() {
+		return path2;
+	}
+	@Override
+	public Method getCreationMethod() {
+		return ObjectPath.creationMethods[1];
+	}
 }
 
-class ObjectIsNullCondition extends Condition{
+class ObjectIsNotNullCondition extends Condition implements SinglePathed{
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = 5096607902070365755L;
+	
+	@Override
+	public ObjectPath getPath() {
+		return path;
+	}
+	
+	ObjectPath path;
+	public ObjectIsNotNullCondition() {}
+	public ObjectIsNotNullCondition(ObjectPath path) {
+		this.path = path;
+	}
+	@Override
+	boolean eval(Board b, int startRow, int startCol, int destRow, int destCol) {
+		return 	path.get(b, startRow, startCol, destRow, destCol) != null;
+	}
+	@Override
+	public Method getCreationMethod() {
+		return ObjectPath.creationMethods[2];
+	}
+}
+
+
+
+class ObjectIsNullCondition extends Condition implements SinglePathed{
 	/**
 	 * 
 	 */
@@ -552,31 +763,17 @@ class ObjectIsNullCondition extends Condition{
 	boolean eval(Board b, int startRow, int startCol, int destRow, int destCol) {
 		return 	path.get(b, startRow, startCol, destRow, destCol) == null;
 	}
-}
-
-class ObjectIsNotNullCondition extends Condition{
-	/**
-	 * 
-	 */
-	private static final long serialVersionUID = 5096607902070365755L;
+	@Override
 	public ObjectPath getPath() {
 		return path;
 	}
-	public void setPath(ObjectPath path) {
-		this.path = path;
-	}
-	ObjectPath path;
-	public ObjectIsNotNullCondition() {}
-	public ObjectIsNotNullCondition(ObjectPath path) {
-		this.path = path;
-	}
 	@Override
-	boolean eval(Board b, int startRow, int startCol, int destRow, int destCol) {
-		return 	path.get(b, startRow, startCol, destRow, destCol) != null;
+	public Method getCreationMethod() {
+		return ObjectPath.creationMethods[3];
 	}
 }
 
-class ObjectInstanceOfCondition extends Condition{
+class ObjectInstanceOfCondition extends Condition implements PathedWith<Class<?>>{ //TODO should this extend singlePathed or a new interface?
 	/**
 	 * 
 	 */
@@ -592,9 +789,21 @@ class ObjectInstanceOfCondition extends Condition{
 	boolean eval(Board b, int startRow, int startCol, int destRow, int destCol) {
 		return 	caster.isInstance(path.get(b, startRow, startCol, destRow, destCol));
 	}
+	@Override
+	public Method getCreationMethod() {
+		return ObjectPath.creationMethods[4];
+	}
+	@Override
+	public ObjectPath getPath() {
+		return path;
+	}
+	@Override
+	public Class<?> getWith() {
+		return caster;
+	}
 }
 
-class ObjectIsPieceCondition extends Condition{
+class ObjectIsPieceCondition extends Condition implements PathedWith<String> { //TODO should this extend singlePathed or a new interface?
 	/**
 	 * 
 	 */
@@ -615,19 +824,32 @@ class ObjectIsPieceCondition extends Condition{
 		}
 		return false;
 	}
+
+	@Override
+	public Method getCreationMethod() {
+		return ObjectPath.creationMethods[5];
+	}
+
+	@Override
+	public ObjectPath getPath() {
+		return path;
+	}
+
+	@Override
+	public String getWith() {
+		return pieceName;
+	}
 }
 
 
-class ANDCondition extends Condition{
+class ANDCondition extends CombinerCondition{
 	/**
 	 * 
 	 */
 	private static final long serialVersionUID = -8781760452433119891L;
-	Condition c1, c2;
 	
 	public ANDCondition(Condition c1, Condition c2) {
-		this.c1 = c1;
-		this.c2 = c2;
+		super(c1,c2);
 	}
 	
 	@Override
@@ -636,18 +858,21 @@ class ANDCondition extends Condition{
 				c2.calc(b, startRow, startCol, destRow, destCol);
 				
 	}
+
+	@Override
+	public Method getCreationMethod() {
+		return postConstructionModifierMethods[0];
+	}
 }
 
-class ORCondition extends Condition{
+class ORCondition extends CombinerCondition{
 	/**
 	 * 
 	 */
 	private static final long serialVersionUID = -5333062990919125832L;
-	Condition c1, c2;
 	
 	public ORCondition(Condition c1, Condition c2) {
-		this.c1 = c1;
-		this.c2 = c2;
+		super(c1,c2);
 	}
 	
 	@Override
@@ -656,18 +881,21 @@ class ORCondition extends Condition{
 				c2.calc(b, startRow, startCol, destRow, destCol);
 				
 	}
+
+	@Override
+	public Method getCreationMethod() {
+		return postConstructionModifierMethods[1];
+	}
 }
 
-class XORCondition extends Condition{
+class XORCondition extends CombinerCondition{
 	/**
 	 * 
 	 */
 	private static final long serialVersionUID = -2320943957306912375L;
-	Condition c1, c2;
 	
 	public XORCondition(Condition c1, Condition c2) {
-		this.c1 = c1;
-		this.c2 = c2;
+		super(c1, c2);
 	}
 	
 	@Override
@@ -676,22 +904,10 @@ class XORCondition extends Condition{
 				c2.calc(b, startRow, startCol, destRow, destCol);
 				
 	}
-}
-
-class NOTCondition extends Condition{
-	/**
-	 * 
-	 */
-	private static final long serialVersionUID = 2020623859815942516L;
-	Condition c1;
-	
-	public NOTCondition(Condition c1) {
-		this.c1 = c1;
-	}
 	
 	@Override
-	boolean eval(Board b, int startRow, int startCol, int destRow, int destCol) {
-		return 	!c1.calc(b, startRow, startCol, destRow, destCol);
+	public Method getCreationMethod() {
+		return postConstructionModifierMethods[2];
 	}
 }
 

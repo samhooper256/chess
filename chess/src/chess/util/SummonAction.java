@@ -24,7 +24,7 @@ public abstract class SummonAction extends Action{
 	 * 
 	 */
 	private static final long serialVersionUID = -7028404081965570002L;
-	protected ArrayList<String> options;
+	public final ArrayList<String> options;
 	
 	@User(params={"relative row", "relative column", "summon options"})
 	public static RelativeSummonAction relative(int relRow, int relCol, ArrayList<String> ops, Condition... cons) {
@@ -94,8 +94,8 @@ public abstract class SummonAction extends Action{
 		 * 
 		 */
 		private static final long serialVersionUID = 525503007331799059L;
-		private int relRow;
-		private int relCol;
+		public final int relRow;
+		public final int relCol;
 		
 		private RelativeSummonAction(int relRow, int relCol, ArrayList<String> options, Condition... cons) {
 			super(options);
@@ -124,7 +124,12 @@ public abstract class SummonAction extends Action{
 				Set<? extends LegalAction> s = Collections.emptySet();
 				return s;
 			}
-		}	
+		}
+		
+		@Override
+		public Object[] getReconstructionParameters() {
+			return new Object[] {relRow, relCol, options};
+		}
 	}
 	
 	public static class LineSummonAction extends SummonAction implements LineAction {
@@ -132,7 +137,7 @@ public abstract class SummonAction extends Action{
 		 * 
 		 */
 		private static final long serialVersionUID = 6964271500790227250L;
-		protected int deltaRow, deltaCol;
+		public final int deltaRow, deltaCol;
 		private ArrayList<Condition> stopConditions;
 		
 		public LineSummonAction(int dr, int dc, ArrayList<String> options, Condition... cons) {
@@ -179,6 +184,11 @@ public abstract class SummonAction extends Action{
 		public Collection<Condition> getStopConditions() {
 			return stopConditions;
 		}
+		
+		@Override
+		public Object[] getReconstructionParameters() {
+			return new Object[] {deltaRow, deltaCol, options};
+		}
 	}
 	
 	public static class RelativeLineSummonAction extends LineSummonAction{
@@ -186,8 +196,8 @@ public abstract class SummonAction extends Action{
 		 * 
 		 */
 		private static final long serialVersionUID = 3665438309855629292L;
-		private int relStartRow, relStartCol;
-		private boolean requiresOnBoardStart;
+		public final int relStartRow, relStartCol;
+		public final boolean requiresOnBoardStart;
 		
 		public RelativeLineSummonAction(int relsr, int relsc, int dr, int dc, ArrayList<String> options, Condition... cons) {
 			super(dr, dc, options, cons);
@@ -260,6 +270,11 @@ public abstract class SummonAction extends Action{
 			//System.out.printf("(%d,%d) rlMNC returning legals: %s%n", startRow, startCol, legals);
 			return legals;
 		}
+		
+		@Override
+		public Object[] getReconstructionParameters() {
+			return new Object[] {relStartRow, relStartCol, deltaRow, deltaCol, requiresOnBoardStart, options};
+		}
 	}
 	
 	public static class RelativeSegmentSummonAction extends SummonAction
@@ -268,8 +283,8 @@ public abstract class SummonAction extends Action{
 		 * 
 		 */
 		private static final long serialVersionUID = 4828990037209511659L;
-		private int relStartRow, relStartCol, deltaRow, deltaCol, length;
-		private boolean requiresOnBoardStart;
+		public final int relStartRow, relStartCol, deltaRow, deltaCol, length;
+		public final boolean requiresOnBoardStart;
 		private ArrayList<Condition> stopConditions;
 		
 		public RelativeSegmentSummonAction(int relStartRow, int relStartCol, int deltaRow, int deltaCol, int length,
@@ -350,17 +365,18 @@ public abstract class SummonAction extends Action{
 		public Collection<Condition> getStopConditions() {
 			return stopConditions;
 		}
-		
-		@Override
-		public void setRequiresOnBoardStart(boolean newRequiresOnBoardStart) {
-			requiresOnBoardStart = newRequiresOnBoardStart;
-			
-		}
 
 		@Override
 		public boolean getRequiresOnBoardStart() {
 			return requiresOnBoardStart;
 		}
+
+		@Override
+		public Object[] getReconstructionParameters() {
+			return new Object[] {relStartRow, relStartCol, deltaRow, deltaCol, length, requiresOnBoardStart, options};
+		}
+		
+		
 	}
 	
 	public static class RadiusSummonAction extends SummonAction implements RadiusAction{
@@ -368,9 +384,9 @@ public abstract class SummonAction extends Action{
 		 * 
 		 */
 		private static final long serialVersionUID = 1707015099806534041L;
-		private int radius;
-		private boolean includeSelf;
-		private boolean fill;
+		public final int radius;
+		public final boolean fill;
+		public final boolean includeSelf;
 		
 		public RadiusSummonAction(int radius, boolean fill, boolean includeSelf, ArrayList<String> options,
 				Condition... cons) {
@@ -449,6 +465,11 @@ public abstract class SummonAction extends Action{
 			}
 			
 			return legals;
+		}
+		
+		@Override
+		public Object[] getReconstructionParameters() {
+			return new Object[] {radius, fill, includeSelf, options};
 		}
 		
 	}

@@ -2,12 +2,17 @@ package chess.piecebuilder;
 
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
+import java.util.Iterator;
+import java.util.List;
 
+import chess.util.Condition;
 import chess.util.ConditionBuilder;
 import chess.util.InputVerification;
 import chess.util.IntTextField;
 import chess.util.IntegerPath;
+import chess.util.MethodAccess;
 import chess.util.PathBase;
+import chess.util.RelativeTile;
 import javafx.collections.ObservableList;
 import javafx.scene.Node;
 import javafx.scene.layout.Pane;
@@ -130,6 +135,91 @@ public class IntegerPathBuilder extends PathBuilder{
 			e.printStackTrace();
 		}
 		throw new IllegalArgumentException("Unknown Error ( see stack trace )");
+	}
+	
+	public static IntegerPathBuilder reconstruct(IntegerPath path) {
+		System.out.println("*****RECREATING:"+path);
+		IntegerPathBuilder builder = new IntegerPathBuilder();
+		ObservableList<Node> children = builder.getChildren();
+		Object base = path.getBase();
+		ConditionOption conditionOpt = null;
+		if(base.getClass() == Integer.class || base.getClass() == int.class) {
+			for(ConditionOption co : builder.onChoiceBox.getItems()) {
+				if(co instanceof IntegerLiteralConditionOption) {
+					builder.onChoiceBox.getSelectionModel().select(conditionOpt = co);
+					break;
+				}
+			}
+			conditionOpt.updatePaneImpl();
+			((IntegerLiteralConditionOption) conditionOpt).followingIntTextField.setText(String.valueOf(base));
+		}
+		else {
+			Method m = Condition.getOnMethodFromBase(base);
+			if(m == null) {
+				throw new IllegalArgumentException("Invalid IntegerPath base: " + base);
+			}
+			for(ConditionOption co : builder.onChoiceBox.getItems()) {
+				if(co instanceof MethodConditionOption && ((MethodConditionOption) co).method.equals(m)) {
+					builder.onChoiceBox.getSelectionModel().select(conditionOpt = co);
+					break;
+				}
+			}
+			if(base instanceof RelativeTile) {
+				children.add(ParameterBlock.reconstruct(m, ((RelativeTile) base).row, ((RelativeTile) base).col));
+			}
+		}
+		
+		if(conditionOpt == null) {
+			throw new NullPointerException("ConditionOption could not be located");
+		}
+		List<MethodAccess> accesses = path.getCallsOrEmpty();
+		Iterator<MethodAccess> itr = accesses.iterator();
+		OUTER:
+		while(itr.hasNext()) {
+			System.out.println("entered while; hasNext() = " + itr.hasNext());
+			MethodAccess ma = itr.next();
+			Object[] args = ma.getArguments();
+			Method maMethod;
+			try {
+				maMethod = ma.getMethod();
+			} catch (NoSuchMethodException | SecurityException | ClassNotFoundException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+				break OUTER;
+			}
+			if(args.length > 0) {
+				children.add(ParameterBlock.reconstruct(maMethod, args));
+			}
+			if(conditionOpt instanceof MethodConditionOption) {
+				ConditionChoiceBox next = ((MethodConditionOption) conditionOpt).getNextCB();
+				
+				boolean selectedSuccessfully = false;
+				INNER:
+				for(ConditionOption co : next.getItems()) {
+					if(co instanceof MethodConditionOption) {
+						if(((MethodConditionOption) co).method.equals(maMethod)) {
+							next.getSelectionModel().select(conditionOpt = co);
+							selectedSuccessfully = true;
+							break INNER;
+						}
+					}
+					else {
+						throw new UnsupportedOperationException("Unsupported ConditionOption type: " + next);
+					}
+				}
+				if(!selectedSuccessfully) {
+					throw new IllegalArgumentException("Could not locate method: " + maMethod);
+				}
+				children.add(next);
+			}
+			else {
+				System.out.println(">>> found a non-MethodCO: "+ conditionOpt);
+				break OUTER;
+			}
+		}
+		
+		System.out.println("*****DONE, RETURNING:"+builder);
+		return builder;
 	}
 }
 

@@ -32,6 +32,7 @@ import javafx.scene.input.Dragboard;
 import javafx.scene.input.TransferMode;
 import javafx.scene.layout.AnchorPane;
 import javafx.scene.layout.Border;
+import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.BorderStroke;
 import javafx.scene.layout.BorderStrokeStyle;
 import javafx.scene.layout.BorderWidths;
@@ -56,6 +57,11 @@ public class PieceBuilder extends Stage implements InputVerification{
 	static {
 		WHITE_DEFAULT_IMAGE = new Image(PieceBuilder.class.getResourceAsStream(WHITE_DEFAULT_URI = "/resources/white_default_image.png"), 240, 240, false, true);
 		BLACK_DEFAULT_IMAGE = new Image(PieceBuilder.class.getResourceAsStream(BLACK_DEFAULT_URI = "/resources/black_default_image.png"), 240, 240, false, true);
+		try {
+			new File("userpieces").createNewFile();
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
 	}
 	
 	private static PieceBuilder instance;
@@ -130,7 +136,8 @@ public class PieceBuilder extends Stage implements InputVerification{
 	
 	private Scene scene;
 	private StackPane outerStackPane, whiteImageOuter, blackImageOuter, whiteImageInternal, blackImageInternal;
-	private VBox outermostVBox, leftVBox, leftImageVBox;
+	private VBox outermostVBox, leftVBox;
+	GridPane leftImageVBox;
 	private GridPane gridPane;
 	private TextField nameTextField;
 	private Label nameLabel;
@@ -143,7 +150,7 @@ public class PieceBuilder extends Stage implements InputVerification{
 	private boolean errorsShowing;
 	private DoubleProperty errorFontSize;
 	private StringExpression errorFontStringExpression;
-	private Collection<String> currentPieceNames; //TODO Update this whenever PieceBuilder is opened! (and when a new piece is added and PieceBuilder remains open)
+	private static Collection<String> currentPieceNames; //TODO Update this whenever PieceBuilder is opened! (and when a new piece is added and PieceBuilder remains open)
 	private FileChooser fileChooser;
 	private AnchorPane whiteXAnchor, blackXAnchor;
 	private Label whiteX, blackX;
@@ -186,16 +193,25 @@ public class PieceBuilder extends Stage implements InputVerification{
 		nameHBox = new HBox(10, nameLabel, nameTextField);
 		nameHBox.setAlignment(Pos.CENTER);
 		
-		leftImageVBox = new VBox(10);
+		leftImageVBox = new GridPane();
+		final RowConstraints rc1 = new RowConstraints();
+		rc1.setPercentHeight(50);
+		
+		final RowConstraints rc2 = new RowConstraints();
+		rc2.setPercentHeight(50);
+		
+		leftImageVBox.getRowConstraints().addAll(rc1,rc2);
+		
+		final ColumnConstraints cc1 = new ColumnConstraints();
+		cc1.setPercentWidth(100);
+		leftImageVBox.getColumnConstraints().add(cc1);
 		
 		
 		whiteImageOuter = new StackPane();
 		whiteImageOuter.maxWidthProperty().bind(leftImageVBox.widthProperty());
-		NumberBinding nbw = Bindings.min(whiteImageOuter.widthProperty(), whiteImageOuter.heightProperty());
+		
 		whiteImageInternal = new StackPane();
 		whiteImageInternal.setBorder(new Border(new BorderStroke(Color.grayRgb(117), BorderStrokeStyle.DASHED, CornerRadii.EMPTY, new BorderWidths(2)))); //TODO put in css
-		whiteImageInternal.maxWidthProperty().bind(nbw);
-		whiteImageInternal.maxHeightProperty().bind(nbw);
 		whiteXAnchor = new AnchorPane(); 
 		whiteX = new Label("X"); //TODO IN css, make this color red (and make font larger?) (do the same for blackX)
 		AnchorPane.setRightAnchor(whiteX, 10d);
@@ -205,15 +221,16 @@ public class PieceBuilder extends Stage implements InputVerification{
 		whiteXAnchor.setVisible(false);
 		whiteImage = WHITE_DEFAULT_IMAGE;
 		whiteImageView = new WrappedImageView(whiteImage, 0, 0);
+		whiteImageView.setPreserveRatio(true);
 		whiteImageInternal.getChildren().addAll(whiteImageView, whiteXAnchor);
+		whiteImageInternal.maxWidthProperty().bind(whiteImageInternal.heightProperty());
 		whiteImageOuter.getChildren().add(whiteImageInternal);
+		//whiteImageOuter.setStyle("-fx-background-color: pink;");
 		
 		blackImageOuter = new StackPane();
-		NumberBinding nbb = Bindings.min(blackImageOuter.widthProperty(), blackImageOuter.heightProperty());
 		blackImageInternal = new StackPane();
 		blackImageInternal.setBorder(new Border(new BorderStroke(Color.grayRgb(117), BorderStrokeStyle.DASHED, CornerRadii.EMPTY, new BorderWidths(2)))); //TODO put in css
-		blackImageInternal.maxWidthProperty().bind(nbb);
-		blackImageInternal.maxHeightProperty().bind(nbb);
+		
 		blackXAnchor = new AnchorPane(); 
 		blackX = new Label("X"); //TODO IN css, make this color red (and make font larger?) (do the same for blackX)
 		AnchorPane.setRightAnchor(blackX, 10d);
@@ -223,12 +240,16 @@ public class PieceBuilder extends Stage implements InputVerification{
 		blackXAnchor.setVisible(false);
 		blackImage = BLACK_DEFAULT_IMAGE;
 		blackImageView = new WrappedImageView(blackImage, 0, 0);
+		blackImageView.setPreserveRatio(true);
 		blackImageInternal.getChildren().addAll(blackImageView, blackXAnchor);
+		blackImageInternal.maxWidthProperty().bind(blackImageInternal.heightProperty());
 		blackImageOuter.getChildren().add(blackImageInternal);
+		//blackImageOuter.setStyle("-fx-background-color: pink;");
 		
 		whiteX.setOnMouseClicked(mouseEvent -> {
 			clearWhiteImage();
 			mouseEvent.consume();
+			gridPane.requestLayout();
 		});
 		whiteImageInternal.setOnMouseClicked(mouseEvent -> {
 			fileChooser.setTitle("Select White Piece Image");
@@ -271,6 +292,7 @@ public class PieceBuilder extends Stage implements InputVerification{
 		blackX.setOnMouseClicked(mouseEvent -> {
 			clearBlackImage();
 			mouseEvent.consume();
+			gridPane.requestLayout();
 		});
 		blackImageInternal.setOnMouseClicked(mouseEvent -> {
 			fileChooser.setTitle("Select Black Piece Image");
@@ -309,10 +331,9 @@ public class PieceBuilder extends Stage implements InputVerification{
             dragEvent.consume();
 		});
 		
-		VBox.setVgrow(whiteImageOuter, Priority.ALWAYS);
-		VBox.setVgrow(blackImageOuter, Priority.ALWAYS);
 		leftImageVBox.setAlignment(Pos.CENTER);
-		leftImageVBox.getChildren().addAll(whiteImageOuter, blackImageOuter);
+		leftImageVBox.add(whiteImageOuter, 0, 0);
+		leftImageVBox.add(blackImageOuter, 0, 1);
 		
 		fileChooser = new FileChooser();
 		fileChooser.setInitialDirectory(new File(System.getProperty("user.home")));
@@ -362,8 +383,8 @@ public class PieceBuilder extends Stage implements InputVerification{
 		this.setTitle("chess++ Piece Builder");
 		this.setScene(scene);
 		this.sizeToScene();
-		this.setMinHeight(400);
-		this.minWidthProperty().bind(this.heightProperty().multiply(1.5));
+		//this.setMinHeight(400);
+		//this.minWidthProperty().bind(this.heightProperty().multiply(1.5));
 		this.initModality(Modality.APPLICATION_MODAL);
 		this.setOnCloseRequest(windowEvent -> {
 			attemptClose();
@@ -497,20 +518,21 @@ public class PieceBuilder extends Stage implements InputVerification{
 		errorsShowing = false;
 	}
 	
-	private void reset() {
-		whiteImage = WHITE_DEFAULT_IMAGE;
-		whiteImageView.setImage(whiteImage);
-		whiteXAnchor.setVisible(false);
-		blackImage = BLACK_DEFAULT_IMAGE;
-		blackImageView.setImage(blackImage);
-		blackXAnchor.setVisible(false);
-		nameTextField.setText("");
-		actionTreeBuilder.reset();
+	/** Does not check if instance is null*/
+	private static void reset() {
+		instance.whiteImage = WHITE_DEFAULT_IMAGE;
+		instance.whiteImageView.setImage(instance.whiteImage);
+		instance.whiteXAnchor.setVisible(false);
+		instance.blackImage = BLACK_DEFAULT_IMAGE;
+		instance.blackImageView.setImage(instance.blackImage);
+		instance.blackXAnchor.setVisible(false);
+		instance.nameTextField.setText("");
+		instance.actionTreeBuilder.reset();
 	}
-	public void open() {
+	public static void open() {
 		currentPieceNames = Piece.getNamesOfAllPieces();
-		this.reset();
-		this.show();
+		reset();
+		instance.show();
 	}
 	
 	public static void open(Piece p) {
@@ -531,6 +553,19 @@ public class PieceBuilder extends Stage implements InputVerification{
 		if(data == null) {
 			throw new NullPointerException();
 		}
+		currentPieceNames = Piece.getNamesOfAllPieces();
+		reset();
+		instance.nameTextField.setText(data.getName());
+		instance.nameTextField.setEditable(false);
+		instance.whiteImage = data.getImage(Piece.WHITE);
+		instance.whiteImageView.setImage(instance.whiteImage);
+		instance.whiteXAnchor.setVisible(true);
+		instance.blackImage = data.getImage(Piece.BLACK);
+		instance.blackImageView.setImage(instance.blackImage);
+		instance.blackXAnchor.setVisible(true);
+		instance.show();
+		instance.actionTreeBuilder.loadTree(data.getTree());
+		
 	}
 	
 	public void attemptClose() {

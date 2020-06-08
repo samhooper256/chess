@@ -9,6 +9,7 @@ import chess.util.CaptureAction;
 import chess.util.Condition;
 import chess.util.MoveAndCaptureAction;
 import chess.util.MultiAction;
+import chess.util.OtherMoveAndCaptureAction;
 import chess.util.PromotionAction;
 import chess.util.SubMulti;
 import chess.util.SummonAction;
@@ -34,21 +35,40 @@ public class Knight extends Piece{
 		data.setTree(
 			new ActionTree(Arrays.asList(
 				new ActionTree.Node(MoveAndCaptureAction.relative( moveA,	moveB, Condition.EOE)),
+				/*
 				new ActionTree.Node(MoveAndCaptureAction.relative( moveA,  -moveB, Condition.EOE)),
 				new ActionTree.Node(MoveAndCaptureAction.relative(-moveA,   moveB, Condition.EOE)),
 				new ActionTree.Node(MoveAndCaptureAction.relative(-moveA,  -moveB, Condition.EOE)),
 				new ActionTree.Node(MoveAndCaptureAction.relative( moveB, 	moveA, Condition.EOE)),
 				new ActionTree.Node(MoveAndCaptureAction.relative( moveB,  -moveA, Condition.EOE)),
 				new ActionTree.Node(MoveAndCaptureAction.relative(-moveB, 	moveA, Condition.EOE)),
-				new ActionTree.Node(MoveAndCaptureAction.relative(-moveB,  -moveA, Condition.EOE)),
-				
+				new ActionTree.Node(MoveAndCaptureAction.relative(-moveB,  -moveA, Condition.EOE)),*/
+				new ActionTree.Node(SummonAction.relative(-1, 0, new ArrayList<String>(Arrays.asList("Rook")), 
+					Condition.xor(Condition.DIE, Condition.SIE)
+				)),
+				new ActionTree.Node(CaptureAction.relative(0, 0, Condition.onDestRelative(0,1).call("getRow").toIntegerPath()
+						.isEquals(Condition.onBoard().call("getBoardSize").toIntegerPath()))),
+				new ActionTree.Node(PromotionAction.withOptions(new ArrayList<>(Arrays.asList("Queen")), 
+						Condition.onStartRelative(0, 0).call("getPiece").call("hasMoved").toBooleanPath().isEquals(
+						Condition.onStartRelative(-1, 0).call("isEmpty").toBooleanPath()
+						))),
+				new ActionTree.Node(MoveAndCaptureAction.line(-1, 0, Condition.onDest().call("getPiece").toObjectPath().isNotNull())),
+				new ActionTree.Node(CaptureAction.line(-2, 0, Condition.onBoard().toObjectPath().isNotNull())),
+				new ActionTree.Node(CaptureAction.line(0, 1, Condition.onStart().call("getPiece").call("getPieceType").toObjectPath()
+						.notEquals(Condition.onStartRelative(-1, 0).call("getPiece").call("getPieceType").toObjectPath()))),
+				new ActionTree.Node(OtherMoveAndCaptureAction.relative(-1, 0, -2, 0, Condition.onStartRelative(-1, 0).call("getPiece")
+						.toObjectPath().isPiece("Pawn"))),
+				new ActionTree.Node(SummonAction.segment(-2, -1, 0, 1, 3, false, new ArrayList<>(Arrays.asList("Bishop")),
+						Condition.onBoard().call("lastPlay").call("getPlay").toObjectPath().instanceOf(LegalMoveAndCapture.class)))
+				/*
 				new ActionTree.Node(MoveAndCaptureAction.relative(-1, 0)),
 				new ActionTree.Node(SummonAction.relative(-1, 0, new ArrayList<>(Arrays.asList("Rook","Queen")))),
 				new ActionTree.Node(CaptureAction.relative(-1, 0)),
 				new ActionTree.Node(MultiAction.relative(-1, 0).addAction(SubMulti.promo(
-						new ArrayList<>(Arrays.asList("Ghost")))))
+						new ArrayList<>(Arrays.asList("Ghost")))))*/
 			))
 		);
+		System.out.println("Knight's tree is:"+data.getTree());
 		data.setPointValue(3);
 	}
 	

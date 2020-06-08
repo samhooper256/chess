@@ -3,8 +3,11 @@ package chess.piecebuilder;
 import java.lang.reflect.Method;
 
 import chess.util.AFC;
+import chess.util.BooleanPath;
 import chess.util.Condition;
 import chess.util.InputVerification;
+import chess.util.IntegerPath;
+import chess.util.ObjectPath;
 import chess.util.PathBase;
 import javafx.geometry.Pos;
 import javafx.scene.Node;
@@ -16,6 +19,7 @@ import javafx.scene.layout.Pane;
 public abstract class PathBuilder extends HBox implements InputVerification{
 	private Label label;
 	protected ConditionChoiceBox onChoiceBox;
+	
 	public PathBuilder() {
 		super();
 		this.setSpacing(4);
@@ -93,6 +97,22 @@ public abstract class PathBuilder extends HBox implements InputVerification{
 		else {
 			return true;
 		}
+	}
+	
+	public static PathBuilder reconstruct(PathBase path){
+		if(path instanceof IntegerPath) {
+			return IntegerPathBuilder.reconstruct((IntegerPath) path);
+		}
+		else if(path instanceof BooleanPath) {
+			return BooleanPathBuilder.reconstruct((BooleanPath) path);
+		}
+		else if(path instanceof ObjectPath) {
+			return ObjectPathBuilder.reconstruct((ObjectPath) path);
+		}
+		else {
+			throw new UnsupportedOperationException("PathBase type " + path.getClass() + " is not supported");
+		}
+		
 	}
 }
 /*

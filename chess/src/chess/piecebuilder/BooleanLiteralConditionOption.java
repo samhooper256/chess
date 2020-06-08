@@ -3,7 +3,7 @@ package chess.piecebuilder;
 import chess.util.BooleanPath;
 
 public class BooleanLiteralConditionOption extends ConditionOption{
-	boolean value;
+	private final boolean value;
 	protected BooleanLiteralConditionOption(ConditionChoiceBox choiceBox, boolean value) {
 		super(choiceBox);
 		this.value = value;
@@ -28,7 +28,7 @@ public class BooleanLiteralConditionOption extends ConditionOption{
 	}
 	
 	@Override
-	public void updatePane() {
+	public void updatePaneImpl() {
 		//TODO - do I even do anything here?
 	}
 

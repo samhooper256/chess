@@ -14,7 +14,7 @@ public class MethodAccess implements Serializable {
 	 * 
 	 */
 	private static final long serialVersionUID = 1356992796269951865L;
-	private Method getMethod() throws NoSuchMethodException, SecurityException, ClassNotFoundException {
+	public Method getMethod() throws NoSuchMethodException, SecurityException, ClassNotFoundException {
 		return Class.forName(className).getMethod(methodName, parameterTypes);
 	}
 
@@ -22,22 +22,16 @@ public class MethodAccess implements Serializable {
 		return arguments;
 	}
 
-	public void setArguments(Object[] arguments) {
-		this.arguments = arguments;
-	}
-
 	private String className;
 	private String methodName;
 	private Class<?>[] parameterTypes;
-	private Object[] arguments;
+	private final Object[] arguments;
 	public MethodAccess(Method method, Object... args) {
 		this.className = method.getDeclaringClass().getName();
 		this.methodName = method.getName();
 		this.parameterTypes = method.getParameterTypes();
 		this.arguments = args;
 	}
-	
-	public MethodAccess() {}
 	
 	public Object retrieve(Object obj, Board b, int startRow, int startCol, int destRow, int destCol) {
 		try {

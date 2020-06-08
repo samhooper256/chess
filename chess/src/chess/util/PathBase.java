@@ -2,6 +2,8 @@ package chess.util;
 
 import java.io.Serializable;
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
 
 import chess.base.Board;
 import chess.base.Piece;
@@ -11,7 +13,7 @@ public abstract class PathBase implements Serializable{
 	 * 
 	 */
 	private static final long serialVersionUID = -8556832703486034225L;
-	protected Object base;
+	protected final Object base;
 	/*
 	 * If calls is empty OR null, base can be used
 	 * */
@@ -19,6 +21,17 @@ public abstract class PathBase implements Serializable{
 	public PathBase(Object base, ArrayList<MethodAccess> calls) {
 		this.base = base;
 		this.calls = calls;
+	}
+	
+	public Object getBase() {
+		return base;
+	}
+	
+	public List<MethodAccess> getCallsOrEmpty() {
+		if(calls == null) {
+			return Collections.emptyList();
+		}
+		return Collections.unmodifiableList(calls);
 	}
 	
 	public Object get(Board b, int startRow, int startCol, int destRow, int destCol) {

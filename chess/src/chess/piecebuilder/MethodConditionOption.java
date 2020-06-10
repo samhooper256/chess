@@ -51,6 +51,12 @@ public class MethodConditionOption extends ConditionOption{
 		ObservableList<Node> children = pb.getChildren();
 		int myIndex = children.indexOf(super.choiceBox);
 		ConditionBox.clearPast(children, myIndex);
+		System.out.println("method.getParameterCount() == " + method.getParameterCount());
+		if(method.getParameterCount() > 0) {
+			System.out.println("MAKING PBLOCK");
+			ParameterBlock pBlock = new ParameterBlock(method);
+			children.add(pBlock);
+		}
 		if(pb instanceof BooleanPathBuilder && returnType == boolean.class) {
 			//TODO Do something?
 		}
@@ -59,10 +65,6 @@ public class MethodConditionOption extends ConditionOption{
 			//TODO Do something?
 		}
 		else {
-			if(method.getParameterCount() > 0) {
-				ParameterBlock pBlock = new ParameterBlock(method);
-				children.add(pBlock);
-			}
 			ConditionChoiceBox newCB = getNextCB(returnType);
 			if(newCB.getItems().isEmpty()) {
 				if(!(pb instanceof ObjectPathBuilder)) {

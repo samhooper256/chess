@@ -13,32 +13,6 @@ public class IntegerPath extends PathBase{
 	 * 
 	 */
 	private static final long serialVersionUID = -8294183160153854073L;
-
-	public static final IntegerPath fromStartEnemyDist = new IntegerPath(null, null) {
-		/**
-		 * 
-		 */
-		private static final long serialVersionUID = 8580955947719348855L;
-
-		@Override
-		public Integer get(Board b, int startRow, int startCol, int destRow, int destCol) {
-			Tile t = b.getTileAt(startRow, startCol);
-			return (Integer) t.enemyLineDistance(t.getPiece().getColor());
-		}
-	};
-	
-	public static final IntegerPath fromDestEnemyDist = new IntegerPath(null, null) {
-		/**
-		 * 
-		 */
-		private static final long serialVersionUID = 7406402918965865446L;
-
-		@Override
-		public Integer get(Board b, int startRow, int startCol, int destRow, int destCol) {
-			Tile t = b.getTileAt(destRow, destCol);
-			return (Integer) t.enemyLineDistance(b.getPieceAt(startRow, startCol).getColor());
-		}
-	};
 	
 	public static final Method[] creationMethods;
 	

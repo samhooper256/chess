@@ -1,5 +1,6 @@
 package chess.util;
 
+import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -17,6 +18,28 @@ import chess.base.Piece;
 
 public abstract class SubMulti extends Action{
 	
+	public static final Method[] subMultiCreationMethods;
+	
+	static {
+		subMultiCreationMethods = new Method[7];
+		
+		try {
+			subMultiCreationMethods[0] = SubMulti.class.getMethod("mnc", Flag.class, int.class, int.class, Condition[].class);
+			subMultiCreationMethods[1] = SubMulti.class.getMethod("omnc", Flag.class, int.class, int.class,
+					int.class, int.class, Condition[].class);
+			subMultiCreationMethods[2] = SubMulti.class.getMethod("capRel", Flag.class, int.class, int.class, Condition[].class);
+			subMultiCreationMethods[3] = SubMulti.class.getMethod("capRad", Flag.class, int.class, boolean.class,
+					boolean.class, Condition[].class);
+			subMultiCreationMethods[4] = SubMulti.class.getMethod("promo", ArrayList.class, Condition[].class);
+			subMultiCreationMethods[5] = SubMulti.class.getMethod("summonRel", Flag.class, int.class, int.class,
+					ArrayList.class, Condition[].class);
+			subMultiCreationMethods[6] = SubMulti.class.getMethod("summonRad", Flag.class, int.class, boolean.class,
+					boolean.class, ArrayList.class, Condition[].class);
+		} catch (NoSuchMethodException | SecurityException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+	}
 	/**
 	 * 
 	 */
@@ -76,6 +99,10 @@ public abstract class SubMulti extends Action{
 			this.addAllConditions(cons);
 		}
 		
+		public static Method getCreationMethod() {
+			return subMultiCreationMethods[0];
+		}
+		
 		public Set<? extends LegalAction> getLegals(Board b, int startRow, int startCol, int destRow, int destCol) {
 			int m = b.getPieceAt(startRow, startCol).getColor() == Piece.WHITE ? 1 : -1;
 			int row, col;
@@ -101,6 +128,70 @@ public abstract class SubMulti extends Action{
 		}
 	}
 	
+	public static class OMNC extends SubMulti implements RelativeJumpAction{
+		/**
+		 * 
+		 */
+		private static final long serialVersionUID = -755367866536044169L;
+		public final Flag relativeTo;
+		public final int otherRelStartRow, otherRelStartCol, otherRelDestRow, otherRelDestCol;
+		private OMNC(Flag rt, int orsr, int orsc, int ordr, int ordc, Condition... cons) {
+			if(rt != Flag.ORIGIN && rt != Flag.DESTINATION) {
+				throw new IllegalArgumentException("Flag must be Flag.ORIGIN or Flag.DESTINATION. Flag was: " + rt);
+			}
+			this.otherRelStartRow = orsr;
+			this.otherRelStartCol = orsc;
+			this.otherRelDestRow = ordr;
+			this.otherRelDestCol = ordc;
+			this.relativeTo = rt;
+			this.addAllConditions(cons);
+		}
+		
+		/* *
+		 * NOTE: Like in OhterMoveAndCaptureAction, the startRow/Col passed to checkConditions is the
+		 * startRow/Col of the "other" piece that's being moved, not the "acting" piece in whose ActionTree this exists.
+		 * 
+		 * It also REQUIRES a piece on the start.
+		 */
+		
+		
+		public Set<? extends LegalAction> getLegals(Board b, int startRow, int startCol, int destRow, int destCol) {
+			if(relativeTo != Flag.ORIGIN && relativeTo != Flag.DESTINATION) {
+				throw new IllegalArgumentException("Flag must be Flag.ORIGIN or Flag.DESTINATION. Flag was: " + relativeTo);
+			}
+			int m = b.getPieceAt(startRow, startCol).getColor() == Piece.WHITE ? 1 : -1;
+			int sr, sc, dr, dc;
+			if(relativeTo == Flag.ORIGIN) {
+				sr = startRow + m*otherRelStartRow;
+				sc = startCol + m*otherRelStartCol;
+				dr = startRow + m*otherRelDestRow;
+				dc = startCol + m*otherRelDestCol;
+			}
+			else {
+				sr = destRow + m*otherRelStartRow;
+				sc = destCol + m*otherRelStartCol;
+				dr = destRow + m*otherRelDestRow;
+				dc = destCol + m*otherRelDestCol;
+			}
+			
+			if(b.inBounds(sr, sc) && b.inBounds(dr, dc) && b.getPieceAt(sr, sc) != null && checkConditions(b, sr, sc, dr, dc)) {
+				return Collections.singleton(new LegalOtherMoveAndCapture(sr, sc, dr, dc));
+			}
+			else {
+				return Collections.emptySet();
+			}
+		}
+		
+		public static Method getCreationMethod() {
+			return subMultiCreationMethods[1];
+		}
+		
+		@Override
+		public Object[] getReconstructionParameters() {
+			return new Object[] {relativeTo, otherRelStartRow, otherRelStartCol, otherRelDestRow, otherRelDestCol};
+		}
+	}
+
 	public static class CapRel extends SubMulti implements RelativeJumpAction{
 		/**
 		 * 
@@ -137,6 +228,11 @@ public abstract class SubMulti extends Action{
 				return Collections.emptySet();
 			}
 		}
+		
+		public static Method getCreationMethod() {
+			return subMultiCreationMethods[2];
+		}
+		
 		@Override
 		public Object[] getReconstructionParameters() {
 			return new Object[] {relativeTo, relRow, relCol};
@@ -229,6 +325,11 @@ public abstract class SubMulti extends Action{
 			
 			return legals;
 		}
+		
+		public static Method getCreationMethod() {
+			return subMultiCreationMethods[3];
+		}
+		
 		@Override
 		public Object[] getReconstructionParameters() {
 			return new Object[] {relativeTo, radius, fill, includeSelf};
@@ -247,7 +348,6 @@ public abstract class SubMulti extends Action{
 		}
 		
 		public Set<? extends LegalAction> getLegals(Board b, int startRow, int startCol, int destRow, int destCol) {
-			int m = b.getPieceAt(startRow, startCol).getColor() == Piece.WHITE ? 1 : -1;
 			
 			if(checkConditions(b, startRow, startCol, startRow, startCol)) {
 				return Collections.singleton(new LegalPromotion(startRow, startCol, options));
@@ -257,69 +357,13 @@ public abstract class SubMulti extends Action{
 			}
 		}
 		
+		public static Method getCreationMethod() {
+			return subMultiCreationMethods[4];
+		}
+		
 		@Override
 		public Object[] getReconstructionParameters() {
 			return new Object[] {options};
-		}
-	}
-	
-	public static class OMNC extends SubMulti implements RelativeJumpAction{
-		/**
-		 * 
-		 */
-		private static final long serialVersionUID = -755367866536044169L;
-		public final Flag relativeTo;
-		public final int otherRelStartRow, otherRelStartCol, otherRelDestRow, otherRelDestCol;
-		private OMNC(Flag rt, int orsr, int orsc, int ordr, int ordc, Condition... cons) {
-			if(rt != Flag.ORIGIN && rt != Flag.DESTINATION) {
-				throw new IllegalArgumentException("Flag must be Flag.ORIGIN or Flag.DESTINATION. Flag was: " + rt);
-			}
-			this.otherRelStartRow = orsr;
-			this.otherRelStartCol = orsc;
-			this.otherRelDestRow = ordr;
-			this.otherRelDestCol = ordc;
-			this.relativeTo = rt;
-			this.addAllConditions(cons);
-		}
-		
-		/* *
-		 * NOTE: Like in OhterMoveAndCaptureAction, the startRow/Col passed to checkConditions is the
-		 * startRow/Col of the "other" piece that's being moved, not the "acting" piece in whose ActionTree this exists.
-		 * 
-		 * It also REQUIRES a piece on the start.
-		 */
-		
-		
-		public Set<? extends LegalAction> getLegals(Board b, int startRow, int startCol, int destRow, int destCol) {
-			if(relativeTo != Flag.ORIGIN && relativeTo != Flag.DESTINATION) {
-				throw new IllegalArgumentException("Flag must be Flag.ORIGIN or Flag.DESTINATION. Flag was: " + relativeTo);
-			}
-			int m = b.getPieceAt(startRow, startCol).getColor() == Piece.WHITE ? 1 : -1;
-			int sr, sc, dr, dc;
-			if(relativeTo == Flag.ORIGIN) {
-				sr = startRow + m*otherRelStartRow;
-				sc = startCol + m*otherRelStartCol;
-				dr = startRow + m*otherRelDestRow;
-				dc = startCol + m*otherRelDestCol;
-			}
-			else {
-				sr = destRow + m*otherRelStartRow;
-				sc = destCol + m*otherRelStartCol;
-				dr = destRow + m*otherRelDestRow;
-				dc = destCol + m*otherRelDestCol;
-			}
-			
-			if(b.inBounds(sr, sc) && b.inBounds(dr, dc) && b.getPieceAt(sr, sc) != null && checkConditions(b, sr, sc, dr, dc)) {
-				return Collections.singleton(new LegalOtherMoveAndCapture(sr, sc, dr, dc));
-			}
-			else {
-				return Collections.emptySet();
-			}
-		}
-		
-		@Override
-		public Object[] getReconstructionParameters() {
-			return new Object[] {relativeTo, otherRelStartRow, otherRelStartCol, otherRelDestRow, otherRelDestCol};
 		}
 	}
 	
@@ -360,6 +404,10 @@ public abstract class SubMulti extends Action{
 			else {
 				return Collections.emptySet();
 			}
+		}
+		
+		public static Method getCreationMethod() {
+			return subMultiCreationMethods[5];
 		}
 		
 		@Override
@@ -455,6 +503,10 @@ public abstract class SubMulti extends Action{
 			}
 			
 			return legals;
+		}
+		
+		public static Method getCreationMethod() {
+			return subMultiCreationMethods[6];
 		}
 		
 		@Override

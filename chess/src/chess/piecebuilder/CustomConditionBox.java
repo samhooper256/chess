@@ -29,20 +29,17 @@ public class CustomConditionBox extends VBox implements InputVerification, Build
 		super();
 		this.prefWidthProperty().bind(ntad.widthProperty());
 		this.nodeToAddTo = ntad;
-		this.setStyle("-fx-border-width: 1px; -fx-border-color: #b00000;");
+		this.getStyleClass().add("custom-condition-box");
 		if(addDrop) {
-			System.out.println("ccb +drop");
+			//System.out.println("ccb +drop");
 			this.getChildren().add(new DropPathPane(true));
-		}
-		else {
-			System.out.println("ccb no drop");
 		}
 		waitingForDrop = true;
 	}
 	
 	void addBuilder(String pathType, boolean suggestedAddFinisher) {
-		System.out.printf(">>>addBuilder(%s, %s)", pathType, suggestedAddFinisher);
-		System.out.println("children before: " + getChildren());
+		//System.out.printf(">>>addBuilder(%s, %s)", pathType, suggestedAddFinisher);
+		//System.out.println("children before: " + getChildren());
 		waitingForDrop = false;
 		PathBuilder builder = PathBuilder.getBuilderByStringEx(pathType);
 		this.getChildren().add(builder);
@@ -57,7 +54,7 @@ public class CustomConditionBox extends VBox implements InputVerification, Build
 				throw new IllegalArgumentException("Cannot have multiple finishers!");
 			}
 		}
-		System.out.println("children after: " + getChildren());
+		//System.out.println("children after: " + getChildren());
 	}
 	
 	public void addFinisherEx(BuildFinisher fin, boolean doPostAdd) {

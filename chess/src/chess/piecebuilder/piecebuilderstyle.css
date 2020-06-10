@@ -4,7 +4,7 @@
 
 #create-piece-button{
     -fx-background-color: rgba(0, 255, 0, 0.5);
-    -fx-font-size: 18pt;
+    -fx-font-size: 14pt;
     -fx-font-weight: 500;
     -fx-font-style: normal; 
     -fx-font-family: "Gill Sans MT";
@@ -12,4 +12,140 @@
 
 #create-piece-button:hover{
     -fx-background-color: rgba(0, 255, 0, 0.7);
+}
+
+ConditionUtilFlowPane{
+	
+}
+
+*.condition-drop{
+	-fx-background-radius: 3 3 3 3;
+}
+
+*.condition-drop Label{
+	-fx-text-fill: rgba(0, 0, 0, 0.85);
+}
+
+*.condition-drop Label:hover{
+	-fx-text-fill: rgba(0, 0, 0, 1.0);
+}
+
+*.object-path-drop{
+	-fx-background-color: rgba(255, 235, 59, 0.9);
+}
+
+*.object-path-drop:hover{
+	-fx-background-color: rgba(255, 235, 59, 1.0);
+}
+
+*.image-x{
+	-fx-text-fill: rgba(200, 60, 60, 0.8);
+	-fx-background-color: rgba(255, 100, 100, 0.2);
+	-fx-background-radius: 5 5 5 5;
+	-fx-padding: 0 4 0 4;
+    -fx-font-size: 16pt;
+    -fx-font-weight: 600;
+    -fx-font-style: normal;
+    -fx-font-family: "Gill Sans MT";
+}
+
+*.image-x:hover{
+	-fx-text-fill: rgba(200, 60, 60, 1.0);
+	-fx-background-color:rgba(255,100,100,0.4);
+}
+
+*.multi-condition-drop{
+	-fx-background-color: rgba(80, 80, 255, 0.9);
+}
+
+*.multi-condition-drop:hover{
+	-fx-background-color: rgba(80, 80, 255, 1.0);
+}
+
+*.integer-path-drop{
+	-fx-background-color: rgba(255, 149, 0, 0.9);
+}
+
+*.integer-path-drop:hover{
+	-fx-background-color: rgba(255, 149, 0, 1.0);
+}
+
+*.boolean-path-drop{
+	-fx-background-color: rgba(228, 56, 255, 0.9);
+}
+
+*.boolean-path-drop:hover{
+	-fx-background-color: rgba(228, 56, 255, 1.0);
+}
+
+*.path-builder{
+	-fx-hgap: 4;
+	-fx-vgap: 4;
+	-fx-padding: 6;
+	-fx-background-radius: 4 4 4 4;
+    -fx-border-radius: 4 4 4 4;
+}
+
+*.integer-path-builder{
+	-fx-border-width: 1;
+	-fx-border-color: rgba(255, 149, 0, 1.0);
+	-fx-background-color: white, rgba(255, 149, 0, 0.3);
+}
+
+*.boolean-path-builder{
+	-fx-border-width: 1;
+	-fx-border-color: rgba(228, 56, 255, 1.0);
+	-fx-background-color: white, rgba(228, 56, 255, 0.3);
+}
+
+*.object-path-builder{
+	-fx-border-width: 1;
+	-fx-border-color: rgba(255, 235, 59, 1.0);
+	-fx-background-color: white, rgba(255, 235, 59, 0.3);
+}
+
+*.custom-condition-box{
+	-fx-spacing: 4;
+	-fx-padding: 5;
+}
+
+*.drop-path-pane{
+	-fx-border-width: 1;
+	-fx-border-color: rgb(5, 163, 0);
+	-fx-border-radius: 2 2 2 2;
+}
+
+*.multi-condition-box{
+	-fx-border-width: 1;
+	-fx-border-radius: 2 2 2 2;
+	-fx-background-radius: 2 2 2 2;
+	-fx-padding: 5;
+	-fx-border-color: rgba(38, 38, 255, 1.0);
+}
+
+*.condition-box{
+	-fx-spacing: 2;
+	-fx-padding: 4;
+	-fx-border-width: 1;
+	-fx-border-color: rgba(38, 38, 255, 1.0);
+	-fx-border-radius: 2 2 2 2;
+	-fx-background-radius: 2 2 2 2;
+	-fx-border-style: segments(1,2);
+}
+
+*.condition-box-wrap{
+	-fx-spacing: 5;
+}
+
+*.multi-condition-part{
+	-fx-background-color: rgb(162, 225, 242);
+}
+*.multi-condition-part > *.multi-condition-part{
+	-fx-background-color: rgb(127, 205, 227);
+}
+*.multi-condition-part > *.multi-condition-part > *.multi-condition-part{
+	-fx-background-color: rgb(95, 190, 217);
+}
+*.multi-condition-part > *.multi-condition-part > *.multi-condition-part > *.multi-condition-part{
+	-fx-background-color: rgb(73, 174, 204);
 }

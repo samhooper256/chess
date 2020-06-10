@@ -44,7 +44,7 @@ public abstract class BuildFinisher extends ChoiceBox<Method> {
 		return new ObjectBuildFinisher(builder);
 	}
 	
-	private static volatile boolean listenersOn;
+	private static volatile boolean listenersOn = true;
 	public static void setListenersOn(boolean newEnabled) {
 		listenersOn = newEnabled;
 	}
@@ -68,7 +68,7 @@ public abstract class BuildFinisher extends ChoiceBox<Method> {
 				if(m.isAnnotationPresent(AFC.class)) {
 					//AFC afc = m.getAnnotation(AFC.class);
 					items.add(m);
-					if(m.getName().equals("toCond")) {
+					if(m.getName().equals("toCondition")) {
 						this.setValue(m);
 					}
 				}
@@ -77,6 +77,7 @@ public abstract class BuildFinisher extends ChoiceBox<Method> {
 				@Override
 			    public void changed(ObservableValue<? extends Number> observableValue, Number number, Number number2) {
 					if(listenersOn) {
+						System.out.println("Buildfinisher action started - listenersOn = true");
 				        Method choice = BooleabBuildFinisher.this.getItems().get((Integer) number2);
 				        Class<?>[] paramTypes = choice.getParameterTypes();
 				        CustomConditionBox ccb = (CustomConditionBox) precedingBuilder.getParent();
@@ -90,6 +91,9 @@ public abstract class BuildFinisher extends ChoiceBox<Method> {
 				        		throw new UnsupportedOperationException("Parameter type " + paramTypes[i] + " is not supported");
 				        	}
 				        }
+					}
+					else {
+						System.out.println("Buildfinisher action cancelled - listenersOn = false");
 					}
 				}
 			});

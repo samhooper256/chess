@@ -16,13 +16,13 @@ import javafx.scene.control.Label;
 import javafx.scene.layout.FlowPane;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Pane;
-public abstract class PathBuilder extends HBox implements InputVerification{
+public abstract class PathBuilder extends FlowPane implements InputVerification{
 	private Label label;
 	protected ConditionChoiceBox onChoiceBox;
 	
 	public PathBuilder() {
 		super();
-		this.setSpacing(4);
+		this.getStyleClass().add("path-builder");
 		this.setAlignment(Pos.CENTER_LEFT);
 		label = new Label(getPathTypeName() + " Path on: ");
 		this.onChoiceBox = new ConditionChoiceBox(PathBuilder.this);

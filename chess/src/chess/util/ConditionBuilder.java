@@ -39,11 +39,11 @@ public class ConditionBuilder{
 		}
 	}
 	
-	public ConditionBuilder call(String name, Object...args) {
+	public ConditionBuilder call(String name) {
 		Method m;
 		try {
 			m = currentClass.getMethod(name);
-			accesses.add(new MethodAccess(m, args));
+			accesses.add(new MethodAccess(m));
 			currentClass = m.getReturnType();
 			if(currentClass == null) {
 				throw new IllegalArgumentException("no void method calls.");

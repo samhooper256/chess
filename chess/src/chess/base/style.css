@@ -1,7 +1,7 @@
 .root{
     -fx-background: rgb(226, 252, 255);
 }
-.popup-button {
+*.popup-button {
     -fx-font-size: 11pt;
     -fx-font-family: "Candra";
     -fx-background-radius: 5 5 5 5;
@@ -10,7 +10,7 @@
     -fx-background-color: #1abb9a;
 }
 
-.popup-button:hover {
+*.popup-button:hover {
     -fx-background-color: #38e8c4;
 }
 
@@ -51,60 +51,100 @@
     -fx-background-color: #FFFFFF;
 }
 
-#settings-grid-pane{
+.settings-grid-pane{
     -fx-background-color: #FFFFFF;
     -fx-border-radius: 10 10 10 10;
     -fx-background-radius: 10 10 10 10;
 }
 
-#open-piece-builder-button{
-    -fx-background-color: rgba(255, 153, 0, 0.5);
-    -fx-font-size: 18pt;
-    -fx-font-weight: 500;
-    -fx-font-style: normal; 
-    -fx-font-family: "Gill Sans MT";
-}
-
-#open-piece-builder-button:hover{
-    -fx-background-color: rgba(255, 153, 0, 0.7);
-}
-
-#create-piece-button{
-    -fx-background-color: rgba(0, 255, 0, 0.5);
-    -fx-font-size: 18pt;
-    -fx-font-weight: 500;
-    -fx-font-style: normal; 
-    -fx-font-family: "Gill Sans MT";
-}
-
-#create-piece-button:hover{
-    -fx-background-color: rgba(0, 255, 0, 0.7);
-}
-
-.move-and-capture {
+*.move-and-capture {
     -fx-fill: #000dff;
     -fx-opacity: 0.5;
 }
-.capture {
+*.capture {
     -fx-fill: #ff0000;
     -fx-opacity: 0.5;
 }
-.other-move-and-capture {
+*.other-move-and-capture {
     -fx-fill: #00022c;
     -fx-opacity: 0.5;
 }
 
-.promotion {
+*.promotion {
     -fx-fill: #ad00cf;
     -fx-opacity: 0.5;
 }
 
-.summon {
+*.summon {
     -fx-fill: #156b00;
     -fx-opacity: 0.5;
 }
 
-.multi {
+*.multi {
     -fx-fill: #ff9900;
     -fx-opacity: 0.5;
+}
+
+*.piece-builder-button{
+	-fx-text-alignment: center;
+	-fx-wrap-text: true;
+    -fx-background-color: rgba(255, 153, 0, 0.5);
+    -fx-font-size: 16pt;
+    -fx-font-weight: 500;
+    -fx-font-style: normal; 
+    -fx-font-family: "Gill Sans MT";
+}
+
+*.piece-builder-button:hover{
+    -fx-background-color: rgba(255, 153, 0, 0.65);
+}
+
+*.clear-board-button{
+	-fx-text-alignment: center;
+	-fx-wrap-text: true;
+	-fx-background-color: rgba(255, 0, 0, 0.25);
+    -fx-font-size: 18pt;
+    -fx-font-weight: 500;
+    -fx-font-style: normal;
+    -fx-font-family: "Century Gothic";
+}
+
+*.clear-board-button:hover{
+	-fx-background-color: rgba(255, 0, 0, 0.35);
+}
+
+*.reset-board-button{
+	-fx-text-alignment: center;
+	-fx-background-color: rgba(255, 0, 0, 0.25);
+    -fx-font-size: 12pt;
+    -fx-font-weight: 400;
+    -fx-font-style: normal;
+    -fx-font-family: "Century Gothic";
+}
+
+*.reset-board-button:hover{
+	-fx-background-color: rgba(255, 0, 0, 0.3);
+}
+
+*.mode-button{
+	-fx-text-alignment: center;
+	-fx-background-color: rgba(255, 0, 255, 0.25);
+    -fx-font-size: 12pt;
+    -fx-font-weight: 400;
+    -fx-font-style: normal;
+    -fx-font-family: "Century Gothic";
+}
+
+*.mode-button:hover{
+	-fx-background-color: rgba(255, 0, 255, 0.3);
+}
+
+*.turn-label{
+	-fx-text-alignment: center;
+	-fx-text-fill: rgba(75, 75, 75, 0.9);
+	-fx-wrap-text: true;
+	-fx-font-size: 24pt;
+    -fx-font-weight: 400;
+    -fx-font-style: normal;
+    -fx-font-family: "Georgia";
 }

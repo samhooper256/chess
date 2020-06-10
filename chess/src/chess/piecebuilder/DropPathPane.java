@@ -23,6 +23,7 @@ public class DropPathPane extends BorderPane implements InputVerification {
 		this.addFinsiher = addFinisher;
 		this.label = new Label("Drop Any Path");
 		this.pathType = null;
+		this.getStyleClass().add("drop-path-pane");
 		label.setPadding(new Insets(5));
 		this.setCenter(label);
 		this.setOnDragDropped(dragEvent -> {
@@ -60,7 +61,6 @@ public class DropPathPane extends BorderPane implements InputVerification {
 	        							//if it's unsuccessful here.
 	        }
 		});
-		this.setStyle("-fx-border-width: 1px; -fx-border-color: #55ff55;");
 	}
 
 	@Override

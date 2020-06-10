@@ -1,35 +1,21 @@
 package chess.base;
 
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.IOException;
-import java.io.ObjectInputStream;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.Set;
 
-import chess.base.Board.Tile;
 import chess.piecebuilder.PieceBuilder;
-import chess.util.ActionTree;
-import chess.util.CaptureAction;
-import chess.util.Condition;
-import chess.util.MoveAndCaptureAction;
-import chess.util.SummonAction;
 import javafx.beans.binding.Bindings;
 import javafx.beans.binding.NumberBinding;
 import javafx.event.EventHandler;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
-import javafx.scene.Cursor;
-import javafx.scene.Node;
 import javafx.scene.SnapshotParameters;
 import javafx.scene.control.Button;
 import javafx.scene.control.CheckBox;
 import javafx.scene.control.Control;
 import javafx.scene.control.Label;
 import javafx.scene.control.ScrollPane;
-import javafx.scene.control.TextArea;
 import javafx.scene.control.TextField;
 import javafx.scene.control.Tooltip;
 import javafx.scene.effect.ColorAdjust;
@@ -40,12 +26,7 @@ import javafx.scene.input.Dragboard;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.input.TransferMode;
 import javafx.scene.layout.AnchorPane;
-import javafx.scene.layout.Border;
-import javafx.scene.layout.BorderStroke;
-import javafx.scene.layout.BorderStrokeStyle;
-import javafx.scene.layout.BorderWidths;
 import javafx.scene.layout.ColumnConstraints;
-import javafx.scene.layout.CornerRadii;
 import javafx.scene.layout.GridPane;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Pane;
@@ -81,7 +62,6 @@ public class GamePanel extends StackPane{
 	private Mode mode;
 	
 	public GamePanel() {
-		pieceBuilder = PieceBuilder.make();
 		hBox = new HBox();
 		hBox.setMinHeight(400);
 		hBox.alignmentProperty().set(Pos.CENTER);
@@ -101,54 +81,16 @@ public class GamePanel extends StackPane{
 				{"+Pawn","+Pawn",null,null,null,null,null,null,null},
 				{"+King","+Pawn",null,null,null,null,null,null,null}});
 		
-		PieceData ghostData = new PieceData("Ghost");
-		ghostData.setPointValue(5);
-		ghostData.setTree(new ActionTree(Arrays.asList(
-				/*
-				new ActionTree.Node(MoveAndCaptureAction.segment(1, 1, 1, 1, 3),
-					new ActionTree.Node(MoveAndCaptureAction.relLine(3, 4, 0, 1)),
-					new ActionTree.Node(MoveAndCaptureAction.relLine(4, 3, 1, 0))
-				)*/
-					/*
-				new ActionTree.Node(MoveAndCaptureAction.segment(0, 1, 0, 1, 2).stops(Condition.POD),
-					new ActionTree.Node(MoveAndCaptureAction.relLine(0, 2, 1, 0)),
-					new ActionTree.Node(MoveAndCaptureAction.relLine(0, 2, -1, 0))
-				),
-				new ActionTree.Node(MoveAndCaptureAction.segment(0, -1, 0, -1, 2).stops(Condition.POD),
-					new ActionTree.Node(MoveAndCaptureAction.relLine(0, -2, 1, 0)),
-					new ActionTree.Node(MoveAndCaptureAction.relLine(0, -2, -1, 0))
-				),
-				new ActionTree.Node(MoveAndCaptureAction.segment(1, 0, 1, 0, 2).stops(Condition.POD),
-					new ActionTree.Node(MoveAndCaptureAction.relLine(2, 0, 0, 1)),
-					new ActionTree.Node(MoveAndCaptureAction.relLine(2, 0, 0, -1))
-				),
-				new ActionTree.Node(MoveAndCaptureAction.segment(-1, 0, -1, 0, 2).stops(Condition.POD),
-					new ActionTree.Node(MoveAndCaptureAction.relLine(-2, 0, 0, 1)),
-					new ActionTree.Node(MoveAndCaptureAction.relLine(-2, 0, 0, -1))
-				)*/
-				new ActionTree.Node(CaptureAction.radius(3, false, false)),
-				new ActionTree.Node(MoveAndCaptureAction.radius(2, true, false)),
-				new ActionTree.Node(SummonAction.radius(1, true, false, new ArrayList<String>(Arrays.asList("Bishop")), Condition.DIE))
-		)));
-		
-		CustomPiece.defineNewPiece(ghostData);
-		
 	    boardBox = new VBox();
 	    boardBox.alignmentProperty().set(Pos.CENTER); 
 	    boardBox.prefWidthProperty().bind(binding);
         boardBox.prefHeightProperty().bind(binding);
         boardBox.setMaxSize(Control.USE_PREF_SIZE, Control.USE_PREF_SIZE);
-
-        
-        
-        
-        
         
         /////////////////////////
 	    leftPanel = new Pane();
 	    rightPanel = new Pane();
 	    iLeft = new StackPane();
-	    //iLeft.setBorder(new Border(new BorderStroke(Color.DARKGREEN, BorderStrokeStyle.SOLID, CornerRadii.EMPTY, new BorderWidths(1))));
 	    iRight = new StackPane();
 	    rightPanel.setPrefWidth(0);
 	    leftPanel.setPrefWidth(0);
@@ -158,6 +100,7 @@ public class GamePanel extends StackPane{
 	    //Make right half:
 	    rightAnchor = new AnchorPane();
 	    modeButton = new Button(FREEPLAY_TEXT);
+	    modeButton.getStyleClass().add("mode-button");
 	    modeButton.setOnMouseClicked(mouseEvent -> {
 	    	if(modeButton.getText().equals(FREEPLAY_TEXT)) {
 	    		GamePanel.this.setToFreeplay();
@@ -167,8 +110,8 @@ public class GamePanel extends StackPane{
 	    	}
 	    });
 	    resetButton = new Button("Reset Board");
+	    resetButton.getStyleClass().add("reset-board-button");
 	    resetButton.setOnMouseClicked(x -> board.reset());
-	    //modeButton.setFocusTraversable(false);
 	    rightAnchor.getChildren().addAll(modeButton, resetButton);
 	    
 	    AnchorPane.setLeftAnchor(modeButton, 10d);
@@ -190,8 +133,8 @@ public class GamePanel extends StackPane{
 	    AnchorPane.setBottomAnchor(piecePickerWrap, 50d);
 	    
 	    
-	    turnLabel = new Label("White to move");
-	    turnLabel.setWrapText(true);
+	    turnLabel = new Label(WHITE_TO_MOVE_TEXT);
+	    turnLabel.getStyleClass().add("turn-label");
 	    turnLabel.setAlignment(Pos.CENTER);
 	    AnchorPane.setLeftAnchor(turnLabel, 10d);
 	    AnchorPane.setRightAnchor(turnLabel, 10d);
@@ -232,7 +175,7 @@ public class GamePanel extends StackPane{
 	    flipBoardImage.setOnMouseClicked(x -> board.flip());
         flipTurnImage.setOnMouseClicked(x -> board.flipTurn());
         
-        ColorAdjust ca = new ColorAdjust();
+        ColorAdjust ca = new ColorAdjust(); //this cannot be done from css... :(
         ca.setBrightness(0.2);
         flipBoardImage.setOnMouseEntered(x -> flipBoardImage.setEffect(ca));
         flipBoardImage.setOnMouseExited(x -> flipBoardImage.setEffect(null));
@@ -246,7 +189,6 @@ public class GamePanel extends StackPane{
         settingsWheel.fitHeightProperty().bind(boardBox.heightProperty().divide(16));
         settingsWheel.setPickOnBounds(true);
         leftAnchor = new AnchorPane();
-        //leftAnchor.setBorder(new Border(new BorderStroke(Color.DARKBLUE, BorderStrokeStyle.SOLID, CornerRadii.EMPTY, new BorderWidths(1))));
         leftAnchor.getChildren().add(settingsWheel);
         leftAnchor.setPickOnBounds(false);
         AnchorPane.setLeftAnchor(settingsWheel, 10d);
@@ -315,36 +257,26 @@ public class GamePanel extends StackPane{
             dragEvent.consume();
         });
         
-        clearBoardButton = new Button("Clear\nBoard");
-        clearBoardButton.setStyle(
-        	"-fx-background-color: rgba(255, 0, 0, 0.25);" +
-        	"-fx-font-size: 18pt;" + 
-        	"-fx-font-weight: 500;" + 
-        	"-fx-font-style: normal;" + 
-        	"-fx-font-family: \"Century Gothic\";"
-        );
+        clearBoardButton = new Button("Clear Board");
+        clearBoardButton.getStyleClass().add("clear-board-button");
         AnchorPane.setRightAnchor(clearBoardButton, 10d);
         AnchorPane.setLeftAnchor(clearBoardButton, 10d);
         AnchorPane.setBottomAnchor(clearBoardButton, 10d);
         clearBoardButton.prefHeightProperty().bind(this.heightProperty().divide(8));
         leftAnchor.getChildren().add(clearBoardButton);
-        clearBoardButton.setOnMouseClicked(mouseEvent -> {
+        clearBoardButton.setOnAction(mouseEvent -> {
         	board.clearBoard();
         });
         clearBoardButton.setVisible(false);
-        //clearBoardButton.maxWidthProperty().bind(iLeft.widthProperty());
-        //clearBoardButton.setWrapText(true);
         
         pieceBuilderButton = new Button("Piece Builder");
-        pieceBuilderButton.setId("open-piece-builder-button");
+        pieceBuilderButton.getStyleClass().add("piece-builder-button");
         AnchorPane.setBottomAnchor(pieceBuilderButton, 10d);
         AnchorPane.setLeftAnchor(pieceBuilderButton, 10d);
         AnchorPane.setRightAnchor(pieceBuilderButton, 10d);
         pieceBuilderButton.prefHeightProperty().bind(this.heightProperty().divide(8));
-        pieceBuilderButton.setWrapText(true);
-        pieceBuilderButton.setAlignment(Pos.CENTER);
-        pieceBuilderButton.setOnMouseClicked(mouseEvent -> {
-        	PieceBuilder.open("Knight");
+        pieceBuilderButton.setOnAction(mouseEvent -> {
+        	PieceBuilder.open();
         });
         leftAnchor.getChildren().add(pieceBuilderButton);
         
@@ -386,8 +318,8 @@ public class GamePanel extends StackPane{
       
         boardBox.getChildren().add(board);
               
-        
-        
+        pieceBuilder = PieceBuilder.make();
+		PieceBuilder.setGamePanel(this);
 	}
 	
 	public enum Mode{
@@ -524,11 +456,10 @@ public class GamePanel extends StackPane{
 			this.setVisible(false);
 			gridPane = new GridPane();
 			gridPane.setPickOnBounds(false);
-			gridPane.setBorder(new Border(new BorderStroke(Color.RED, BorderStrokeStyle.SOLID, CornerRadii.EMPTY, new BorderWidths(1))));
 			gridPane.setMinSize(300, 400);
 			gridPane.maxWidthProperty().bind(GamePanel.this.widthProperty().divide(1.5));
 			gridPane.maxHeightProperty().bind(GamePanel.this.heightProperty().divide(1.5));
-			gridPane.setId("settings-grid-pane");
+			gridPane.getStyleClass().add("settings-grid-pane");
 			RowConstraints row1 = new RowConstraints();
 			row1.setPercentHeight(80);
 			RowConstraints row2 = new RowConstraints();

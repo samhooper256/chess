@@ -12,6 +12,11 @@ import javafx.scene.layout.VBox;
 public class ConditionBoxWrap extends VBox implements InputVerification, Buildable<Condition>{
 	VBox esvBox;
 	private Button deleteConditionButton;
+	
+	{
+		this.getStyleClass().add("condition-box-wrap");
+	}
+	
 	public ConditionBoxWrap() {
 		this((MultiConditionPart) (new ConditionBox()));
 	}
@@ -24,8 +29,6 @@ public class ConditionBoxWrap extends VBox implements InputVerification, Buildab
 		this.setFillWidth(true);
 		esvBox.setFillWidth(true);
 		esvBox.getChildren().add((Node) (part));
-		
-		this.setStyle("-fx-border-color: pink;");
 		deleteConditionButton = new Button("Delete Condition");
 		deleteConditionButton.setStyle("-fx-background-color: transparent; -fx-border-width: 1px; -fx-border-color: #b00000;"
 				+ "-fx-border-radius: 6; -fx-text-fill: #b00000;"); //TODO Put this in CSS (and add hover effect)

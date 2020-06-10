@@ -28,9 +28,30 @@ public class CustomPiece extends Piece{
 		loadPieceData();
 	}
 	public static void defineNewPiece(PieceData data) {
-		definedPieces.put(data.getName(),
+		String pieceName = data.getName();
+		if(definedPieces.containsKey(pieceName)) {
+			throw new IllegalArgumentException("This piece already exists");
+		}
+		definedPieces.put(pieceName,
 			new CPFactory(data)
 		);
+	}
+	
+	public static void updatePieceData(PieceData data) {
+		String pieceName = data.getName();
+		if(!definedPieces.containsKey(pieceName)) {
+			throw new IllegalArgumentException("This piece does not exist");
+		}
+		definedPieces.get(pieceName).setData(data);
+	}
+	
+	public static void deletePiece(String pieceName) {
+		if(definedPieces.containsKey(pieceName)) {
+			definedPieces.remove(pieceName);
+		}
+		else {
+			throw new IllegalArgumentException("Piece does not exist");
+		}
 	}
 	
 	public static PieceData getDataFor(String name) {
@@ -41,19 +62,6 @@ public class CustomPiece extends Piece{
 		else {
 			return factory.getPieceData();
 		}
-	}
-	
-	private static void deleteFolderContents(File folder) {
-	    File[] files = folder.listFiles();
-	    if(files!=null) { //some JVMs return null for empty dirs
-	        for(File f: files) {
-	            if(f.isDirectory()) {
-	            	deleteFolderContents(f);
-	            } else {
-	                f.delete();
-	            }
-	        }
-	    }
 	}
 	
 	private static void loadPieceData() {
@@ -104,7 +112,7 @@ public class CustomPiece extends Piece{
 	}
 	
 	private static class CPFactory{
-		private final PieceData data;
+		private PieceData data;
 		public CPFactory(PieceData data) {
 			this.data = data;
 		}
@@ -115,6 +123,10 @@ public class CustomPiece extends Piece{
 		
 		public PieceData getPieceData() {
 			return data;
+		}
+		
+		private void setData(PieceData newData) {
+			this.data = newData;
 		}
 	}
 	

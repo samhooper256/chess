@@ -5,10 +5,12 @@ import java.io.FileOutputStream;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.ObjectOutputStream;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 
 import chess.base.CustomPiece;
+import chess.base.GamePanel;
 import chess.base.Piece;
 import chess.base.PieceData;
 import chess.base.WrappedImageView;
@@ -18,17 +20,25 @@ import javafx.beans.binding.NumberBinding;
 import javafx.beans.binding.StringExpression;
 import javafx.beans.property.DoubleProperty;
 import javafx.beans.property.SimpleDoubleProperty;
+import javafx.event.ActionEvent;
+import javafx.event.EventHandler;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
+import javafx.scene.Node;
 import javafx.scene.Scene;
 import javafx.scene.control.Button;
+import javafx.scene.control.CustomMenuItem;
 import javafx.scene.control.Label;
 import javafx.scene.control.Menu;
 import javafx.scene.control.MenuBar;
+import javafx.scene.control.MenuItem;
+import javafx.scene.control.ScrollPane;
+import javafx.scene.control.Slider;
 import javafx.scene.control.TextField;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.input.Dragboard;
+import javafx.scene.input.MouseEvent;
 import javafx.scene.input.TransferMode;
 import javafx.scene.layout.AnchorPane;
 import javafx.scene.layout.Border;
@@ -43,20 +53,28 @@ import javafx.scene.layout.HBox;
 import javafx.scene.layout.Priority;
 import javafx.scene.layout.RowConstraints;
 import javafx.scene.layout.StackPane;
+import javafx.scene.layout.TilePane;
 import javafx.scene.layout.VBox;
 import javafx.scene.paint.Color;
+import javafx.scene.shape.Circle;
 import javafx.stage.FileChooser;
 import javafx.stage.Modality;
+import javafx.stage.Popup;
+import javafx.stage.PopupWindow;
 import javafx.stage.Stage;
+import javafx.stage.StageStyle;
 
 public class PieceBuilder extends Stage implements InputVerification{
 	public static final Image WHITE_DEFAULT_IMAGE, BLACK_DEFAULT_IMAGE;
 	public static final String WHITE_DEFAULT_URI, BLACK_DEFAULT_URI;
+	public static final int IMAGE_SIZE = 240;
 	//TODO Maybe make an "error loading" image to use when the file path is wrong?
 	
 	static {
-		WHITE_DEFAULT_IMAGE = new Image(PieceBuilder.class.getResourceAsStream(WHITE_DEFAULT_URI = "/resources/white_default_image.png"), 240, 240, false, true);
-		BLACK_DEFAULT_IMAGE = new Image(PieceBuilder.class.getResourceAsStream(BLACK_DEFAULT_URI = "/resources/black_default_image.png"), 240, 240, false, true);
+		WHITE_DEFAULT_IMAGE = new Image(PieceBuilder.class.getResourceAsStream(WHITE_DEFAULT_URI = "/resources/white_default_image.png"),
+				IMAGE_SIZE, IMAGE_SIZE, false, true);
+		BLACK_DEFAULT_IMAGE = new Image(PieceBuilder.class.getResourceAsStream(BLACK_DEFAULT_URI = "/resources/black_default_image.png"),
+				IMAGE_SIZE, IMAGE_SIZE, false, true);
 		try {
 			new File("userpieces").createNewFile();
 		} catch (IOException e) {
@@ -107,31 +125,20 @@ public class PieceBuilder extends Stage implements InputVerification{
 		}
 	}
 	
+	public static void setGamePanel(GamePanel gp) {
+		associatedGamePanel = gp;
+	}
+	
 	public static void submitError(String message) {
-		if(instance == null) {
-			throw new NullPointerException("The instance does not exist.");
-		}
-		else {
-			instance.submitErrorMessage(message);
-		}
+		instance.submitErrorMessage(message);
 	}
 	
 	public static void clearErrors() {
-		if(instance == null) {
-			throw new NullPointerException("The instance does not exist.");
-		}
-		else {
-			instance.clearErrors0();
-		}
+		instance.clearErrors0();
 	}
 	
 	public static Collection<String> currentPieceNames(){
-		if(instance == null) {
-			throw new NullPointerException("The instance does not exist.");
-		}
-		else {
-			return instance.currentPieceNames0();
-		}
+		return instance.currentPieceNames0();
 	}
 	
 	private Scene scene;
@@ -151,20 +158,31 @@ public class PieceBuilder extends Stage implements InputVerification{
 	private DoubleProperty errorFontSize;
 	private StringExpression errorFontStringExpression;
 	private static Collection<String> currentPieceNames; //TODO Update this whenever PieceBuilder is opened! (and when a new piece is added and PieceBuilder remains open)
+	private static Collection<String> currentCustomPieceNames;
 	private FileChooser fileChooser;
 	private AnchorPane whiteXAnchor, blackXAnchor;
 	private Label whiteX, blackX;
 	private String whiteImageURIString, blackImageURIString;
+	private PieceData currentData;
+	private SuccessPopup successPopup;
+	private static GamePanel associatedGamePanel;
 	
 	private PieceBuilder() {
 		super();
+		associatedGamePanel = null;
+		currentData = null;
 		whiteImageURIString = null;
 		blackImageURIString = null;
+		successPopup = new SuccessPopup();
 		outermostVBox = new VBox();
 		outermostVBox.setFillWidth(true);
 		outerStackPane = new StackPane();
 		VBox.setVgrow(outerStackPane, Priority.ALWAYS);
-		outermostVBox.getChildren().addAll(new MenuBar(new Menu("oof")), outerStackPane);
+		currentPieceNames = new ArrayList<>();
+		currentCustomPieceNames = new ArrayList<>();
+		updatePieceNames();
+		setupMenuBar();
+		outermostVBox.getChildren().addAll(menuBar, outerStackPane);
 		scene = new Scene(outermostVBox, 600, 400);
 		scene.getStylesheets().add(PieceBuilder.class.getResource("piecebuilderstyle.css").toExternalForm());
 		
@@ -194,6 +212,7 @@ public class PieceBuilder extends Stage implements InputVerification{
 		nameHBox.setAlignment(Pos.CENTER);
 		
 		leftImageVBox = new GridPane();
+		leftImageVBox.setVgap(10);
 		final RowConstraints rc1 = new RowConstraints();
 		rc1.setPercentHeight(50);
 		
@@ -213,9 +232,10 @@ public class PieceBuilder extends Stage implements InputVerification{
 		whiteImageInternal = new StackPane();
 		whiteImageInternal.setBorder(new Border(new BorderStroke(Color.grayRgb(117), BorderStrokeStyle.DASHED, CornerRadii.EMPTY, new BorderWidths(2)))); //TODO put in css
 		whiteXAnchor = new AnchorPane(); 
-		whiteX = new Label("X"); //TODO IN css, make this color red (and make font larger?) (do the same for blackX)
-		AnchorPane.setRightAnchor(whiteX, 10d);
-		AnchorPane.setTopAnchor(whiteX, 10d);
+		whiteX = new Label("X");
+		whiteX.getStyleClass().add("image-x");
+		AnchorPane.setRightAnchor(whiteX, 6d);
+		AnchorPane.setTopAnchor(whiteX, 6d);
 		whiteXAnchor.getChildren().add(whiteX);
 		whiteXAnchor.setPickOnBounds(false);
 		whiteXAnchor.setVisible(false);
@@ -225,16 +245,17 @@ public class PieceBuilder extends Stage implements InputVerification{
 		whiteImageInternal.getChildren().addAll(whiteImageView, whiteXAnchor);
 		whiteImageInternal.maxWidthProperty().bind(whiteImageInternal.heightProperty());
 		whiteImageOuter.getChildren().add(whiteImageInternal);
-		//whiteImageOuter.setStyle("-fx-background-color: pink;");
+		whiteImageInternal.maxHeightProperty().bind(whiteImageOuter.widthProperty());
 		
 		blackImageOuter = new StackPane();
 		blackImageInternal = new StackPane();
 		blackImageInternal.setBorder(new Border(new BorderStroke(Color.grayRgb(117), BorderStrokeStyle.DASHED, CornerRadii.EMPTY, new BorderWidths(2)))); //TODO put in css
 		
 		blackXAnchor = new AnchorPane(); 
-		blackX = new Label("X"); //TODO IN css, make this color red (and make font larger?) (do the same for blackX)
-		AnchorPane.setRightAnchor(blackX, 10d);
-		AnchorPane.setTopAnchor(blackX, 10d);
+		blackX = new Label("X");
+		blackX.getStyleClass().add("image-x");
+		AnchorPane.setRightAnchor(blackX, 6d);
+		AnchorPane.setTopAnchor(blackX, 6d);
 		blackXAnchor.getChildren().add(blackX);
 		blackXAnchor.setPickOnBounds(false);
 		blackXAnchor.setVisible(false);
@@ -244,7 +265,7 @@ public class PieceBuilder extends Stage implements InputVerification{
 		blackImageInternal.getChildren().addAll(blackImageView, blackXAnchor);
 		blackImageInternal.maxWidthProperty().bind(blackImageInternal.heightProperty());
 		blackImageOuter.getChildren().add(blackImageInternal);
-		//blackImageOuter.setStyle("-fx-background-color: pink;");
+		blackImageInternal.maxHeightProperty().bind(blackImageOuter.widthProperty());
 		
 		whiteX.setOnMouseClicked(mouseEvent -> {
 			clearWhiteImage();
@@ -347,10 +368,9 @@ public class PieceBuilder extends Stage implements InputVerification{
 		
 		createPieceButton = new Button("Create Piece");
 		createPieceButton.setMaxWidth(Double.MAX_VALUE);
-		createPieceButton.prefHeightProperty().bind(leftVBox.heightProperty().divide(8));
-		createPieceButton.setWrapText(true);
+		//createPieceButton.setWrapText(true);
 		createPieceButton.setId("create-piece-button");
-		createPieceButton.setOnMouseClicked(mouseEvent -> attemptCreate());
+		createPieceButton.setOnMouseClicked(mouseEvent -> attemptFinish());
 		
 		VBox.setVgrow(leftImageVBox, Priority.ALWAYS);
 		
@@ -390,6 +410,152 @@ public class PieceBuilder extends Stage implements InputVerification{
 			attemptClose();
 			windowEvent.consume();
 		});
+	}
+	
+	private MenuBar menuBar;
+	private Menu optionsMenu;
+	private MenuItem newPieceMenuItem, editPieceMenuItem, deletePieceMenuItem;
+	private PiecePopup editPiecePopup, deletePiecePopup;
+	private ConfirmDeletionPopup deleteConfirmation;
+	
+	private void setupMenuBar() {
+		newPieceMenuItem = new MenuItem("Create New Piece");
+		newPieceMenuItem.setOnAction(actionEvent -> {
+			PieceBuilder.reset(false); //TODO Make a "You have unsaved changes" popup here
+		});
+		editPiecePopup = new PiecePopup("Select a piece to edit", "Edit", actionEvent -> {
+			editPiecePopup.hide();
+			PieceBuilder.open(Piece.getDataFor(editPiecePopup.getCurrentlySelectedOption().getPieceName()));
+		});
+		editPieceMenuItem = new MenuItem("Edit Existing Piece");
+		editPieceMenuItem.setOnAction(actionEvent -> {
+			editPiecePopup.reloadOptions();
+			editPiecePopup.show();
+		});
+		deletePiecePopup = new PiecePopup("Select a piece to delete", "Delete", actionEvent -> {
+			deletePiecePopup.hide();
+			PieceBuilder.attemptDelete(deletePiecePopup.getCurrentlySelectedOption().getPieceName());
+		});
+		deletePieceMenuItem = new MenuItem("Delete Existing Piece");
+		deletePieceMenuItem.setOnAction(actionEvent -> {
+			deletePiecePopup.reloadOptions();
+			deletePiecePopup.show();
+		});
+		deleteConfirmation = new ConfirmDeletionPopup();
+		
+		optionsMenu = new Menu("Options");
+		optionsMenu.getItems().addAll(newPieceMenuItem, editPieceMenuItem, deletePieceMenuItem);
+		
+		menuBar = new MenuBar(optionsMenu);
+	}
+	
+	private static void updatePieceNames() {
+		currentCustomPieceNames = CustomPiece.getDefinedPieceNames();
+		currentPieceNames.clear();
+		currentPieceNames.addAll(Piece.predefinedPieces);
+		currentPieceNames.addAll(currentCustomPieceNames);
+		System.out.println("PieceNames updated, now\n\ttotal="+currentPieceNames+"\n\t"
+				+ "custom="+currentCustomPieceNames);
+	}
+
+	private class PiecePopup extends Stage{
+		private TilePane tilePane;
+		private Button cancelButton, selectButton;
+		private PieceOption currentlySelectedOption;
+		private final EventHandler<? super MouseEvent> pieceOptionClickAction = mouseEvent -> {
+			PieceOption source = (PieceOption) mouseEvent.getSource();
+			if(PiecePopup.this.currentlySelectedOption == source) {
+				source.setSelected(false);
+				PiecePopup.this.currentlySelectedOption = null;
+				PiecePopup.this.selectButton.setDisable(true);
+				mouseEvent.consume();
+				return;
+			}
+			if(currentlySelectedOption != null) {
+				currentlySelectedOption.setSelected(false);
+			}
+			PiecePopup.this.currentlySelectedOption = source;
+			PiecePopup.this.currentlySelectedOption.setSelected(true);
+			selectButton.setDisable(false);
+			
+			mouseEvent.consume();
+			
+		};
+		
+		public PiecePopup(String title, String selectText, EventHandler<ActionEvent> selectEvent) {
+			super();
+			StackPane content = new StackPane();
+			this.initModality(Modality.APPLICATION_MODAL);
+			this.initOwner(PieceBuilder.this);
+			this.initStyle(StageStyle.UNDECORATED);
+			this.setScene(new Scene(content));
+			tilePane = new TilePane();
+			tilePane.setHgap(5);
+			tilePane.setVgap(5);
+			for(String s : currentCustomPieceNames) {
+				tilePane.getChildren().add(new PieceOption(s));
+			}
+			VBox vBox = new VBox(10);
+			vBox.setPadding(new Insets(10));
+			vBox.setFillWidth(true);
+			
+			Label titleLabel = new Label(title);
+			ScrollPane scrollPane = new ScrollPane(tilePane);
+			
+			HBox buttonsBox = new HBox(20);
+			buttonsBox.setFillHeight(true);
+			cancelButton = new Button("Cancel");
+			cancelButton.setOnAction(actionEvent -> {
+				PiecePopup.this.hide();
+			});
+			selectButton = new Button(selectText);
+			selectButton.setOnAction(selectEvent);
+			selectButton.setDisable(true);
+			buttonsBox.getChildren().addAll(cancelButton, selectButton);
+			buttonsBox.setAlignment(Pos.CENTER);
+			vBox.getChildren().addAll(titleLabel, scrollPane, buttonsBox);
+			content.getChildren().add(vBox);
+			content.setStyle("-fx-background-color: white;");
+			this.sizeToScene();
+		}
+		
+		public PieceOption getCurrentlySelectedOption() {
+			return currentlySelectedOption;
+		}
+		
+		public void reloadOptions() {
+			tilePane.getChildren().clear();
+			for(String s : currentCustomPieceNames) {
+				tilePane.getChildren().add(new PieceOption(s));
+			}
+		}
+		
+		private class PieceOption extends StackPane {
+			private final String pieceName;
+			private final Label label;
+			private boolean isSelected;
+			public PieceOption(String pieceName) {
+				super();
+				isSelected = false;
+				this.pieceName = pieceName;
+				this.getChildren().add(label = new Label(pieceName));
+				this.setOnMouseClicked(pieceOptionClickAction);
+			}
+			
+			public String getPieceName() {
+				return pieceName;
+			}
+			
+			public void setSelected(boolean newSelected) {
+				isSelected = newSelected;
+				if(isSelected) {
+					PieceOption.this.setStyle("-fx-background-color: lightblue;");
+				}
+				else {
+					PieceOption.this.setStyle("-fx-background-color: inherit;");
+				}
+			}
+		}
 	}
 	
 	private boolean isValidImage(File f) {
@@ -435,6 +601,47 @@ public class PieceBuilder extends Stage implements InputVerification{
 		}
 	}
 	
+	private void attemptFinish() {
+		System.out.println("Attempting finish, currentData = " + currentData);
+		if(currentData == null) {
+			attemptCreate();
+		}
+		else {
+			attemptSave();
+		}
+	}
+	
+	private void attemptSave() {
+		clearErrors();
+		if(!verifyInput()) {
+			return;
+		}
+		currentData.setWhiteImageURIString(whiteImageURIString);
+		currentData.setBlackImageURIString(blackImageURIString);
+		currentData.setTree(actionTreeBuilder.build());
+		currentData.setPointValue(5);
+		
+		File file = new File("userpieces/" + currentData.getName() + ".dat");
+		try {
+			file.createNewFile();
+			FileWriter temp = new FileWriter(file, false);
+			temp.flush();
+			temp.close();
+			FileOutputStream fos = new FileOutputStream(file); 
+			ObjectOutputStream oos = new ObjectOutputStream(fos);
+			oos.writeObject(currentData);
+			oos.flush();
+			oos.close();
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		CustomPiece.updatePieceData(currentData);
+		successPopup.setMessage("\"" + currentData.getName() + "\" saved successfully.");
+		successPopup.show();
+		
+	}
+	
 	private void attemptCreate() {
 		clearErrors();
 		if(!verifyInput()) {
@@ -467,24 +674,133 @@ public class PieceBuilder extends Stage implements InputVerification{
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
-		this.hide(); //TODO popup window saying it was a success?
 		
+		CustomPiece.defineNewPiece(pieceData);
+		successPopup.setMessage("Piece \"" + pieceData.getName() + "\" created successfully.");
+		successPopup.show();
+		createPieceButton.setText("Save Edits");
+		nameTextField.setEditable(false);
+		currentData = pieceData;
+	}
+	
+	/**
+	 * BLOCKS while it waits for the user to confirm deletion.
+	 * Does nothing if the user cancels the deletion.
+	 * @param pieceName
+	 */
+	public static void attemptDelete(String pieceName) {
+		if(confirmDelete(pieceName)){
+			System.out.println(">>> Delete confirmed");
+			CustomPiece.deletePiece(pieceName);
+			File file = new File("userpieces/" + pieceName + ".dat");
+			file.delete();
+			updatePieceNames();
+		}
+		else {
+			System.out.println(">>> Delete cancelled");
+		}
+	}
+	
+	private static boolean confirmDelete(String pieceName) {
+		instance.deleteConfirmation.setPieceName(pieceName);
+		instance.deleteConfirmation.showAndWait();
+		return instance.deleteConfirmation.getLastResult();
+	}
+	
+	private class ConfirmDeletionPopup extends Stage{
+		private Label sureLabel;
+		private volatile boolean result;
+		public ConfirmDeletionPopup() {
+			super();
+			this.initModality(Modality.APPLICATION_MODAL);
+			this.initOwner(PieceBuilder.this);
+			StackPane content = new StackPane();
+			this.setScene(new Scene(content));
+			VBox vBox = new VBox(30);
+			vBox.setPadding(new Insets(20));
+			sureLabel = new Label("Are you sure you want to delete?");
+			sureLabel.setWrapText(true);
+			Button cancelButton = new Button("Cancel");
+			cancelButton.setOnAction(actionEvent -> {
+				result = false;
+				this.close();
+			});
+			Button confirmButton = new Button("Confirm");
+			confirmButton.setOnAction(actionEvent -> {
+				result = true;
+				this.close();
+			});
+			HBox buttonsBox = new HBox(20);
+			buttonsBox.getChildren().addAll(cancelButton, confirmButton);
+			buttonsBox.setAlignment(Pos.CENTER_RIGHT);
+			vBox.getChildren().addAll(sureLabel, buttonsBox);
+			content.getChildren().add(vBox);
+			this.setOnCloseRequest(windowEvent -> {
+				result = false;
+				this.close();
+			});
+			this.sizeToScene();
+		}
+		
+		public boolean getLastResult() {
+			return result;
+		}
+		
+		public void setPieceName(String pieceName) {
+			sureLabel.setText("Are you sure you want to delete the \"" + pieceName + "\" piece?");
+		}
+	}
+	
+	private class SuccessPopup extends Stage{
+		private Label messageLabel;
+		public SuccessPopup() {
+			this("");
+		}
+		public SuccessPopup(String message) {
+			super();
+			this.initModality(Modality.APPLICATION_MODAL);
+			this.initOwner(PieceBuilder.this);
+			StackPane content = new StackPane();
+			this.setScene(new Scene(content));
+			VBox vBox = new VBox(30);
+			vBox.setPadding(new Insets(20));
+			vBox.setFillWidth(true);
+			messageLabel = new Label(message);
+			messageLabel.setWrapText(true);
+			Button closeButton = new Button("Close");
+			closeButton.setOnAction(actionEvent -> {
+				this.close();
+			});
+			HBox hBox = new HBox(20, closeButton);
+			hBox.setAlignment(Pos.CENTER_RIGHT);
+			vBox.getChildren().addAll(messageLabel, hBox);
+			content.getChildren().add(vBox);
+			this.sizeToScene();
+		}
+		
+		public void setMessage(String newMessage) {
+			messageLabel.setText(newMessage);
+		}
 	}
 	@Override
 	public boolean verifyInput() {
+		System.out.println("PieceBuilder verify called");
 		try {
 			boolean result = true;
 			String name = nameTextField.getText().strip();
 			if(name == null || name.isEmpty() || name.isBlank()) {
 				submitErrorMessage("name field is blank");
-				result &= false;
+				result = false;
 			}
-			if(CustomPiece.isDefinedPieceName(name)) {
-				submitErrorMessage("A piece with this name already exists.");
+			if(currentData == null) {
+				if(Piece.isNameOfPiece(name)) {
+					submitErrorMessage("A piece with this name already exists.");
+					result = false;
+				}
 			}
 			if(name.indexOf('+') >= 0 || name.indexOf('-') >= 0) {
-				submitErrorMessage("Piece names cannot contain a plus (+) or minus (-)"); //TODO actual error message
-				result &= false;
+				submitErrorMessage("Piece names cannot contain a plus (+) or minus (-)");
+				result = false;
 			}
 			result &= actionTreeBuilder.verifyInput();
 			if(result) {
@@ -507,8 +823,10 @@ public class PieceBuilder extends Stage implements InputVerification{
 		if(!errorsShowing) {
 			errorVBox.getChildren().add(hideErrors);
 			errorsShowing = true;
+			errorVBox.setMouseTransparent(false);
 		}
 		Label label = new Label(message);
+		label.setMouseTransparent(true);
 		label.styleProperty().bind(errorFontStringExpression);
 		errorVBox.getChildren().add(0, label);
 	}
@@ -516,21 +834,35 @@ public class PieceBuilder extends Stage implements InputVerification{
 	private void clearErrors0() {
 		errorVBox.getChildren().clear();
 		errorsShowing = false;
+		errorVBox.setMouseTransparent(true);
+	}
+	
+	/** Does not check if instance is null*/
+	private static void reset(boolean updatePieces) {
+		if(updatePieces) {
+			updatePieceNames();
+		}
+		clearErrors();
+		instance.whiteImage = WHITE_DEFAULT_IMAGE;
+		instance.whiteImageURIString = null;
+		instance.whiteImageView.setImage(instance.whiteImage);
+		instance.whiteXAnchor.setVisible(false);
+		instance.blackImage = BLACK_DEFAULT_IMAGE;
+		instance.blackImageURIString = null;
+		instance.blackImageView.setImage(instance.blackImage);
+		instance.blackXAnchor.setVisible(false);
+		instance.nameTextField.setText("");
+		instance.createPieceButton.setText("Create Piece");
+		instance.actionTreeBuilder.reset();
+		instance.nameTextField.setEditable(true);
+		instance.currentData = null;
 	}
 	
 	/** Does not check if instance is null*/
 	private static void reset() {
-		instance.whiteImage = WHITE_DEFAULT_IMAGE;
-		instance.whiteImageView.setImage(instance.whiteImage);
-		instance.whiteXAnchor.setVisible(false);
-		instance.blackImage = BLACK_DEFAULT_IMAGE;
-		instance.blackImageView.setImage(instance.blackImage);
-		instance.blackXAnchor.setVisible(false);
-		instance.nameTextField.setText("");
-		instance.actionTreeBuilder.reset();
+		reset(true);
 	}
 	public static void open() {
-		currentPieceNames = Piece.getNamesOfAllPieces();
 		reset();
 		instance.show();
 	}
@@ -553,18 +885,25 @@ public class PieceBuilder extends Stage implements InputVerification{
 		if(data == null) {
 			throw new NullPointerException();
 		}
-		currentPieceNames = Piece.getNamesOfAllPieces();
 		reset();
 		instance.nameTextField.setText(data.getName());
 		instance.nameTextField.setEditable(false);
 		instance.whiteImage = data.getImage(Piece.WHITE);
-		instance.whiteImageView.setImage(instance.whiteImage);
-		instance.whiteXAnchor.setVisible(true);
+		instance.whiteImageURIString = data.getWhiteImageURIString();
+		if(instance.whiteImageURIString != null) {
+			instance.whiteImageView.setImage(instance.whiteImage);
+			instance.whiteXAnchor.setVisible(true);
+		}
 		instance.blackImage = data.getImage(Piece.BLACK);
-		instance.blackImageView.setImage(instance.blackImage);
-		instance.blackXAnchor.setVisible(true);
+		instance.blackImageURIString = data.getBlackImageURIString();
+		if(instance.blackImageURIString != null) {
+			instance.blackImageView.setImage(instance.blackImage);
+			instance.blackXAnchor.setVisible(true);
+		}
 		instance.show();
 		instance.actionTreeBuilder.loadTree(data.getTree());
+		instance.createPieceButton.setText("Save Edits");
+		instance.currentData = data;
 		
 	}
 	
@@ -574,6 +913,10 @@ public class PieceBuilder extends Stage implements InputVerification{
 	
 	public void close0() {
 		close();
+		if(associatedGamePanel != null) {
+			associatedGamePanel.getBoard().movePreparerForFXThread.prepare();
+		}
+		
 	}
 	
 	private Collection<String> currentPieceNames0(){

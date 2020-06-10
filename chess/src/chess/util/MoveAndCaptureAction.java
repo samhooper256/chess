@@ -31,7 +31,7 @@ public abstract class MoveAndCaptureAction extends chess.util.Action{
 		return new LineMoveAndCaptureAction(deltaRow, deltaCol, cons);
 	}
 	
-	@User(params={"relative start row", "relative start column", "delta row", "delta column"})
+	@User(params={"relative start row", "relative start column", "delta row", "delta column", "requires start to be on board"})
 	public static RelativeLineMoveAndCaptureAction relLine(int relStartRow, int relStartCol, int dr, int dc,
 			boolean requiresOnBoardStart, Condition... cons) {
 		return new RelativeLineMoveAndCaptureAction(relStartRow, relStartCol, dr, dc, requiresOnBoardStart, cons);
@@ -184,7 +184,7 @@ public abstract class MoveAndCaptureAction extends chess.util.Action{
 		}
 		
 		public static Method getCreationMethod() throws NoSuchMethodException, SecurityException {
-			return MoveAndCaptureAction.class.getMethod("relLine", int.class, int.class, int.class, int.class, Condition[].class);
+			return MoveAndCaptureAction.class.getMethod("relLine", int.class, int.class, int.class, int.class, boolean.class, Condition[].class);
 		}
 		
 		@Override

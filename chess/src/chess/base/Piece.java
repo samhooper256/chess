@@ -132,7 +132,7 @@ public abstract class Piece {
 		return getColorString() + " Piece";
 	}
 	
-	public boolean isNameOfPiece(String pieceName) {
+	public static boolean isNameOfPiece(String pieceName) {
 		return 	pieceName.equals("King") ||
 				pieceName.equals("Queen") ||
 				pieceName.equals("Rook") ||
@@ -161,9 +161,11 @@ public abstract class Piece {
 		return end;
 	}
 	
+	public static final Collection<String> predefinedPieces = new ArrayList<>(Arrays.asList("Pawn","Knight","Bishop","Rook","Queen","King"));
+	
 	public static final Collection<String> getNamesOfAllPieces(){
 		ArrayList<String> end = new ArrayList<>(6 + CustomPiece.getDefinedPieceCount());
-		end.addAll(Arrays.asList("Pawn","Knight","Bishop","Rook","Queen","King"));
+		end.addAll(predefinedPieces);
 		end.addAll(CustomPiece.getDefinedPieceNames());
 		return end;
 	}

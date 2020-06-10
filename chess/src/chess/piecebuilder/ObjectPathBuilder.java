@@ -20,7 +20,7 @@ public class ObjectPathBuilder extends PathBuilder{
 
 	public ObjectPathBuilder() {
 		super();
-		this.setStyle("-fx-border-width: 1px; -fx-border-color: rgba(255, 235, 59, 1.0);");
+		this.getStyleClass().add("object-path-builder");
 	}
 
 	@Override

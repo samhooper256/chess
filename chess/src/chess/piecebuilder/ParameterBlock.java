@@ -7,16 +7,20 @@ import chess.util.InputVerification;
 import chess.util.IntTextField;
 import chess.util.IntegerPath;
 import javafx.collections.ObservableList;
+import javafx.geometry.Pos;
 import javafx.scene.Node;
 import javafx.scene.control.CheckBox;
 import javafx.scene.layout.HBox;
+import javafx.scene.layout.VBox;
 
-public class ParameterBlock extends HBox implements Buildable<Object[]>, InputVerification{
+public class ParameterBlock extends VBox implements Buildable<Object[]>, InputVerification{
 	private Method method;
 	public ParameterBlock(Method m) {
 		this(m, true);
 	}
 	private ParameterBlock(Method m, boolean addEmptyBuilders) {
+		super(2);
+		this.setAlignment(Pos.CENTER_LEFT);
 		this.method = m;
 		if(addEmptyBuilders) {
 			for(Class<?> clazz : m.getParameterTypes()) {
@@ -63,13 +67,13 @@ public class ParameterBlock extends HBox implements Buildable<Object[]>, InputVe
 				pBlock.getChildren().add(IntegerPathBuilder.reconstruct((IntegerPath) arg));
 			}
 			else if(arg instanceof BooleanPath) {
-				throw new UnsupportedOperationException("Unfinished code");
+				pBlock.getChildren().add(BooleanPathBuilder.reconstruct((BooleanPath) arg));
 			}
 			else if(arg.getClass() == Integer.class || arg.getClass() == int.class) {
-				throw new UnsupportedOperationException("Unfinished code");
+				pBlock.getChildren().add(IntegerPathBuilder.reconstruct((int) arg));
 			}
 			else if(arg.getClass() == Boolean.class || arg.getClass() == boolean.class) {
-				throw new UnsupportedOperationException("Unfinished code");
+				pBlock.getChildren().add(BooleanPathBuilder.reconstruct((boolean) arg));
 			}
 		}
 		return pBlock;

@@ -15,19 +15,19 @@ public class MethodAccess implements Serializable {
 	 */
 	private static final long serialVersionUID = 1356992796269951865L;
 	public Method getMethod() throws NoSuchMethodException, SecurityException, ClassNotFoundException {
-		return Class.forName(className).getMethod(methodName, parameterTypes);
+		return clazz.getMethod(methodName, parameterTypes);
 	}
 
 	public Object[] getArguments() {
 		return arguments;
 	}
 
-	private String className;
+	private Class<?> clazz;
 	private String methodName;
 	private Class<?>[] parameterTypes;
 	private final Object[] arguments;
 	public MethodAccess(Method method, Object... args) {
-		this.className = method.getDeclaringClass().getName();
+		this.clazz = method.getDeclaringClass();
 		this.methodName = method.getName();
 		this.parameterTypes = method.getParameterTypes();
 		this.arguments = args;
@@ -67,7 +67,7 @@ public class MethodAccess implements Serializable {
 	
 	@Override
 	public String toString() {
-		return "[MethodAccess:className="+className+", methodName="+methodName+", parameterTypes="+Arrays.deepToString(parameterTypes)+
+		return "[MethodAccess:clazz="+clazz+", methodName="+methodName+", parameterTypes="+Arrays.deepToString(parameterTypes)+
 				", arguments="+Arrays.deepToString(arguments)+"]";
 	}
 	

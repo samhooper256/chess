@@ -4,6 +4,7 @@ import java.util.Arrays;
 import java.util.Set;
 
 import chess.util.ActionTree;
+import chess.util.CaptureAction;
 import chess.util.Condition;
 import chess.util.Flag;
 import chess.util.MoveAndCaptureAction;
@@ -34,8 +35,9 @@ public class Bishop extends Piece {
 			new ActionTree.Node(MoveAndCaptureAction.line(-1, -1, Condition.EOE).stops(Condition.POD)),
 			new ActionTree.Node(
 				MultiAction.relative(-2, 0)
-				.addAction(SubMulti.omnc(Flag.ORIGIN, 0, -1, -2, -1, Condition.POS), false)
-				.addAction(SubMulti.omnc(Flag.ORIGIN, 0, 1, -2, 1, Condition.POS), false)
+				.addAction(SubMulti.omnc(Flag.ORIGIN, 0, -1, -2, -1, Condition.POS), true)
+				.addAction(SubMulti.omnc(Flag.DESTINATION, -2, 1, 0, 1, Condition.POS), false),
+				new ActionTree.Node(CaptureAction.relative(0, 0, Condition.TOD))
 			)
 		))
 		);

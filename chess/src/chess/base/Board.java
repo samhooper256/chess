@@ -269,7 +269,7 @@ public class Board extends StackPane{
 	
 	private ClickHandler clickHandler = new ClickHandler();
 	
-	class MovePreparer extends Service<Void>{
+	public class MovePreparer extends Service<Void>{
 		
 		public void prepare() {
 			if(!isRunning()) {
@@ -300,7 +300,7 @@ public class Board extends StackPane{
 		
 	}
 	
-	MovePreparer movePreparerForFXThread = new MovePreparer();
+	public MovePreparer movePreparerForFXThread = new MovePreparer();
 	
 	class MoveMaker{
 		public MoveMaker() {}
@@ -890,7 +890,7 @@ public class Board extends StackPane{
 			return false;
 		}
 		
-		@AFC(name="enemy line distance")
+		@AFC(name="enemy line distance", paramDescriptions={"color"})
 		public int enemyLineDistance(boolean color) {
 			return color == Piece.WHITE ? row + 1 : BOARD_SIZE - row;
 		}
@@ -1475,6 +1475,8 @@ public class Board extends StackPane{
 			currentlySelectedTile.setHighlighted(false);
 			currentlySelectedTile = null;
 		}
+		associatedGP.turnLabel.setText(turn == Piece.WHITE ? 
+				GamePanel.WHITE_TO_MOVE_TEXT : GamePanel.BLACK_TO_MOVE_TEXT);
 	}
 
 	boolean tryMoveForLegality(int startRow, int startCol, LegalAction action) {

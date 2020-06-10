@@ -59,7 +59,8 @@ public class Knight extends Piece{
 				new ActionTree.Node(OtherMoveAndCaptureAction.relative(-1, 0, -2, 0, Condition.onStartRelative(-1, 0).call("getPiece")
 						.toObjectPath().isPiece("Pawn"))),
 				new ActionTree.Node(SummonAction.segment(-2, -1, 0, 1, 3, false, new ArrayList<>(Arrays.asList("Bishop")),
-						Condition.onBoard().call("lastPlay").call("getPlay").toObjectPath().instanceOf(LegalMoveAndCapture.class)))
+						Condition.onBoard().call("lastPlay").call("getPlay").toObjectPath().instanceOf(LegalMoveAndCapture.class))),
+				new ActionTree.Node(CaptureAction.line(-1, 1, Condition.EOE).stops(Condition.EOD))
 				/*
 				new ActionTree.Node(MoveAndCaptureAction.relative(-1, 0)),
 				new ActionTree.Node(SummonAction.relative(-1, 0, new ArrayList<>(Arrays.asList("Rook","Queen")))),
@@ -68,7 +69,6 @@ public class Knight extends Piece{
 						new ArrayList<>(Arrays.asList("Ghost")))))*/
 			))
 		);
-		System.out.println("Knight's tree is:"+data.getTree());
 		data.setPointValue(3);
 	}
 	
@@ -91,11 +91,6 @@ public class Knight extends Piece{
 	@Override
 	public boolean canCheck(Board b, int startRow, int startCol, int destRow, int destCol) {
 		return data.getTree().canCheck(b, startRow, startCol, destRow, destCol);
-		/*
-		int aDiff = Math.abs(startRow - destRow);
-		int bDiff = Math.abs(startCol - destCol);
-		return aDiff == moveA && bDiff == moveB || aDiff == moveB && bDiff == moveA;
-		*/
 	}
 	@Override
 	public Image getImage() {

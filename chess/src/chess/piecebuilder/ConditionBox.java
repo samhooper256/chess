@@ -100,8 +100,11 @@ public class ConditionBox extends VBox implements InputVerification, MultiCondit
         	}
 		}
 	};
+	
 	public ConditionBox() {
+		super();
 		this.setFillWidth(true);
+		this.getStyleClass().addAll("multi-condition-part", "condition-box");
 		flow = new FlowPane();
 		shouldAddDrop = true;
 		conditionNameLabel = new Label("Condition: ");
@@ -138,7 +141,6 @@ public class ConditionBox extends VBox implements InputVerification, MultiCondit
 	        dragEvent.setDropCompleted(success);
 	        dragEvent.consume();
 		});
-		this.setStyle("-fx-border-width: 1px; -fx-border-color: rgba(200,200,200,1.0); -fx-border-style: dashed;");
 		
 		defaultValueChoiceBox = new ChoiceBox<>();
 		defaultValueChoiceBox.getItems().addAll(true,false);
@@ -240,6 +242,7 @@ public class ConditionBox extends VBox implements InputVerification, MultiCondit
 	}
 	
 	public static MultiConditionPart reconstruct(Condition con) {
+		System.out.println("reconstructin con:"+con);
 		if(con.isPremade()) {
 			ConditionBox conditionBox = new ConditionBox();
 			conditionBox.box1.getSelectionModel().select("Premade");

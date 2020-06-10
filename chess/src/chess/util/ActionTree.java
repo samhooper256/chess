@@ -252,6 +252,10 @@ public class ActionTree implements Serializable{
 			this.children = new ArrayList<>(children);
 		}
 		
+		public ArrayList<Condition> getChokeConditions(){
+			return conditions;
+		}
+		
 		@Override
 		public Set<LegalAction> getLegals(Board b, int startRow, int startCol) {
 			Set<LegalAction> legals = new HashSet<>();
@@ -281,6 +285,11 @@ public class ActionTree implements Serializable{
 				}
 			}
 			return false;
+		}
+		
+		@Override
+		public String toString() {
+			return "[Choke@"+hashCode()+":conditions="+conditions+", children="+children+"]";
 		}
 		
 	}

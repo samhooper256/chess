@@ -24,7 +24,7 @@ import javafx.scene.layout.Pane;
 public class BooleanPathBuilder extends PathBuilder{
 	public BooleanPathBuilder() {
 		super();
-		this.setStyle("-fx-border-width: 1px; -fx-border-color: rgba(228, 56, 255, 1.0);");
+		this.getStyleClass().add("boolean-path-builder");
 		onChoiceBox.getItems().addAll(new BooleanLiteralConditionOption(onChoiceBox, true),
 				new BooleanLiteralConditionOption(onChoiceBox, false));
 	}
@@ -136,6 +136,19 @@ public class BooleanPathBuilder extends PathBuilder{
 		return result;
 	}
 	
+	public static BooleanPathBuilder reconstruct(boolean bool) {
+		BooleanPathBuilder builder = new BooleanPathBuilder();
+		for(ConditionOption co : builder.onChoiceBox.getItems()) {
+			if(co instanceof BooleanLiteralConditionOption) {
+				if(((BooleanLiteralConditionOption) co).getBooleanValue() == (bool)) {
+					builder.onChoiceBox.getSelectionModel().select(co);
+					break;
+				}
+			}
+		}
+		return builder;
+	}
+	
 	public static BooleanPathBuilder reconstruct(BooleanPath path) {
 		//TODO Very similar code to IntegerPath#reconstruct
 		System.out.println("*****RECREATING:"+path);
@@ -152,6 +165,7 @@ public class BooleanPathBuilder extends PathBuilder{
 					}
 				}
 			}
+			return builder;
 		}
 		else {
 			Method m = Condition.getOnMethodFromBase(base);

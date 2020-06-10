@@ -20,7 +20,7 @@ import javafx.scene.layout.Pane;
 public class IntegerPathBuilder extends PathBuilder{
 	public IntegerPathBuilder() {
 		super();
-		this.setStyle("-fx-border-width: 1px; -fx-border-color: rgba(255, 149, 0, 1.0);");
+		this.getStyleClass().add("integer-path-builder");
 		onChoiceBox.getItems().addAll(new IntegerLiteralConditionOption(onChoiceBox));
 	}
 
@@ -137,6 +137,20 @@ public class IntegerPathBuilder extends PathBuilder{
 		throw new IllegalArgumentException("Unknown Error ( see stack trace )");
 	}
 	
+	public static IntegerPathBuilder reconstruct(int base) {
+		IntegerPathBuilder builder = new IntegerPathBuilder();
+		ConditionOption conditionOpt = null;
+		for(ConditionOption co : builder.onChoiceBox.getItems()) {
+			if(co instanceof IntegerLiteralConditionOption) {
+				builder.onChoiceBox.getSelectionModel().select(conditionOpt = co);
+				break;
+			}
+		}
+		conditionOpt.updatePaneImpl();
+		((IntegerLiteralConditionOption) conditionOpt).followingIntTextField.setText(String.valueOf(base));
+		return builder;
+	}
+	
 	public static IntegerPathBuilder reconstruct(IntegerPath path) {
 		System.out.println("*****RECREATING:"+path);
 		IntegerPathBuilder builder = new IntegerPathBuilder();
@@ -152,6 +166,7 @@ public class IntegerPathBuilder extends PathBuilder{
 			}
 			conditionOpt.updatePaneImpl();
 			((IntegerLiteralConditionOption) conditionOpt).followingIntTextField.setText(String.valueOf(base));
+			return builder;
 		}
 		else {
 			Method m = Condition.getOnMethodFromBase(base);

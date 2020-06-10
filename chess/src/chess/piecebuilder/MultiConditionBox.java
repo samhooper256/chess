@@ -62,10 +62,12 @@ public class MultiConditionBox extends VBox implements MultiConditionPart{
 	        dragEvent.setDropCompleted(success);
 	        dragEvent.consume();
 		});
-		//***
-		
-		this.setStyle("-fx-border-width: 1px; -fx-border-color: rgba(38, 38, 255, 1.0);"); //TODO put in CSS (this and elsewhere)
 	}
+	
+	{
+		this.getStyleClass().addAll("multi-condition-part", "multi-condition-box");
+	}
+	
 	public <T extends Node & MultiConditionPart> MultiConditionBox(T first){
 		super(4);
 		System.out.println("Entered MCP constructor, mcp passed was: " + first);

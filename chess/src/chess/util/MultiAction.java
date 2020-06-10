@@ -13,6 +13,7 @@ import chess.base.Board;
 import chess.base.LegalAction;
 import chess.base.LegalMulti;
 import chess.base.Piece;
+import chess.piecebuilder.Pair;
 import chess.util.SummonAction.LineSummonAction;
 import chess.util.SummonAction.RadiusSummonAction;
 import chess.util.SummonAction.RelativeSummonAction;
@@ -29,6 +30,9 @@ public abstract class MultiAction extends chess.util.Action{
 	boolean hasCapture = false; //This variable is used by ActionTree's canCheck(...) to short-circuit. KEEP IT UPDATED.
 	boolean hasPromotion = false;
 	
+	public Pair<List<SubMulti>, List<Boolean>> getSubMultiData(){
+		return new Pair<>(actions, states);
+	}
 	@User(params={"relative display row", "relative display column"})
 	public static RelativeMultiAction relative(int relDispRow, int relDispCol, Condition... cons) {
 		return new RelativeMultiAction(relDispRow, relDispCol, cons);

@@ -87,27 +87,28 @@ public class ActionTreeBuilder extends StackPane implements InputVerification, B
 		int index = 0;
 		ObservableList<Node> children = actionTreeVBox.getChildren();
 		for(ActionTree.TreeNode tnode : tree.getPrimaryNodes()) {
-			if(tnode instanceof ActionTree.Node) {
-				Action action = ((ActionTree.Node) tnode).getAction();
-				children.add(index, loadActionTP(action));
-				index++;
-			}
-			else if(tnode instanceof ActionTree.Choke) {
-				//children.add(index++, ChokeTP.loadChoke((ActionTree.Node) tnode)); //TODO
-			}
-			else {
-				throw new UnsupportedOperationException("Unsupported subclass of ActionTree.TreeNode: " + tree.getClass());
-			}
+			children.add(index, loadTreeNode(tnode));
+			index++;
 		}
 		BuildFinisher.setListenersOn(true);
 		ConditionOption.setUpdatesAllowed(true);
 	}
 	
-	private ActionTP loadActionTP(Action a) {
-		//System.out.println("Loading action to ActionTP:"+a);
-		if(a instanceof MultiAction) {
-			return loadMultiActionTP((MultiAction) a);
+	private TitledPane loadTreeNode(ActionTree.TreeNode treeNode) {
+		if(treeNode instanceof ActionTree.Node) {
+			return loadActionTP((ActionTree.Node) treeNode);
 		}
+		else if(treeNode instanceof ActionTree.Choke) {
+			return loadChokeTP((ActionTree.Choke) treeNode);
+		}
+		else {
+			throw new UnsupportedOperationException("does not support ActionTree.TreeNode type: " + treeNode);
+		}
+	}
+	
+	private ActionTP loadActionTP(ActionTree.Node actionNode) {
+		Action a = actionNode.getAction();
+		//System.out.println("Loading action to ActionTP:"+a);
 		Class<? extends Action> clazz = a.getClass();
 		String title = "???";
 		try {
@@ -121,13 +122,19 @@ public class ActionTreeBuilder extends StackPane implements InputVerification, B
 		}
 		ActionTP tp = null;
 		try {
-			tp = new ActionTP(title, (Method) clazz.getMethod("getCreationMethod").invoke(null), ActionTree.supportsChildren(a));
+			if(a instanceof MultiAction) {
+				tp = new MultiActionTP(title, (Method) clazz.getMethod("getCreationMethod").invoke(null));
+			}
+			else {
+				tp = new ActionTP(title, (Method) clazz.getMethod("getCreationMethod").invoke(null), ActionTree.supportsChildren(a));
+			}
 		} catch (IllegalAccessException | IllegalArgumentException | InvocationTargetException
 				| NoSuchMethodException | SecurityException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 		if(tp == null) {
+			System.err.println("Trouble loading creation method from class: " + clazz + " (action="+a+")");
 			return null;
 		}
 		Object[] reconstructionParams = a.getReconstructionParameters();
@@ -174,35 +181,35 @@ public class ActionTreeBuilder extends StackPane implements InputVerification, B
 		}
 		//System.out.println("passing cons:"+a.getConditions());
 		ConditionTP.reconstruct(a.getConditions(), tp.conditionPane);
-		return tp;
-	}
-	
-	private MultiActionTP loadMultiActionTP(MultiAction a) {
-		String title = "???";
-		Class<? extends Action> clazz = a.getClass();
-		try {
-			title = 
-				(String) clazz.getMethod("getVariant").invoke(null) + " " +
-				(String) clazz.getMethod("getActionName").invoke(null);
-		} catch (IllegalAccessException | IllegalArgumentException | InvocationTargetException | NoSuchMethodException
-				| SecurityException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+		if(a instanceof StoppableAction && tp.stopConditionPane != null) {
+			ConditionTP.reconstruct(((StoppableAction) a).getStopConditions(), tp.stopConditionPane);
 		}
-		MultiActionTP tp = null;
-		try {
-			tp = new MultiActionTP(title, (Method) clazz.getMethod("getCreationMethod").invoke(null));
-		} catch (IllegalAccessException | IllegalArgumentException | InvocationTargetException
-				| NoSuchMethodException | SecurityException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+		if(a instanceof MultiAction && tp instanceof MultiActionTP) {
+			SubActionsTP.reconstruct(((MultiAction) a).getSubMultiData(), ((MultiActionTP) tp).subTP);
 		}
-		if(tp == null) {
-			return null;
+		if(tp.childPane != null) {
+			reconstructChildTP(actionNode.getChildren(), tp.childPane);
 		}
+		
 		return tp;
 		
 	}
+	
+	private ChokeTP loadChokeTP(ActionTree.Choke chokeNode) {
+		ChokeTP tp = new ChokeTP();
+		ConditionTP.reconstruct(chokeNode.getChokeConditions(), tp.conditionTP);
+		reconstructChildTP(chokeNode.getChildren(), tp.childTP);
+		return tp;
+	}
+	
+	private void reconstructChildTP(Collection<ActionTree.TreeNode> treeChildren, ChildTP whereToAdd) {
+		int addIndex = 0;
+		for(ActionTree.TreeNode treeNode : treeChildren) {
+			whereToAdd.vBox.getChildren().add(addIndex, loadTreeNode(treeNode));
+			addIndex++;
+		}
+	}
+	
 	private void setupAddActionButton(MenuButton button, ObservableList<Node> whereToAddActionTPs) {
 		setupAddActionButton(button, whereToAddActionTPs, true, true);
 	}
@@ -547,7 +554,9 @@ public class ActionTreeBuilder extends StackPane implements InputVerification, B
 			this.setContent(vBox);
 			this.setExpanded(false);
 		}
-
+		
+		
+		
 		@Override
 		public boolean verifyInput() {
 			boolean result = true;

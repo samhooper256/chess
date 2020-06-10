@@ -6,6 +6,7 @@ import java.lang.reflect.Parameter;
 import java.lang.reflect.ParameterizedType;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Iterator;
 import java.util.List;
 
 import chess.util.AFC;
@@ -29,26 +30,14 @@ import javafx.scene.layout.Pane;
 import javafx.scene.layout.VBox;
 
 public class SubActionsTP extends TitledPane implements InputVerification, Buildable<List<Pair<SubMulti, Boolean>>>{
-	private static final List<Method> subMultiCreationMethods;
-	static {
-		subMultiCreationMethods = new ArrayList<>();
-		Method[] allSubMultiMethods = SubMulti.class.getMethods();
-		for(Method m : allSubMultiMethods) {
-			if(m.isAnnotationPresent(AFC.class)) {
-				subMultiCreationMethods.add(m);
-			}
-		}
-	}
 	
 	private VBox vBox; //content of this SubActiosnTP
 	private MenuButton addActionButton;
-	private CheckBox necessaryCheckBox;
 	public SubActionsTP() {
 		super();
 		vBox = new VBox(10);
 		vBox.setPadding(new Insets(10,0,10,10));
 		addActionButton = new MenuButton("Add action");
-		necessaryCheckBox = new CheckBox("necessary"); //TODO add tooltip
 		setupAddActionButton();
 		vBox.getChildren().add(addActionButton);
 		this.setText("Sub-Actions");
@@ -58,7 +47,7 @@ public class SubActionsTP extends TitledPane implements InputVerification, Build
 	
 	private void setupAddActionButton() {
 		ObservableList<MenuItem> items = addActionButton.getItems();
-		for(Method m : subMultiCreationMethods) {
+		for(Method m : SubMulti.subMultiCreationMethods) {
 			MenuItem mi = new MenuItem();
 			mi.setText(m.getAnnotation(AFC.class).name());
 			mi.setOnAction(actionEvent -> {
@@ -98,16 +87,112 @@ public class SubActionsTP extends TitledPane implements InputVerification, Build
 		return end;
 	}
 	
-	private class SubActionTP extends TitledPane implements InputVerification, Buildable<Pair<SubMulti, Boolean>>{
+	public static void reconstruct(Pair<List<SubMulti>, List<Boolean>> subData, SubActionsTP whereToAdd) {
+		int addIndex = 0;
+		List<SubMulti> actions = subData.get1();
+		List<Boolean> states = subData.get2();
+		if(actions.size() != states.size()) {
+			throw new IllegalArgumentException("actions.size() != states.size() for MultiAction");
+		}
+		Iterator<SubMulti> actionsIterator = actions.iterator();
+		Iterator<Boolean> statesIterator = states.iterator();
+		while(actionsIterator.hasNext()) {
+			SubMulti nextAction = actionsIterator.next();
+			Boolean nextState = statesIterator.next();
+			whereToAdd.vBox.getChildren().add(addIndex, reconstruct(nextAction, nextState));
+			addIndex++;
+		}
+	}
+	
+	private static SubActionTP reconstruct(SubMulti action, Boolean state) {
+		SubActionTP subTP = null;
+		try {
+			subTP = new SubActionTP((Method) action.getClass().getMethod("getCreationMethod").invoke(null));
+		} catch (IllegalAccessException | IllegalArgumentException | InvocationTargetException | NoSuchMethodException
+				| SecurityException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		if(subTP == null) {
+			System.err.println("Failed reconstructing subActionTP;"
+					+ " Could not find static method \"getCreationMethod()\" in class " + action.getClass());
+			return null;
+		}
+		
+		Object[] reconstructionParams = action.getReconstructionParameters();
+		//System.out.println("recon params = " + Arrays.toString(reconstructionParams));
+		ObservableList<Node> tpChildren = subTP.subVBox.getChildren();
+		for(int rpIndex = 0, tpIndex = 0; rpIndex < reconstructionParams.length; rpIndex++) {
+			//System.out.println("\tentered loop, rpIndex = " + rpIndex + ", tpIndex = " + tpIndex);
+			if(reconstructionParams[rpIndex].getClass() == int.class || reconstructionParams[rpIndex].getClass() == Integer.class) {
+				//System.out.println("twas an int");
+				while(!(tpChildren.get(tpIndex) instanceof IntInputHBox)) {
+					tpIndex++;
+				}
+				if(tpIndex >= tpChildren.size()) {
+					throw new IllegalArgumentException("Could not find an IntInputHBox for "
+							+ "reconstruction param at index " + rpIndex);
+				}
+				((IntInputHBox) tpChildren.get(tpIndex)).setValue((int) reconstructionParams[rpIndex]);
+				tpIndex++;
+			}
+			else if(reconstructionParams[rpIndex].getClass() == boolean.class || reconstructionParams[rpIndex].getClass() == Boolean.class) {
+				while(!(tpChildren.get(tpIndex) instanceof BooleanInputHBox)) {
+					tpIndex++;
+				}
+				if(tpIndex >= tpChildren.size()) {
+					throw new IllegalArgumentException("Could not find a BooleanInputHBox for "
+							+ "reconstruction param at index " + rpIndex);
+				}
+				((BooleanInputHBox) tpChildren.get(tpIndex)).setValue((boolean) reconstructionParams[rpIndex]);
+				tpIndex++;
+			}
+			else if(reconstructionParams[rpIndex].getClass() == ArrayList.class) {
+				while(!(tpChildren.get(tpIndex) instanceof PieceOptionsInputHBox)) {
+					tpIndex++;
+				}
+				if(tpIndex >= tpChildren.size()) {
+					throw new IllegalArgumentException("Could not find a PieceOptionsInputHBox for "
+							+ "reconstruction param at index " + rpIndex);
+				}
+				((PieceOptionsInputHBox) tpChildren.get(tpIndex)).selectAll((ArrayList<String>) reconstructionParams[rpIndex]);
+			}
+			else if(reconstructionParams[rpIndex].getClass() == Flag.class) {
+				while(!(tpChildren.get(tpIndex) instanceof FlagInputHBox)) {
+					tpIndex++;
+				}
+				if(tpIndex >= tpChildren.size()) {
+					throw new IllegalArgumentException("Could not find a PieceOptionsInputHBox for "
+							+ "reconstruction param at index " + rpIndex);
+				}
+				((FlagInputHBox) tpChildren.get(tpIndex)).setValue((Flag) reconstructionParams[rpIndex]);
+			}
+			else {
+				System.err.println("unrecognized reconstruction param type: " + reconstructionParams[rpIndex].getClass());
+			}
+		}
+		
+		ConditionTP.reconstruct(action.getConditions(), subTP.conditionTP);
+		
+		subTP.necessaryHBox.setValue(state.booleanValue());
+		
+		return subTP;
+	}
+	
+	private static class SubActionTP extends TitledPane implements InputVerification, Buildable<Pair<SubMulti, Boolean>>{
 		private Method creationMethod;
 		private AFC afc;
-		private VBox subVBox;
+		private VBox subVBox; //content of this SubActionTP
 		private BooleanInputHBox necessaryHBox;
-		private ChoiceBox<Flag> flagChoice;
+		
 		private ConditionTP conditionTP; //All submultis are guaranteed not to have child actions, stop conditions, or sub-actions.
 		private Button deleteActionButton;
 		private Pane deleteActionButtonWrap;
-		private HBox flagChoiceHBox;
+		/**
+		 * 
+		 * @param cm the creation method for this SubMulti type. It should be located within the {@link SubMulti}
+		 * class.
+		 */
 		private SubActionTP(Method cm) {
 			super();
 			this.creationMethod = cm;
@@ -119,18 +204,6 @@ public class SubActionsTP extends TitledPane implements InputVerification, Build
 			subVBox.getChildren().add(necessaryHBox);
 			Parameter[] params = cm.getParameters();
 			int paramIndex = 0;
-			if(params[0].getType() == Flag.class) {
-				flagChoice = new ChoiceBox<>();
-				flagChoice.getItems().addAll(Flag.ORIGIN, Flag.DESTINATION);
-				flagChoiceHBox = new HBox(4);
-				flagChoiceHBox.getChildren().addAll(new Label("relative to: "), flagChoice);
-				flagChoiceHBox.setAlignment(Pos.CENTER_LEFT);
-				subVBox.getChildren().add(flagChoiceHBox);
-				paramIndex++;
-			}
-			else {
-				flagChoice = null;
-			}
 			String[] paramNames = afc.paramDescriptions();
 			for(; paramIndex < params.length; paramIndex++) {
 				Parameter p = params[paramIndex];
@@ -138,7 +211,11 @@ public class SubActionsTP extends TitledPane implements InputVerification, Build
 					continue;
 				}
 				else {
-					if(p.getType() == int.class) {
+					if(p.getType() == Flag.class) {
+						FlagInputHBox hBox = new FlagInputHBox(4, "relative to:", Flag.ORIGIN, Flag.DESTINATION);
+						subVBox.getChildren().add(hBox);
+					}
+					else if(p.getType() == int.class) {
 						IntInputHBox hBox = new IntInputHBox(paramNames[paramIndex]);
 						subVBox.getChildren().add(hBox);
 					}
@@ -147,11 +224,11 @@ public class SubActionsTP extends TitledPane implements InputVerification, Build
 						subVBox.getChildren().add(hBox);
 					}
 					else if(p.getType() == ArrayList.class && ((ParameterizedType) p.getParameterizedType()).getActualTypeArguments()[0] == String.class) {
-						PieceOptionsInputHBox hBox= new PieceOptionsInputHBox(paramNames[paramIndex]);
+						PieceOptionsInputHBox hBox = new PieceOptionsInputHBox(paramNames[paramIndex]);
 						subVBox.getChildren().add(hBox);
 					}
 					else {
-						System.err.println("unsupported type");
+						System.err.println("unsupported type: " + p.getType());
 					}
 				}
 			}
@@ -177,8 +254,8 @@ public class SubActionsTP extends TitledPane implements InputVerification, Build
 				if(child == necessaryHBox || child == deleteActionButtonWrap) {
 					continue;
 				}
-				else if(child == flagChoiceHBox) {
-					actualParams[apIndex++] = flagChoice.getValue();
+				else if(child instanceof FlagInputHBox) {
+					actualParams[apIndex++] = ((FlagInputHBox) child).getFlag();
 				}
 				else if(child instanceof IntInputHBox) {
 					actualParams[apIndex++] = ((IntInputHBox) child).getInt();
@@ -223,10 +300,6 @@ public class SubActionsTP extends TitledPane implements InputVerification, Build
 		@Override
 		public boolean verifyInput() {
 			boolean result = true;
-			if(flagChoice != null && flagChoice.getSelectionModel().isEmpty()) {
-				PieceBuilder.submitError("relative to (in a Multi's Sub-Action): has no selection");
-				result = false;
-			}
 			for(Node fxNode : subVBox.getChildren()) {
 				if(fxNode instanceof InputVerification) {
 					if(!((InputVerification) fxNode).verifyInput()) {
@@ -236,5 +309,7 @@ public class SubActionsTP extends TitledPane implements InputVerification, Build
 			}
 			return result;
 		}
+		
+		
 	}
 }

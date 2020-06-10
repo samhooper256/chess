@@ -29,59 +29,66 @@ public class Pawn extends Piece{
 		BLACK_IMAGE = new Image(Piece.class.getResourceAsStream("/resources/pawn_black.png"));
 		WHITE_IMAGE = new Image(Piece.class.getResourceAsStream("/resources/pawn_white.png"));
 		data = new PieceData("Pawn", WHITE_IMAGE, BLACK_IMAGE);
-		data.setTree(
-			new ActionTree(
-				Arrays.asList(
-					new ActionTree.Choke(Arrays.asList(IntegerPath.fromStartEnemyDist.greaterThan(new IntegerPath(2))),
-						Arrays.asList(
-							new ActionTree.Node(MoveAndCaptureAction.relative(-1, 0, Condition.DIE),
-								new ActionTree.Node(MoveAndCaptureAction.relative(-2, 0, Condition.DIE,
-								Condition.onSelf().call("hasMoved").toBooleanPath().invert().toCondition()))),
-							new ActionTree.Node(MoveAndCaptureAction.relative(-1, 1, Condition.EOD)),
-							new ActionTree.Node(MoveAndCaptureAction.relative(-1, -1, Condition.EOD))
-						)
-					),
-					new ActionTree.Choke(Arrays.asList(IntegerPath.fromStartEnemyDist.isEquals(new IntegerPath(2))),
+		try {
+			data.setTree(
+				new ActionTree(
+					Arrays.asList(
+						new ActionTree.Choke(Arrays.asList(Condition.onStart().call(Board.Tile.class.getMethod("enemyLineDistance", boolean.class),
+								Condition.onSelf().call("getColor").toBooleanPath()).toIntegerPath().greaterThan(new IntegerPath(2))),
 							Arrays.asList(
-								new ActionTree.Node(MultiAction.relative(-1, 0, Condition.DIE)
-									.addAction(SubMulti.mnc(Flag.DESTINATION,0,0))
-									.addAction(SubMulti.promo(new ArrayList<>(Arrays.asList("Queen","Rook","Bishop","Knight"))))
-								),
-								new ActionTree.Node(MultiAction.relative(-1, 1, Condition.EOD)
-									.addAction(SubMulti.mnc(Flag.DESTINATION,0,0))
-									.addAction(SubMulti.promo(new ArrayList<>(Arrays.asList("Queen","Rook","Bishop","Knight"))))
-								),
-								new ActionTree.Node(MultiAction.relative(-1, -1, Condition.EOD)
-									.addAction(SubMulti.mnc(Flag.DESTINATION,0,0))
-									.addAction(SubMulti.promo(new ArrayList<>(Arrays.asList("Queen","Rook","Bishop","Knight"))))
+								new ActionTree.Node(MoveAndCaptureAction.relative(-1, 0, Condition.DIE),
+									new ActionTree.Node(MoveAndCaptureAction.relative(-2, 0, Condition.DIE,
+									Condition.onSelf().call("hasMoved").toBooleanPath().invert().toCondition()))),
+								new ActionTree.Node(MoveAndCaptureAction.relative(-1, 1, Condition.EOD)),
+								new ActionTree.Node(MoveAndCaptureAction.relative(-1, -1, Condition.EOD))
+							)
+						),
+						new ActionTree.Choke(Arrays.asList(Condition.onStart().call(Board.Tile.class.getMethod("enemyLineDistance", boolean.class),
+								Condition.onSelf().call("getColor").toBooleanPath()).toIntegerPath().isEquals(new IntegerPath(2))),
+								Arrays.asList(
+									new ActionTree.Node(MultiAction.relative(-1, 0, Condition.DIE)
+										.addAction(SubMulti.mnc(Flag.DESTINATION,0,0))
+										.addAction(SubMulti.promo(new ArrayList<>(Arrays.asList("Queen","Rook","Bishop","Knight"))))
+									),
+									new ActionTree.Node(MultiAction.relative(-1, 1, Condition.EOD)
+										.addAction(SubMulti.mnc(Flag.DESTINATION,0,0))
+										.addAction(SubMulti.promo(new ArrayList<>(Arrays.asList("Queen","Rook","Bishop","Knight"))))
+									),
+									new ActionTree.Node(MultiAction.relative(-1, -1, Condition.EOD)
+										.addAction(SubMulti.mnc(Flag.DESTINATION,0,0))
+										.addAction(SubMulti.promo(new ArrayList<>(Arrays.asList("Queen","Rook","Bishop","Knight"))))
+									)
 								)
-							)
-					),
-					new ActionTree.Choke(Arrays.asList(
-							Condition.onBoard().call("hasPlay").toBooleanPath().toCondition(),
-							Condition.onBoard().call("lastPlay").call("distance").toIntegerPath().isEquals(new IntegerPath(2)),
-							Condition.onBoard().call("lastPlay").call("getPiece").toObjectPath().instanceOf(Pawn.class),
-							Condition.onBoard().call("lastPlay").call("getPlay").toObjectPath().instanceOf(LegalMoveAndCapture.class)),
-						new ArrayList<>(Arrays.asList(
-							new ActionTree.Node(MultiAction.relative(-1, -1)
-								.addAction(SubMulti.mnc(Flag.DESTINATION, 0, 0, Condition.DIE))
-								.addAction(SubMulti.capRel(Flag.ORIGIN, 0, -1, Condition.EOD,
-								Condition.onDest().call("getPiece").toObjectPath().isEquals(Condition.onBoard().call("lastPlay").call("getPiece").toObjectPath())	
-								))
-							),
-							new ActionTree.Node(MultiAction.relative(-1, 1)
-								.addAction(SubMulti.mnc(Flag.DESTINATION, 0, 0, Condition.DIE))
-								.addAction(SubMulti.capRel(Flag.ORIGIN, 0, 1, Condition.EOD,
-								Condition.onDest().call("getPiece").toObjectPath().isEquals(Condition.onBoard().call("lastPlay").call("getPiece").toObjectPath())	
-								))
-							)
-						))
-					),
-					new ActionTree.Node(SummonAction.line(-1, 0, new ArrayList<>(Arrays.asList("Knight")), Condition.DIE).stops(Condition.POD))
-					
+						),
+						new ActionTree.Choke(Arrays.asList(
+								Condition.onBoard().call("hasPlay").toBooleanPath().toCondition(),
+								Condition.onBoard().call("lastPlay").call("distance").toIntegerPath().isEquals(new IntegerPath(2)),
+								Condition.onBoard().call("lastPlay").call("getPiece").toObjectPath().instanceOf(Pawn.class),
+								Condition.onBoard().call("lastPlay").call("getPlay").toObjectPath().instanceOf(LegalMoveAndCapture.class)),
+							new ArrayList<>(Arrays.asList(
+								new ActionTree.Node(MultiAction.relative(-1, -1)
+									.addAction(SubMulti.mnc(Flag.DESTINATION, 0, 0, Condition.DIE))
+									.addAction(SubMulti.capRel(Flag.ORIGIN, 0, -1, Condition.EOD,
+									Condition.onDest().call("getPiece").toObjectPath().isEquals(Condition.onBoard().call("lastPlay").call("getPiece").toObjectPath())	
+									))
+								),
+								new ActionTree.Node(MultiAction.relative(-1, 1)
+									.addAction(SubMulti.mnc(Flag.DESTINATION, 0, 0, Condition.DIE))
+									.addAction(SubMulti.capRel(Flag.ORIGIN, 0, 1, Condition.EOD,
+									Condition.onDest().call("getPiece").toObjectPath().isEquals(Condition.onBoard().call("lastPlay").call("getPiece").toObjectPath())	
+									))
+								)
+							))
+						)
+					)
 				)
-			)
-		);
+			);
+		} catch (NoSuchMethodException | SecurityException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			System.exit(-1);
+		}
+		System.out.println("Pawn's tree is:"+data.getTree());
 		data.setPointValue(1);
 	}
 	

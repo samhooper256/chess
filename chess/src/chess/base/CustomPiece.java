@@ -11,6 +11,7 @@ import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
@@ -95,11 +96,20 @@ public class CustomPiece extends Piece{
 	}
 	
 	public static Collection<String> getDefinedPieceNames(){
-		return definedPieces.keySet();
+		return Collections.unmodifiableSet(definedPieces.keySet());
 	}
 	
 	public static int getDefinedPieceCount(){
 		return definedPieces.size();
+	}
+	
+	public static Collection<Image> getAllCustomPieceImages(){
+		ArrayList<Image> end = new ArrayList<>(getDefinedPieceCount() * 2);
+		for(CPFactory factory : definedPieces.values()) {
+			end.add(factory.getPieceData().getImage(Piece.WHITE));
+			end.add(factory.getPieceData().getImage(Piece.BLACK));
+		}
+		return end;
 	}
 	
 	public static boolean isDefinedPiece(String pieceName) {

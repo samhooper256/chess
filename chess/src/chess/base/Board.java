@@ -13,6 +13,7 @@ import java.util.Set;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 
+import chess.base.GamePanel.Mode;
 import chess.piecebuilder.ReferenceContextMenu;
 import chess.util.AFC;
 import chess.util.CaptureAction;
@@ -89,8 +90,8 @@ public class Board extends StackPane{
 	
 	private Lock lock2 = new ReentrantLock();
 	
-	private static String LIGHT_COLOR = "#1abb9a";
-	private static String DARK_COLOR = "#2c3d4f";
+	static String LIGHT_COLOR = "#1abb9a";
+	static String DARK_COLOR = "#2c3d4f";
 	private static String LIGHT_COLOR_SELECTED = "#38e8c4";
 	private static String DARK_COLOR_SELECTED = "#45576b";
 	
@@ -479,7 +480,6 @@ public class Board extends StackPane{
 	private EventHandler<? super MouseEvent> tileClickAction = event -> {
 		if(event.getButton() == MouseButton.PRIMARY) {
 			Tile source = (Tile) event.getSource();
-			source.cm.hide();
 			if(Board.this.associatedGP.getMode() == GamePanel.Mode.PLAY) {
 				if(!boardInteractionAllowed) {
 					System.out.println("tile click blocked because board interaction is not allowed.");
@@ -563,18 +563,6 @@ public class Board extends StackPane{
 		Board.this.associatedGP.finishDrag();
 	};
 	
-	private EventHandler<ActionEvent> tileEditPieceAction = actionEvent -> {
-		Tile source = ((Tile) ((ReferenceContextMenu) ((MenuItem) actionEvent.getSource()).getParentPopup()).getParent());
-		System.out.println("editing " + source.getPiece());
-		//TODO EDITING PIECES
-	};
-	
-	private EventHandler<ActionEvent> tileDeletePieceAction = actionEvent -> {
-		Tile source = ((Tile) ((ReferenceContextMenu) ((MenuItem) actionEvent.getSource()).getParentPopup()).getParent());
-		source.setPiece(null);
-	};
-	
-	
 	public class Tile extends StackPane{
 
 		class ColorBox extends Pane{
@@ -654,8 +642,6 @@ public class Board extends StackPane{
 		private Set<LegalAction> legalMovesShowing;
 		private WrappedImageView currentImageView;
 		private ColorBox colorBox;
-		private ReferenceContextMenu cm;
-		private MenuItem editPiece, deletePiece;
 		
 		public Tile(int row, int col) {
 			super();
@@ -691,52 +677,6 @@ public class Board extends StackPane{
 	    		}
 	        });
 	        this.setOnDragDone(tileOnDragDone);
-	        cm = new ReferenceContextMenu(this);
-	        editPiece = new MenuItem();
-	        editPiece.setOnAction(tileEditPieceAction);
-	        deletePiece = new MenuItem("Delete");
-	        deletePiece.setOnAction(tileDeletePieceAction);
-	        cm.getItems().add(editPiece);
-	        this.setOnContextMenuRequested(contextMenuEvent -> {
-	        	//System.out.println(editPiece.getText());
-	        	updateContextMenu();
-	        	//System.out.println(editPiece.getText());
-	        	if(cm.getItems().size() > 0) {
-	        		cm.show(this, contextMenuEvent.getScreenX(), contextMenuEvent.getScreenY());
-	        	}
-	        });
-	        
-	        
-		}
-		
-		private void updateContextMenu() {
-			ObservableList<MenuItem> items = cm.getItems();
-			if(currentPiece == null || currentPiece instanceof King /* you may not edit the king's rules.*/) {
-				items.remove(editPiece);
-			}
-			else {
-				if(!items.contains(editPiece)) {
-					items.add(0, editPiece);
-				}
-				editPiece.setText("Edit \"" + currentPiece.getPieceName() + "\" properties");
-			}
-			
-			
-			if(Board.this.associatedGP.getMode() == GamePanel.Mode.FREEPLAY) {
-				if(currentPiece != null) {
-					if(!items.contains(deletePiece)) {
-						items.add(deletePiece);
-					}
-				}
-				else {
-					items.remove(deletePiece);
-				}
-				
-			}
-			else if(Board.this.associatedGP.getMode() == GamePanel.Mode.PLAY) {
-				items.remove(deletePiece);
-			}
-			
 		}
 		
 		public void showLegalMovesAndPopulate() {
@@ -989,7 +929,8 @@ public class Board extends StackPane{
 		this.preset = null;
 		
 		finishBoardInit();
-		movePreparerForFXThread.prepare();
+		//Empty board constructor does not prepare for next move so that you don't immediately
+		//see "Game Over" because no kings exist. (and it would waste time).
 	}
 	
 	private Board(GamePanel panel, BoardPreset preset) {
@@ -998,36 +939,15 @@ public class Board extends StackPane{
 			"than MAX_BOARD_SIZE (26)");
 		}
 		this.associatedGP = panel;
-		
 		BOARD_SIZE = preset.getBoardSize();
 		turn = preset.getTurn();
 		this.preset = preset;
 		
 		finishBoardInit();
 		setupPiecesFromPreset(preset);
-		movePreparerForFXThread.prepare();
-		
-		//TODO DELETE EVERYTHING BELOW THIS LINE (IN THIS CONSTRUCTOR)
-
-		Thread reader = new Thread(new Runnable() {
-
-			@Override
-			public void run() {
-				Scanner in = new Scanner(System.in);
-				while(true) {
-					String line = in.nextLine().trim();
-					if(line.startsWith("@")) {
-						int index = line.indexOf(',');
-						int row = Integer.parseInt(line.substring(1, index));
-						int col = Integer.parseInt(line.substring(index + 1));
-						board[row][col].printDetailedData(System.out);
-					}
-				}
-			}
-			
-		});
-		reader.setDaemon(true);
-		reader.start();
+		if(panel.getMode() == Mode.PLAY) {
+			movePreparerForFXThread.prepare();
+		}
 	}
 	
 	private void finishBoardInit() {

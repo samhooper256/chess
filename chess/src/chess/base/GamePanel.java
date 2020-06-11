@@ -274,7 +274,6 @@ public class GamePanel extends StackPane{
         AnchorPane.setBottomAnchor(pieceBuilderButton, 10d);
         AnchorPane.setLeftAnchor(pieceBuilderButton, 10d);
         AnchorPane.setRightAnchor(pieceBuilderButton, 10d);
-        pieceBuilderButton.prefHeightProperty().bind(this.heightProperty().divide(8));
         pieceBuilderButton.setOnAction(mouseEvent -> {
         	PieceBuilder.open();
         });
@@ -374,6 +373,13 @@ public class GamePanel extends StackPane{
 	public Mode getMode() { return mode; }
 	
 	public Board getBoard() { return board; }
+	
+	public void setBoard(int size) {
+		Board newBoard = Board.emptyBoard(this, size);
+		board = newBoard;
+		VBox.setVgrow(board, Priority.ALWAYS);
+		boardBox.getChildren().set(0, board);
+	}
 	
 	public Settings settings() { return settingsMenu;}
 	
@@ -510,7 +516,11 @@ public class GamePanel extends StackPane{
 			lowerBox = new HBox(20);
 			lowerBox.setAlignment(Pos.CENTER_RIGHT);
 			lowerBox.setPadding(new Insets(20));
-			lowerBox.getChildren().addAll(errorMessage, cancelButton, applyButton);
+			Button butt = new Button("Change board");
+			butt.setOnAction(actionEvent -> {
+				GamePanel.this.setBoard(5 + (int) (Math.random() * 19)); 
+			});
+			lowerBox.getChildren().addAll(butt, /*errorMessage,*/ cancelButton, applyButton); //TODO put "error message" somewhere
 			gridPane.add(lowerBox, 0, 1);
 			
 			darken = new ColorAdjust();

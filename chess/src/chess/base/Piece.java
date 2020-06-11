@@ -161,11 +161,25 @@ public abstract class Piece {
 		return end;
 	}
 	
-	public static final Collection<String> predefinedPieces = new ArrayList<>(Arrays.asList("Pawn","Knight","Bishop","Rook","Queen","King"));
+	public static final Collection<Image> getImagesOfAllPieces() {
+		ArrayList<Image> end = new ArrayList<>(12 + CustomPiece.getDefinedPieceCount() * 2);
+		end.addAll(Arrays.asList(
+				Pawn.WHITE_IMAGE, Pawn.BLACK_IMAGE,
+				Knight.WHITE_IMAGE, Knight.BLACK_IMAGE,
+				Bishop.WHITE_IMAGE, Bishop.BLACK_IMAGE,
+				Rook.WHITE_IMAGE, Rook.BLACK_IMAGE,
+				Queen.WHITE_IMAGE, Queen.BLACK_IMAGE,
+				King.WHITE_IMAGE, King.BLACK_IMAGE
+		));
+		end.addAll(CustomPiece.getAllCustomPieceImages());
+		return end;
+	}
+	
+	public static final Collection<String> predefinedPieceNames = new ArrayList<>(Arrays.asList("Pawn","Knight","Bishop","Rook","Queen","King"));
 	
 	public static final Collection<String> getNamesOfAllPieces(){
 		ArrayList<String> end = new ArrayList<>(6 + CustomPiece.getDefinedPieceCount());
-		end.addAll(predefinedPieces);
+		end.addAll(predefinedPieceNames);
 		end.addAll(CustomPiece.getDefinedPieceNames());
 		return end;
 	}

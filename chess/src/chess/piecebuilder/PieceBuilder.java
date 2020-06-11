@@ -452,7 +452,7 @@ public class PieceBuilder extends Stage implements InputVerification{
 	private static void updatePieceNames() {
 		currentCustomPieceNames = CustomPiece.getDefinedPieceNames();
 		currentPieceNames.clear();
-		currentPieceNames.addAll(Piece.predefinedPieces);
+		currentPieceNames.addAll(Piece.predefinedPieceNames);
 		currentPieceNames.addAll(currentCustomPieceNames);
 		System.out.println("PieceNames updated, now\n\ttotal="+currentPieceNames+"\n\t"
 				+ "custom="+currentCustomPieceNames);

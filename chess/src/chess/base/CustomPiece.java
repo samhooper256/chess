@@ -81,14 +81,13 @@ public class CustomPiece extends Piece{
 			} catch (IOException | ClassNotFoundException e) {
 				e.printStackTrace();
 			}
-			
 		}
 	}
 	
 	public static Piece forName(String name, boolean color) {
 		CPFactory factory = definedPieces.get(name);
 		if(factory == null) {
-			throw new IllegalArgumentException("Piece does not exist!");
+			return null;
 		}
 		else {
 			return factory.make(color);

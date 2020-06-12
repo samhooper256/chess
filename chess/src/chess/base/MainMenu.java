@@ -1,19 +1,29 @@
 package chess.base;
 
+import java.util.ArrayList;
+import java.util.Collection;
+
 import chess.piecebuilder.IntInputHBox;
 import javafx.animation.Animation;
 import javafx.animation.Interpolator;
 import javafx.animation.ParallelTransition;
 import javafx.animation.TranslateTransition;
 import javafx.application.Application;
+import javafx.beans.binding.Bindings;
+import javafx.beans.binding.DoubleBinding;
+import javafx.beans.value.ChangeListener;
 import javafx.beans.value.ObservableValue;
 import javafx.collections.ObservableList;
+import javafx.concurrent.Service;
+import javafx.concurrent.Task;
 import javafx.geometry.Pos;
 import javafx.geometry.Rectangle2D;
 import javafx.scene.Node;
 import javafx.scene.Scene;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
+import javafx.scene.image.Image;
+import javafx.scene.image.ImageView;
 import javafx.scene.layout.ColumnConstraints;
 import javafx.scene.layout.GridPane;
 import javafx.scene.layout.HBox;
@@ -44,67 +54,81 @@ public class MainMenu extends StackPane{
 		return instance;
 	}
 	
-	/**
-	 * Returns either an Integer representing the new empty board size or a board preset.
-	 */
-	public static Object getBoardSelection() {
-		boardSelect.showAndWait();
-		return boardSelect.getResult();
-	}
+	
 	
 	private static MainMenu instance;
+	private static ArrayList<Image> pieceImages;
 	private Scene scene;
 	private GamePanel gamePanel;
-	private static BoardSelect boardSelect;
+	private MenuTransitionHandler mth;
 	
-	static {
-		boardSelect = new BoardSelect();
-	}
 	private MainMenu() {
 		scene = new Scene(this, Main.WIDTH, Main.HEIGHT);
 		scene.getStylesheets().add(MainMenu.class.getResource("mainmenu.css").toExternalForm());
 		Pane pane = new Pane();
 		this.getChildren().add(pane);
 		gamePanel = new GamePanel();
+		pieceImages = Piece.getImagesOfAllPieces();
 		
-		MenuTransitionHandler mth = new MenuTransitionHandler(pane);
+		DoubleBinding buttonWidth = MainMenu.this.widthProperty().divide(6);
+		mth = new MenuTransitionHandler(pane);
 		Button newBoardButton = new Button("New Board");
+		newBoardButton.prefWidthProperty().bind(buttonWidth);
 		newBoardButton.getStyleClass().add("main-menu-button");
 		Button settingsButton = new Button("Settings");
 		settingsButton.getStyleClass().add("main-menu-button");
+		settingsButton.prefWidthProperty().bind(buttonWidth);
 		Button quitButton = new Button("Quit");
 		quitButton.getStyleClass().add("main-menu-button");
+		quitButton.prefWidthProperty().bind(buttonWidth);
 		newBoardButton.setOnAction(actionEvent -> {
-			Object selection = getBoardSelection();
-			if(selection != null) {
-				if(selection instanceof Integer) {
-					gamePanel.setBoard(((Integer) selection).intValue());
-				}
-				else {
-					throw new UnsupportedOperationException();
-				}
+			Object selection = BoardSelect.getBoardSelection();
+			if(selection instanceof Integer) {
+				gamePanel.setBoard(((Integer) selection).intValue());
+				scene.setRoot(gamePanel);
+				pauseBackground();
 			}
-			scene.setRoot(gamePanel);
+			else if(selection instanceof BoardPreset) {
+				gamePanel.setBoard((BoardPreset) selection);
+				scene.setRoot(gamePanel);
+				pauseBackground();
+			}
+			
+		});
+		settingsButton.setOnAction(actionEvent -> {
+			Settings.openOn(MainMenu.this, true, 0.4, 0.4);
+		});
+		quitButton.setOnAction(actionEvent -> {
+			((Stage) quitButton.getScene().getWindow()).close();
 		});
 		VBox vBox = new VBox(newBoardButton, settingsButton, quitButton);
-		vBox.setAlignment(Pos.CENTER);
+		vBox.getStyleClass().add("main-menu-box");
 		this.getChildren().add(vBox);
 		mth.start();
+	}
+	
+	public static void pauseBackground() {
+		instance.mth.pause();
+	}
+	
+	public static void playBackground() {
+		instance.mth.play();
 	}
 	
 	class MenuTransitionHandler{
 		private final PseudoBoard[] boards;
 		ParallelTransition pt;
 		private final int DURATION_MILLIS;
+		private final int PBOARD_SIZE = 24;
 		public MenuTransitionHandler(Pane whereToAddBoards) {
 			super();
 			boards = new PseudoBoard[3];
 			final double PX_SIZE = Math.max(Main.WIDTH, Main.HEIGHT);
-			boards[0] = new PseudoBoard(PX_SIZE, 24);
-			boards[1] = new PseudoBoard(PX_SIZE, 24);
-			boards[2] = new PseudoBoard(PX_SIZE, 24);
+			boards[0] = new PseudoBoard(PX_SIZE, PBOARD_SIZE);
+			boards[1] = new PseudoBoard(PX_SIZE, PBOARD_SIZE);
+			boards[2] = new PseudoBoard(PX_SIZE, PBOARD_SIZE);
 			
-			DURATION_MILLIS = (int) (PX_SIZE * 30);
+			DURATION_MILLIS = (int) (PX_SIZE * 40);
 			
 			
 			TranslateTransition tt1 = new TranslateTransition(Duration.millis(DURATION_MILLIS), boards[0]);
@@ -122,21 +146,86 @@ public class MainMenu extends StackPane{
 			pt = new ParallelTransition(tt1,tt2,tt3);
 			pt.setCycleCount(Animation.INDEFINITE);
 			whereToAddBoards.getChildren().addAll(boards);
+			double tt1break = DURATION_MILLIS * 0.55;
+			for(int i = 0; i < PBOARD_SIZE; i++) {
+				for(int j = 0; j < PBOARD_SIZE; j++) {
+					if(Math.random() < 0.05) {
+						boards[0].getTileAt(i, j).setImage(pieceImages.get((int) (Math.random() * pieceImages.size())));
+					}
+					if(Math.random() < 0.05) {
+						boards[1].getTileAt(i, j).setImage(pieceImages.get((int) (Math.random() * pieceImages.size())));
+					}
+					if(Math.random() < 0.05) {
+						boards[2].getTileAt(i, j).setImage(pieceImages.get((int) (Math.random() * pieceImages.size())));
+					}
+				}
+			}
+			tt1.currentTimeProperty().addListener(new ChangeListener<Duration>() {
+
+				@Override
+				public void changed(ObservableValue<? extends Duration> observable, Duration oldValue,
+						Duration newValue) {
+					if(oldValue.toMillis() < tt1break && newValue.toMillis() > tt1break) {
+						for(int i = 0; i < PBOARD_SIZE; i++) {
+							for(int j = 0; j < PBOARD_SIZE; j++) {
+								PseudoTile tile = boards[0].getTileAt(i, j);
+								PseudoTile tile2 = boards[2].getTileAt(i, j);
+								if(!tile2.getChildren().isEmpty()) {
+									tile.setImage(tile2.image);
+								}
+								else {
+									tile.clearImage();
+								}
+							}
+						}
+					}
+					//System.out.println("change called");
+				}
+			});
+			tt1.setOnFinished(actionEvent -> {
+				for(int i = 0; i < PBOARD_SIZE; i++) {
+					for(int j = 0; j < PBOARD_SIZE; j++) {
+						PseudoTile t1 = boards[1].getTileAt(i, j);
+						PseudoTile t2 = boards[2].getTileAt(i, j);
+						t1.clearImage();
+						t2.clearImage();
+						if(Math.random() < 0.05) {
+							t1.setImage(pieceImages.get((int) (Math.random() * pieceImages.size())));
+						}
+						if(Math.random() < 0.05) {
+							t2.setImage(pieceImages.get((int) (Math.random() * pieceImages.size())));
+						}
+					}
+				}
+			});
 		}
 		
 		public void start() {
 			pt.playFromStart();
+		}
+		
+		public void pause() {
+			pt.pause();
+		}
+		
+		public void play() {
+			pt.play();
 		}
 	}
 }
 
 class PseudoBoard extends StackPane{
 	private GridPane gridPane;
-	
+	private PseudoTile[][] tiles;
+	private final int size;
 	public PseudoBoard(final double pxSize, final int SIZE) {
 		this.setMinWidth(pxSize);
 		this.setMinHeight(pxSize);
-		
+		this.setMaxSize(pxSize, pxSize);
+		this.setPrefSize(pxSize, pxSize);
+		//this.setStyle("-fx-border-color:red; -fx-border-width:3");
+		this.size = SIZE;
+		tiles = new PseudoTile[SIZE][SIZE];
 		gridPane = new GridPane();
 		for(int i = 0; i < SIZE; i++) {
 			RowConstraints rc = new RowConstraints();
@@ -149,52 +238,49 @@ class PseudoBoard extends StackPane{
 		
 		for(int i = 0; i < SIZE; i++) {
 			for(int j = 0; j < SIZE; j++) {
-				PseudoTile pTile = new PseudoTile(i, j);
+				PseudoTile pTile = tiles[i][j] = new PseudoTile(i, j);
 				gridPane.add(pTile, i, j);
 			}
 		}
 		
 		this.getChildren().add(gridPane);
 	}
+	
+	public int getSize() {
+		return size;
+	}
+	
+	/**
+	 * DOES NOT PERFORM BOUNDS CHECKING
+	 * @param row
+	 * @param col
+	 * @return
+	 */
+	public PseudoTile getTileAt(int row, int col) {
+		return tiles[row][col];
+	}
 }
 
 class PseudoTile extends StackPane{
+	volatile Image image;
 	public PseudoTile(int row, int col) {
 		super();
 		this.setStyle("-fx-background-color: " + ((row+col) % 2 == 0 ? Board.LIGHT_COLOR : Board.DARK_COLOR) + ";");
 	}
-}
-
-class BoardSelect extends Stage{
-	Object result;
-	public BoardSelect() {
-		super();
-		this.initModality(Modality.APPLICATION_MODAL);
-		IntInputHBox intBox = new IntInputHBox("Enter a board size:");
-		Label orLabel = new Label("or");
-		Label presetLabel = new Label("Select Preset:");
-		HBox bottomHBox = new HBox(presetLabel);
-		Button selectButton = new Button("Select");
-		Label errorMessage = new Label();
-		selectButton.setOnAction(actionEvent -> {
-			//TODO presets - choose the preset if it's available, else choose the number
-			if(intBox.verifyInput()) {
-				result = Integer.valueOf(intBox.getInt());
-				BoardSelect.this.close();
-			}
-			else {
-				errorMessage.setText("Invalid number");
-			}
-			
-		});
-		VBox vBox = new VBox(intBox, orLabel, bottomHBox, selectButton, errorMessage);
-		vBox.setAlignment(Pos.CENTER);
-		Scene scene = new Scene(vBox);
-		this.setScene(scene);
-		this.sizeToScene();
+	
+	public void setImage(Image im) {
+		ImageView imv = new WrappedImageView(image = im);
+		if(this.getChildren().isEmpty()) {
+			this.getChildren().add(0, imv);
+		}
+		else {
+			this.getChildren().set(0, imv);
+		}
+		
 	}
 	
-	public Object getResult() {
-		return result;
+	public void clearImage() {
+		image = null;
+		this.getChildren().clear();
 	}
 }

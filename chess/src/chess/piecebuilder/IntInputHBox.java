@@ -7,7 +7,7 @@ import javafx.scene.control.TextField;
 import javafx.scene.layout.HBox;
 
 public class IntInputHBox extends HBox implements InputVerification{
-	private static final int SPACING = 5;
+	public static final int SPACING = 5;
 	private TextField textField;
 	public IntInputHBox(String parameterName) {
 		super(SPACING);
@@ -35,7 +35,7 @@ public class IntInputHBox extends HBox implements InputVerification{
 		return Integer.parseInt(textField.getText().strip());
 	}
 	
-	private static boolean isInteger(String s, int radix) {
+	public static boolean isInteger(String s, int radix) {
 	    if(s.isEmpty()) return false;
 	    for(int i = 0; i < s.length(); i++) {
 	        if(i == 0 && s.charAt(i) == '-') {

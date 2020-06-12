@@ -17,14 +17,17 @@ public class Main extends Application{
 	}
 	
 	public static final double WIDTH, HEIGHT;
-	private static Scene scene;
+	public static Scene scene;
 	static {
+		
 		Rectangle2D screenSize = Screen.getPrimary().getBounds();
 		WIDTH = screenSize.getWidth();
 		HEIGHT = screenSize.getHeight();
 	}
 	@Override
 	public void start(Stage primaryStage) throws Exception {
+		BoardSelect.make();
+		PresetCreation.make();
 		scene = MainMenu.make();
 		scene.getStylesheets().add(Main.class.getResource("style.css").toExternalForm());
 		primaryStage.setMinHeight(400);
@@ -32,6 +35,10 @@ public class Main extends Application{
 		primaryStage.setTitle("chess++");
 		primaryStage.setScene(scene);
 		primaryStage.setMaximized(true);
+		primaryStage.setOnCloseRequest(windowEvent -> {
+			BoardPreset.savePresets();
+			primaryStage.close();
+		});
 		primaryStage.show();
 	}
 	

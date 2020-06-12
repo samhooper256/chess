@@ -1,3 +1,10 @@
+*.main-menu-box{
+	-fx-spacing: 10;
+	-fx-alignment: center;	
+}
+
 *.main-menu-button{
 	-fx-background-color: yellow;
+	-fx-border-color: orange;
+	-fx-border-weight: 10;
 }

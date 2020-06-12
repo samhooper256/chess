@@ -19,13 +19,14 @@ public abstract class Piece {
 	public static final boolean WHITE = true;
 	public static final boolean BLACK = false;
 	
+	/**
+	 * Returns null if the piece name is invalid or a piece of that name does not exist.
+	 * @param name
+	 * @return
+	 */
 	public static Piece forName(String name) {
-		if(name == null || name.isEmpty()) {
+		if(name == null || name.isBlank() || name.length() == 1) {
 			return null;
-		}
-		
-		if(name.length() == 1) {
-			throw new IllegalArgumentException("Piece doesn't exist: \"" + name + "\"");
 		}
 		
 		boolean color;
@@ -36,11 +37,17 @@ public abstract class Piece {
 			color = Piece.BLACK;
 		}
 		else {
-			throw new IllegalArgumentException("Piece doesn't exist.");
+			return null;
 		}
 		return Piece.forName(name.substring(1), color);
 	}
 	
+	/**
+	 * Returns null if the piece name is invalid or a piece of that name does not exist.
+	 * @param name
+	 * @param color
+	 * @return
+	 */
 	public static Piece forName(String name, boolean color) {
 		if(name == null || name.isEmpty()) {
 			return null;
@@ -115,6 +122,10 @@ public abstract class Piece {
 		return this.getClass().getSimpleName();
 	}
 	
+	/**
+	 * Return's this piece's full name, including a '+' or '-' at the beginning for the color.
+	 * @return
+	 */
 	public String getFullName() {
 		return (color == Piece.WHITE ? '+' : '-') + getPieceName();
 	}
@@ -161,7 +172,7 @@ public abstract class Piece {
 		return end;
 	}
 	
-	public static final Collection<Image> getImagesOfAllPieces() {
+	public static final ArrayList<Image> getImagesOfAllPieces() {
 		ArrayList<Image> end = new ArrayList<>(12 + CustomPiece.getDefinedPieceCount() * 2);
 		end.addAll(Arrays.asList(
 				Pawn.WHITE_IMAGE, Pawn.BLACK_IMAGE,

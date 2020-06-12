@@ -60,6 +60,7 @@ import javafx.scene.text.Text;
  */
 public class Board extends StackPane{
 	public static final int MAX_BOARD_SIZE = 26;
+	public static final int MIN_BOARD_SIZE = 3;
 	public static final int DEFAULT_BOARD_SIZE = 8;
 	private static BoardPreset defaultBoardPreset;
 	
@@ -96,7 +97,7 @@ public class Board extends StackPane{
 	private static String DARK_COLOR_SELECTED = "#45576b";
 	
 	static {
-		defaultBoardPreset = new BoardPreset(DEFAULT_BOARD_SIZE);
+		defaultBoardPreset = new BoardPreset("Default", DEFAULT_BOARD_SIZE);
 		defaultBoardPreset.setTurn(Piece.WHITE);
 		defaultBoardPreset.setPieces(new String[][] {
 			{"-Rook", "-Knight", "-Bishop", "-Queen", "-King", "-Bishop", "-Knight", "-Rook"},
@@ -452,7 +453,7 @@ public class Board extends StackPane{
 			
 			playNumber++;
 			
-			if(Board.this.associatedGP.settings().getAutoFlip()) {
+			if(Settings.getAutoFlip()) {
 				setOrientation(turn);
 			}
 			
@@ -479,7 +480,7 @@ public class Board extends StackPane{
 	
 	private EventHandler<? super MouseEvent> tileClickAction = event -> {
 		if(event.getButton() == MouseButton.PRIMARY) {
-			Tile source = (Tile) event.getSource();
+			//Tile source = (Tile) event.getSource();
 			if(Board.this.associatedGP.getMode() == GamePanel.Mode.PLAY) {
 				if(!boardInteractionAllowed) {
 					System.out.println("tile click blocked because board interaction is not allowed.");
@@ -919,9 +920,9 @@ public class Board extends StackPane{
 	}
 	
 	private Board(GamePanel panel, int size) {
-		if(size > MAX_BOARD_SIZE) {
-			throw new IllegalArgumentException("Desired board size (" + size + ") is greater " + 
-			"than MAX_BOARD_SIZE (26)");
+		if(size < MIN_BOARD_SIZE || size > MAX_BOARD_SIZE) {
+			throw new IllegalArgumentException("Desired board size is in the range " + MIN_BOARD_SIZE + " to " +
+					MAX_BOARD_SIZE);
 		}
 		this.associatedGP = panel;
 		BOARD_SIZE = size;
@@ -934,7 +935,7 @@ public class Board extends StackPane{
 	}
 	
 	private Board(GamePanel panel, BoardPreset preset) {
-		if(preset.getBoardSize() > MAX_BOARD_SIZE) {
+		if(preset.getBoardSize() < MIN_BOARD_SIZE || preset.getBoardSize() > MAX_BOARD_SIZE) {
 			throw new IllegalArgumentException("Desired board size (" + preset.getBoardSize() + ") is greater " + 
 			"than MAX_BOARD_SIZE (26)");
 		}
@@ -1170,8 +1171,8 @@ public class Board extends StackPane{
 				break PREP;
 			}
 			
-			if(associatedGP.settings().moveRuleEnabled()) {
-				int moveRule = associatedGP.settings().getMoveRule();
+			if(Settings.moveRuleEnabled()) {
+				int moveRule = Settings.getMoveRule();
 				//System.out.println("MOVE RULE ENABLED" + moveRule);
 				if(movesSincePawnOrCapture >= moveRule) {
 					endGameWithMessage("Draw by " + moveRule + "-move rule");
@@ -1220,7 +1221,7 @@ public class Board extends StackPane{
 			System.out.println("prep 99% complete");
 			
 			//Now check for insufficient material:
-			if(Board.this.associatedGP.settings().getInsufficientMaterial()) {
+			if(Settings.getInsufficientMaterial()) {
 				MATERIAL_CHECK:
 				{
 					int wk = 0, bk = 0, wb = 0, bb = 0; //White Knights, Black Knights, White Bishops, Black Bishops
@@ -1931,6 +1932,10 @@ public class Board extends StackPane{
 	
 	public GamePanel gamePanel() {
 		return associatedGP;
+	}
+	
+	public boolean getTurn() {
+		return turn;
 	}
 	
 	public void updateKingLocations() {

@@ -50,7 +50,6 @@ public class GamePanel extends StackPane{
 	private Button modeButton, resetButton, clearBoardButton, pieceBuilderButton;
 	private VBox boardBox;
 	private Board board;
-	private Settings settingsMenu;
 	private TilePane piecePicker;
 	private ScrollPane piecePickerWrap;
 	private ImageView cancelPieceIcon;
@@ -68,18 +67,6 @@ public class GamePanel extends StackPane{
 		
 		//Make board
 		final NumberBinding binding = Bindings.min(widthProperty(), heightProperty());
-	    
-		BoardPreset pre = new BoardPreset(9);
-		pre.setPieces(new String[][]{
-				{null,null,null,null,null,null,null,"-Pawn","-King"},
-				{null,null,null,null,null,null,null,"-Pawn","-Pawn"},
-				{null,null,null,null,null,null,null,null,"-Queen"},
-				{null,null,null,"+Ghost",null,null,null,null,null},
-				{null,null,null,null,null,null,null,null,null},
-				{null,null,null,null,null,null,null,null,null},
-				{"+Queen",null,null,null,null,null,null,null,null},
-				{"+Pawn","+Pawn",null,null,null,null,null,null,null},
-				{"+King","+Pawn",null,null,null,null,null,null,null}});
 		
 	    boardBox = new VBox();
 	    boardBox.alignmentProperty().set(Pos.CENTER); 
@@ -281,9 +268,7 @@ public class GamePanel extends StackPane{
         
         iLeft.getChildren().add(leftAnchor);
         
-        settingsMenu = new Settings();
-        
-        settingsWheel.setOnMouseClicked(x -> settingsMenu.open());
+        settingsWheel.setOnMouseClicked(x -> Settings.openOn(GamePanel.this, true, 0.4, 0.4));
 	    ///////////////////
 	    
 	    
@@ -305,17 +290,12 @@ public class GamePanel extends StackPane{
         
         
         hBox.getChildren().addAll(leftPanel, boardBox, rightPanel);
-        this.getChildren().addAll(hBox, settingsMenu);
+        this.getChildren().add(hBox);
         //HBox.setHgrow(this, Priority.ALWAYS);
         
         mode = Mode.PLAY;
         
-        //TODO UNCOMMENT AND DELETE STUFF
-        //board = Board.fromPreset(this, pre);
-        board = Board.defaultBoard(this);
-        VBox.setVgrow(board, Priority.ALWAYS);
-      
-        boardBox.getChildren().add(board);
+        board = null;
               
         pieceBuilder = PieceBuilder.make();
 		PieceBuilder.setGamePanel(this);
@@ -375,13 +355,31 @@ public class GamePanel extends StackPane{
 	public Board getBoard() { return board; }
 	
 	public void setBoard(int size) {
-		Board newBoard = Board.emptyBoard(this, size);
-		board = newBoard;
-		VBox.setVgrow(board, Priority.ALWAYS);
-		boardBox.getChildren().set(0, board);
+		setBoard(Board.emptyBoard(GamePanel.this, size));
 	}
 	
-	public Settings settings() { return settingsMenu;}
+	public void setBoard(BoardPreset preset) {
+		setBoard(Board.fromPreset(GamePanel.this, preset));
+	}
+	
+	private void setBoard(Board newBoard) {
+		board = newBoard;
+		VBox.setVgrow(board, Priority.ALWAYS);
+		boardBox.getChildren().clear();
+		boardBox.getChildren().add(0, board);
+		
+		
+	}
+	
+	public void selectNewBoard() {
+		Object result = BoardSelect.getBoardSelection();
+		if(result instanceof Integer) {
+			GamePanel.this.setBoard(((Integer) result).intValue());
+		}
+		else if(result instanceof BoardPreset) {
+			GamePanel.this.setBoard((BoardPreset) result);
+		}
+	}
 	
 	void setTurnText(String text) {
 		turnLabel.setText(text);
@@ -435,167 +433,8 @@ public class GamePanel extends StackPane{
 	    }
 	    return true;
 	}
-	
-	
-	public class Settings extends StackPane{
-		ColorAdjust darken;
-		private GridPane gridPane;
-		private ScrollPane scroll;
-		private VBox vBox;
-		private HBox lowerBox;
-		private Label errorMessage;
-		/** Auto-flip Setting */
-		private CheckBox autoFlipCheckBox;
-		/** Draw by insufficient material Setting*/
-		private CheckBox insufficientMaterialCheckBox;
-		/** N-move rule Setting*/
-		private HBox moveRuleHBox;
-		private CheckBox moveRuleCheckBox;
-		private TextField moveRuleTextField;
-		private Label moveRuleLabel;
-		/////////////////////
-		private int moveRule;
-		private boolean autoFlip, insufficientMaterial, moveRuleEnabled;
-		
-		public Settings() {
-			super();
-			this.setVisible(false);
-			gridPane = new GridPane();
-			gridPane.setPickOnBounds(false);
-			gridPane.setMinSize(300, 400);
-			gridPane.maxWidthProperty().bind(GamePanel.this.widthProperty().divide(1.5));
-			gridPane.maxHeightProperty().bind(GamePanel.this.heightProperty().divide(1.5));
-			gridPane.getStyleClass().add("settings-grid-pane");
-			RowConstraints row1 = new RowConstraints();
-			row1.setPercentHeight(80);
-			RowConstraints row2 = new RowConstraints();
-			row2.setPercentHeight(20);
-			gridPane.getRowConstraints().addAll(row1, row2);
-			ColumnConstraints col1 = new ColumnConstraints();
-			col1.setPercentWidth(100);
-			gridPane.getColumnConstraints().add(col1);
-			gridPane.setGridLinesVisible(true);
-			
-			vBox = new VBox(5);
-			scroll = new ScrollPane(vBox);
-			gridPane.add(scroll, 0, 0);
-			
-			/* Create auto-flip setting*/
-			autoFlipCheckBox = new CheckBox("Auto-flip");
-			Tooltip.install(autoFlipCheckBox, new Tooltip("When enabled, the board will automatically be rotated so that the pieces of the player"
-					+ " whose turn it is appears at the bottom."));
-			autoFlipCheckBox.setSelected(true);
-			autoFlip = true;
-			
-			/* Create draw by insufficient material setting*/
-			insufficientMaterialCheckBox = new CheckBox("Draw by insufficient matierial");
-			insufficientMaterialCheckBox.setSelected(true);
-			Tooltip.install(insufficientMaterialCheckBox, new Tooltip("Determines whether the insufficient material rule is enabled."));
-			insufficientMaterial = true;
-			
-			/* Create N-move-rule setting*/
-			moveRuleCheckBox = new CheckBox();
-			moveRuleCheckBox.setSelected(true);
-			moveRuleTextField = new TextField("50");
-			moveRuleTextField.prefWidthProperty().bind(Settings.this.widthProperty().divide(32));
-			moveRuleLabel = new Label("move rule");
-			moveRuleHBox = new HBox(5, moveRuleCheckBox, moveRuleTextField, moveRuleLabel);
-			moveRuleHBox.setAlignment(Pos.CENTER_LEFT);
-			moveRule = 50;
-			moveRuleEnabled = true;
-			
-			vBox.getChildren().addAll(autoFlipCheckBox, insufficientMaterialCheckBox, moveRuleHBox);
-			
-			Button cancelButton = new Button("Cancel");
-			cancelButton.setOnMouseClicked(x -> this.closeWithoutApplying());
-			Button applyButton = new Button("Apply");
-			applyButton.setOnMouseClicked(x -> this.attemptClose());
-			errorMessage = new Label("");
-			errorMessage.setWrapText(true);
-			errorMessage.setTextFill(Color.RED);
-			lowerBox = new HBox(20);
-			lowerBox.setAlignment(Pos.CENTER_RIGHT);
-			lowerBox.setPadding(new Insets(20));
-			Button butt = new Button("Change board");
-			butt.setOnAction(actionEvent -> {
-				GamePanel.this.setBoard(5 + (int) (Math.random() * 19)); 
-			});
-			lowerBox.getChildren().addAll(butt, /*errorMessage,*/ cancelButton, applyButton); //TODO put "error message" somewhere
-			gridPane.add(lowerBox, 0, 1);
-			
-			darken = new ColorAdjust();
-			darken.setBrightness(-0.25);
-			
-			this.getChildren().add(gridPane);
-		}
-		
-		private boolean applySettings() {
-			if(moveRuleCheckBox.isSelected()) {
-				if(!isInteger(moveRuleTextField.getText().strip(), 10)){
-					errorMessage.setText("You must enter a positive integer for move rule if it is enabled.");
-					return false;
-				}
-			}
-			
-			if(moveRuleCheckBox.isSelected()) {
-				moveRule = Integer.parseInt(moveRuleTextField.getText().strip()); //make sure to call strip
-				moveRuleTextField.setText(String.valueOf(moveRule));
-			}
-			moveRuleEnabled = moveRuleCheckBox.isSelected();
-			autoFlip = autoFlipCheckBox.isSelected();
-			insufficientMaterial = insufficientMaterialCheckBox.isSelected();
-			return true;
-		}
-		
-		
-		
-		private void keepSettings() {
-			autoFlipCheckBox.setSelected(autoFlip);
-			insufficientMaterialCheckBox.setSelected(insufficientMaterial);
-			moveRuleCheckBox.setSelected(moveRuleEnabled);
-			moveRuleTextField.setText(String.valueOf(moveRule));
-		}
-		
-		public void open() {
-			GamePanel.this.hBox.setEffect(darken);
-			this.setPickOnBounds(true);
-			this.setVisible(true);
-		}
-		
-		public void attemptClose() {
-			boolean apply = this.applySettings();
-			if(apply) {
-				close0();
-			}
-		}
-		
-		public void closeWithoutApplying() {
-			this.keepSettings();
-			close0();
-		}
-		
-		private void close0(){
-			errorMessage.setText("");
-			this.setVisible(false);
-			this.setPickOnBounds(false);
-			GamePanel.this.hBox.setEffect(null);
-		}
-		
-		public boolean getAutoFlip() {
-			return autoFlip;
-		}
-		
-		public boolean getInsufficientMaterial() {
-			return insufficientMaterial;
-		}
-		
-		public boolean moveRuleEnabled() {
-			return moveRuleEnabled;
-		}
-		
-		public int getMoveRule() {
-			return moveRule;
-		}
+
+	public void saveBoardAsPreset() {
+		PresetCreation.createOn(board);
 	}
-	
 }

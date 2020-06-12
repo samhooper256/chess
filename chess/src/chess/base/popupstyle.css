@@ -1,0 +1,16 @@
+.root {
+	-fx-background-color: rgb(255, 213, 130);
+}
+
+
+VBox{
+	-fx-alignment: center;
+	-fx-border-width:  5;
+	-fx-border-color: rgb(255, 188, 56);
+	-fx-padding: 15 5 5 5;
+	-fx-spacing: 5;
+}
+
+HBox{
+	-fx-alignment: center;
+}

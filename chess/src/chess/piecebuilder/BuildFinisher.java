@@ -211,6 +211,7 @@ public abstract class BuildFinisher extends ChoiceBox<Method> {
 	}
 	
 	public static BuildFinisher reconstruct(PathBuilder precedingBuilder, Method creationMethod) {
+		System.out.printf("BuildFinisher.reconstruct(precedingBuilder=%s, creationMethod=%s)%n", precedingBuilder, creationMethod);
 		if(precedingBuilder instanceof IntegerPathBuilder) {
 			IntegerBuildFinisher fin = new IntegerBuildFinisher((IntegerPathBuilder) precedingBuilder);
 			fin.getSelectionModel().select(creationMethod);

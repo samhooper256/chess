@@ -1,7 +1,6 @@
 package chess.util;
 
 import java.lang.reflect.Method;
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
@@ -11,9 +10,6 @@ import chess.base.Board;
 import chess.base.LegalAction;
 import chess.base.LegalOtherMoveAndCapture;
 import chess.base.Piece;
-import chess.util.SummonAction.LineSummonAction;
-import chess.util.SummonAction.RadiusSummonAction;
-import chess.util.SummonAction.RelativeSummonAction;
 
 
 public abstract class OtherMoveAndCaptureAction extends chess.util.Action{
@@ -46,6 +42,15 @@ public abstract class OtherMoveAndCaptureAction extends chess.util.Action{
 		 * 
 		 */
 		private static final long serialVersionUID = -701615069952124077L;
+		private static Method CREATION_METHOD;
+		static {
+			try {
+				CREATION_METHOD = OtherMoveAndCaptureAction.class.getMethod("relative", int.class, int.class, int.class, int.class, Condition[].class);
+			} catch (NoSuchMethodException | SecurityException e) {
+				e.printStackTrace();
+				System.exit(-1);
+			}
+		}
 		public final int relStartRow, relStartCol, relDestRow, relDestCol;
 		public RelativeOtherMoveAndCaptureAction(int otherRelStartRow,
 			int otherRelStartCol, int otherRelDestRow, int otherRelDestCol, Condition... cons) {
@@ -60,8 +65,13 @@ public abstract class OtherMoveAndCaptureAction extends chess.util.Action{
 			return "Relative";
 		}
 		
-		public static Method getCreationMethod() throws NoSuchMethodException, SecurityException {
-			return OtherMoveAndCaptureAction.class.getMethod("relative", int.class, int.class, int.class, int.class, Condition[].class);
+		@Override
+		public Method getMethod() {
+			return CREATION_METHOD;
+		}
+
+		public static Method getCreationMethod() {
+			return CREATION_METHOD;
 		}
 		
 		/* *

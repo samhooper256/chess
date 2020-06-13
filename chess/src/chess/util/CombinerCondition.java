@@ -25,6 +25,4 @@ public abstract class CombinerCondition extends Condition{
 	public String toString() {
 		return "["+getClass().getName()+"@"+hashCode()+":c1="+c1+", c2="+c2+"]";
 	}
-	
-	public abstract java.lang.reflect.Method getCreationMethod();
 }

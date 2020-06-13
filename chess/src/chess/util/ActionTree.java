@@ -27,7 +27,6 @@ public class ActionTree implements Serializable{
 	public ActionTree() {
 		root = new Node(null, true);
 	}
-	
 	public void addPrimaryNode(TreeNode primaryNode) {
 		root.addChild(primaryNode);
 	}

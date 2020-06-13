@@ -26,10 +26,8 @@ public class BooleanLiteralConditionOption extends ConditionOption{
 	public String toString() {
 		return String.valueOf(value);
 	}
-	
+
 	@Override
-	public void updatePaneImpl() {
-		//TODO - do I even do anything here?
-	}
+	protected void updatePaneImpl() {}
 
 }

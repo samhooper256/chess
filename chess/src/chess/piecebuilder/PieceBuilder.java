@@ -16,7 +16,6 @@ import chess.base.PieceData;
 import chess.base.WrappedImageView;
 import chess.util.InputVerification;
 import javafx.beans.binding.Bindings;
-import javafx.beans.binding.NumberBinding;
 import javafx.beans.binding.StringExpression;
 import javafx.beans.property.DoubleProperty;
 import javafx.beans.property.SimpleDoubleProperty;
@@ -24,16 +23,13 @@ import javafx.event.ActionEvent;
 import javafx.event.EventHandler;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
-import javafx.scene.Node;
 import javafx.scene.Scene;
 import javafx.scene.control.Button;
-import javafx.scene.control.CustomMenuItem;
 import javafx.scene.control.Label;
 import javafx.scene.control.Menu;
 import javafx.scene.control.MenuBar;
 import javafx.scene.control.MenuItem;
 import javafx.scene.control.ScrollPane;
-import javafx.scene.control.Slider;
 import javafx.scene.control.TextField;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
@@ -41,13 +37,7 @@ import javafx.scene.input.Dragboard;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.input.TransferMode;
 import javafx.scene.layout.AnchorPane;
-import javafx.scene.layout.Border;
-import javafx.scene.layout.BorderPane;
-import javafx.scene.layout.BorderStroke;
-import javafx.scene.layout.BorderStrokeStyle;
-import javafx.scene.layout.BorderWidths;
 import javafx.scene.layout.ColumnConstraints;
-import javafx.scene.layout.CornerRadii;
 import javafx.scene.layout.GridPane;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Priority;
@@ -55,25 +45,22 @@ import javafx.scene.layout.RowConstraints;
 import javafx.scene.layout.StackPane;
 import javafx.scene.layout.TilePane;
 import javafx.scene.layout.VBox;
-import javafx.scene.paint.Color;
-import javafx.scene.shape.Circle;
 import javafx.stage.FileChooser;
 import javafx.stage.Modality;
-import javafx.stage.Popup;
-import javafx.stage.PopupWindow;
 import javafx.stage.Stage;
 import javafx.stage.StageStyle;
 
 public class PieceBuilder extends Stage implements InputVerification{
-	public static final Image WHITE_DEFAULT_IMAGE, BLACK_DEFAULT_IMAGE;
+	public static final Image WHITE_DEFAULT_IMAGE, BLACK_DEFAULT_IMAGE, ERROR_LOADING_IMAGE;
 	public static final String WHITE_DEFAULT_URI, BLACK_DEFAULT_URI;
 	public static final int IMAGE_SIZE = 240;
-	//TODO Maybe make an "error loading" image to use when the file path is wrong?
 	
 	static {
 		WHITE_DEFAULT_IMAGE = new Image(PieceBuilder.class.getResourceAsStream(WHITE_DEFAULT_URI = "/resources/white_default_image.png"),
 				IMAGE_SIZE, IMAGE_SIZE, false, true);
 		BLACK_DEFAULT_IMAGE = new Image(PieceBuilder.class.getResourceAsStream(BLACK_DEFAULT_URI = "/resources/black_default_image.png"),
+				IMAGE_SIZE, IMAGE_SIZE, false, true);
+		ERROR_LOADING_IMAGE = new Image(PieceBuilder.class.getResourceAsStream("/resources/errorloading.png"),
 				IMAGE_SIZE, IMAGE_SIZE, false, true);
 		try {
 			new File("userpieces").createNewFile();
@@ -157,7 +144,7 @@ public class PieceBuilder extends Stage implements InputVerification{
 	private boolean errorsShowing;
 	private DoubleProperty errorFontSize;
 	private StringExpression errorFontStringExpression;
-	private static Collection<String> currentPieceNames; //TODO Update this whenever PieceBuilder is opened! (and when a new piece is added and PieceBuilder remains open)
+	private static Collection<String> currentPieceNames;
 	private static Collection<String> currentCustomPieceNames;
 	private FileChooser fileChooser;
 	private AnchorPane whiteXAnchor, blackXAnchor;
@@ -230,7 +217,7 @@ public class PieceBuilder extends Stage implements InputVerification{
 		whiteImageOuter.maxWidthProperty().bind(leftImageVBox.widthProperty());
 		
 		whiteImageInternal = new StackPane();
-		whiteImageInternal.setBorder(new Border(new BorderStroke(Color.grayRgb(117), BorderStrokeStyle.DASHED, CornerRadii.EMPTY, new BorderWidths(2)))); //TODO put in css
+		whiteImageInternal.getStyleClass().add("insert-image-box");
 		whiteXAnchor = new AnchorPane(); 
 		whiteX = new Label("X");
 		whiteX.getStyleClass().add("image-x");
@@ -249,7 +236,7 @@ public class PieceBuilder extends Stage implements InputVerification{
 		
 		blackImageOuter = new StackPane();
 		blackImageInternal = new StackPane();
-		blackImageInternal.setBorder(new Border(new BorderStroke(Color.grayRgb(117), BorderStrokeStyle.DASHED, CornerRadii.EMPTY, new BorderWidths(2)))); //TODO put in css
+		blackImageInternal.getStyleClass().add("insert-image-box");
 		
 		blackXAnchor = new AnchorPane(); 
 		blackX = new Label("X");
@@ -532,13 +519,12 @@ public class PieceBuilder extends Stage implements InputVerification{
 		
 		private class PieceOption extends StackPane {
 			private final String pieceName;
-			private final Label label;
 			private boolean isSelected;
 			public PieceOption(String pieceName) {
 				super();
 				isSelected = false;
 				this.pieceName = pieceName;
-				this.getChildren().add(label = new Label(pieceName));
+				this.getChildren().add(new Label(pieceName));
 				this.setOnMouseClicked(pieceOptionClickAction);
 			}
 			
@@ -622,6 +608,7 @@ public class PieceBuilder extends Stage implements InputVerification{
 		currentData.setPointValue(5);
 		
 		File file = new File("userpieces/" + currentData.getName() + ".dat");
+		boolean error = false;
 		try {
 			file.createNewFile();
 			FileWriter temp = new FileWriter(file, false);
@@ -633,12 +620,15 @@ public class PieceBuilder extends Stage implements InputVerification{
 			oos.flush();
 			oos.close();
 		} catch (IOException e) {
-			// TODO Auto-generated catch block
+			error = true;
 			e.printStackTrace();
 		}
 		CustomPiece.updatePieceData(currentData);
-		successPopup.setMessage("\"" + currentData.getName() + "\" saved successfully.");
-		successPopup.show();
+		if(!error) {
+			successPopup.setMessage("\"" + currentData.getName() + "\" saved successfully.");
+			successPopup.show();
+		}
+		
 		
 	}
 	
@@ -678,8 +668,7 @@ public class PieceBuilder extends Stage implements InputVerification{
 		CustomPiece.defineNewPiece(pieceData);
 		successPopup.setMessage("Piece \"" + pieceData.getName() + "\" created successfully.");
 		successPopup.show();
-		createPieceButton.setText("Save Edits");
-		nameTextField.setEditable(false);
+		PieceBuilder.reset();
 		currentData = pieceData;
 	}
 	
@@ -694,7 +683,7 @@ public class PieceBuilder extends Stage implements InputVerification{
 			CustomPiece.deletePiece(pieceName);
 			File file = new File("userpieces/" + pieceName + ".dat");
 			file.delete();
-			updatePieceNames();
+			PieceBuilder.reset(true);
 		}
 		else {
 			System.out.println(">>> Delete cancelled");
@@ -747,7 +736,8 @@ public class PieceBuilder extends Stage implements InputVerification{
 		}
 		
 		public void setPieceName(String pieceName) {
-			sureLabel.setText("Are you sure you want to delete the \"" + pieceName + "\" piece?");
+			sureLabel.setText("Are you sure you want to delete the \"" + pieceName + "\" piece?"
+					+ " This will reset the Piece Builder");
 		}
 	}
 	
@@ -863,6 +853,9 @@ public class PieceBuilder extends Stage implements InputVerification{
 		reset(true);
 	}
 	public static void open() {
+		if(associatedGamePanel != null) {
+			associatedGamePanel.getBoard().deselect();
+		}
 		reset();
 		instance.show();
 	}
@@ -884,6 +877,9 @@ public class PieceBuilder extends Stage implements InputVerification{
 	public static void open(PieceData data) {
 		if(data == null) {
 			throw new NullPointerException();
+		}
+		if(associatedGamePanel != null) {
+			associatedGamePanel.getBoard().deselect();
 		}
 		reset();
 		instance.nameTextField.setText(data.getName());

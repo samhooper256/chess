@@ -1,8 +1,10 @@
 package chess.util;
 
+import java.io.Serializable;
+
 import chess.base.Board;
 
-public class RelativeTile{
+public class RelativeTile implements Serializable{
 	public Flag relativeTo;
 	public IntegerPath row, col;
 	

@@ -2,22 +2,14 @@ package chess.base;
 
 import java.io.File;
 import java.io.FileInputStream;
-import java.io.FileOutputStream;
-import java.io.FileWriter;
 import java.io.IOException;
 import java.io.ObjectInputStream;
-import java.io.ObjectOutputStream;
-import java.io.Serializable;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
-import java.util.Map;
 import java.util.Set;
 
-import chess.piecebuilder.PieceBuilder;
-import chess.util.ActionTree;
 import javafx.scene.image.Image;
 
 public class CustomPiece extends Piece{
@@ -184,5 +176,10 @@ public class CustomPiece extends Piece{
 
 	public static boolean isDefinedPieceName(String name) {
 		return definedPieces.containsKey(name);
+	}
+	
+	@Override
+	public String toString() {
+		return getColor() + " + " + data.getName();
 	}
 }

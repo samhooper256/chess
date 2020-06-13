@@ -99,6 +99,10 @@ public abstract class SubMulti extends Action{
 			this.addAllConditions(cons);
 		}
 		
+		public Method getMethod() {
+			return subMultiCreationMethods[0];
+		}
+		
 		public static Method getCreationMethod() {
 			return subMultiCreationMethods[0];
 		}
@@ -182,6 +186,10 @@ public abstract class SubMulti extends Action{
 			}
 		}
 		
+		public Method getMethod() {
+			return subMultiCreationMethods[1];
+		}
+		
 		public static Method getCreationMethod() {
 			return subMultiCreationMethods[1];
 		}
@@ -227,6 +235,10 @@ public abstract class SubMulti extends Action{
 			else {
 				return Collections.emptySet();
 			}
+		}
+		
+		public Method getMethod() {
+			return subMultiCreationMethods[2];
 		}
 		
 		public static Method getCreationMethod() {
@@ -326,6 +338,10 @@ public abstract class SubMulti extends Action{
 			return legals;
 		}
 		
+		public Method getMethod() {
+			return subMultiCreationMethods[3];
+		}
+		
 		public static Method getCreationMethod() {
 			return subMultiCreationMethods[3];
 		}
@@ -355,6 +371,10 @@ public abstract class SubMulti extends Action{
 			else {
 				return Collections.emptySet();
 			}
+		}
+		
+		public Method getMethod() {
+			return subMultiCreationMethods[4];
 		}
 		
 		public static Method getCreationMethod() {
@@ -404,6 +424,10 @@ public abstract class SubMulti extends Action{
 			else {
 				return Collections.emptySet();
 			}
+		}
+		
+		public Method getMethod() {
+			return subMultiCreationMethods[5];
 		}
 		
 		public static Method getCreationMethod() {
@@ -503,6 +527,10 @@ public abstract class SubMulti extends Action{
 			}
 			
 			return legals;
+		}
+		
+		public Method getMethod() {
+			return subMultiCreationMethods[6];
 		}
 		
 		public static Method getCreationMethod() {

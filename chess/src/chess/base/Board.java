@@ -1,44 +1,33 @@
 package chess.base;
 
 import java.io.PrintStream;
-import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
-import java.util.Scanner;
 import java.util.Set;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 
 import chess.base.GamePanel.Mode;
-import chess.piecebuilder.ReferenceContextMenu;
 import chess.util.AFC;
-import chess.util.CaptureAction;
-import chess.util.MoveAndCaptureAction;
 import javafx.application.Platform;
-import javafx.beans.property.SimpleObjectProperty;
-import javafx.collections.ObservableList;
 import javafx.concurrent.Service;
 import javafx.concurrent.Task;
-import javafx.event.ActionEvent;
 import javafx.event.EventHandler;
 import javafx.geometry.HPos;
 import javafx.geometry.Pos;
 import javafx.geometry.VPos;
 import javafx.scene.SnapshotParameters;
 import javafx.scene.control.Button;
-import javafx.scene.control.ContextMenu;
 import javafx.scene.control.Control;
 import javafx.scene.control.Label;
-import javafx.scene.control.MenuItem;
 import javafx.scene.control.ScrollPane;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.input.ClipboardContent;
-import javafx.scene.input.DataFormat;
 import javafx.scene.input.DragEvent;
 import javafx.scene.input.Dragboard;
 import javafx.scene.input.MouseButton;
@@ -132,7 +121,7 @@ public class Board extends StackPane{
 						if(source.isShowingLegal()) {
 							System.out.printf("You clicked on square that's showing as legal (aka it has a dot on it)%n");
 							Object lock1 = new Object();
-							System.out.println("BIT = false :: from CH");
+							//System.out.println("BIT = false :: from CH");
 							boardInteractionAllowed = false;
 							final int row = currentlySelectedTile.row;
 							final int col = currentlySelectedTile.col;
@@ -140,29 +129,29 @@ public class Board extends StackPane{
 							Platform.runLater(new Runnable() {
 								@Override
 								public void run() {
-									System.out.println("\tAttempting to sync from CH (on FX Thread)");
+									//System.out.println("\tAttempting to sync from CH (on FX Thread)");
 									synchronized(lock1) {
-										System.out.println("\t\tSuccessfully synced from CH (on FX Thread)");
+										//System.out.println("\t\tSuccessfully synced from CH (on FX Thread)");
 										currentlySelectedTile.hideLegalMovesAndDepopulate();
 										currentlySelectedTile.setHighlighted(false);
 										currentlySelectedTile = null;
-										System.out.println("\t\tnotifying all CH (on FX Thread)");
+										//System.out.println("\t\tnotifying all CH (on FX Thread)");
 										lock1.notifyAll();
 										flag = true;
 									}
 								}
 							});
 							
-							System.out.println(">>> attempting to sync on lock1; " + Thread.currentThread().getName());
+							//System.out.println(">>> attempting to sync on lock1; " + Thread.currentThread().getName());
 							synchronized(lock1) {
 								while(!flag) {
-									System.out.println("\t>>> starting wait on lock1; " + Thread.currentThread().getName());
+									//System.out.println("\t>>> starting wait on lock1; " + Thread.currentThread().getName());
 									try {
 										lock1.wait();
 									} catch (InterruptedException e) {}						
 								}
 							}
-							System.out.println("\t>>> done waiting on lock1; " + Thread.currentThread().getName());	
+							//System.out.println("\t>>> done waiting on lock1; " + Thread.currentThread().getName());	
 							
 							System.out.println("----------starting select-and-making");
 							synchronized(board) {
@@ -170,7 +159,7 @@ public class Board extends StackPane{
 							}
 							System.out.println("----------done select-and-making");
 							
-							System.out.println("BIT = true :: from CH");
+							//System.out.println("BIT = true :: from CH");
 							boardInteractionAllowed = true;
 							
 							
@@ -261,7 +250,7 @@ public class Board extends StackPane{
 		
 	}
 	
-	void deselect() {
+	public void deselect() {
 		if(currentlySelectedTile != null) {
 			currentlySelectedTile.hideLegalMovesAndDepopulate();
 			currentlySelectedTile.setHighlighted(false);
@@ -435,6 +424,7 @@ public class Board extends StackPane{
 		}
 		
 		private void wrapUpPlay(BoardPlay play){
+			System.out.println("wrapup called");
 			if(turn == Piece.WHITE) {
 				setTurn(Piece.BLACK);
 			}
@@ -453,6 +443,7 @@ public class Board extends StackPane{
 			
 			playNumber++;
 			
+			System.out.println("turn = " + turn + ", autoflip = " + Settings.getAutoFlip());
 			if(Settings.getAutoFlip()) {
 				setOrientation(turn);
 			}
@@ -1010,10 +1001,10 @@ public class Board extends StackPane{
 			row1.setPercentHeight(25);
 			RowConstraints row2 = new RowConstraints();
 			row2.setValignment(VPos.CENTER);
-			row2.setPercentHeight(25);
+			row2.setPercentHeight(35);
 			RowConstraints row3 = new RowConstraints();
 			row3.setValignment(VPos.CENTER);
-			row3.setPercentHeight(50);
+			row3.setPercentHeight(40);
 			ColumnConstraints col1 = new ColumnConstraints();
 			col1.setHalignment(HPos.CENTER);
 			col1.setPercentWidth(50);
@@ -1027,7 +1018,6 @@ public class Board extends StackPane{
 		boardPopupBox.getChildren().add(popupMessageArea);
 		
 		boardPopupMessage = new Label();
-		boardPopupMessage.setWrapText(true);
 		boardPopupMessage.setId("popup-message");
 		
 		popupGameOverText = new Text("Game Over");
@@ -1093,8 +1083,25 @@ public class Board extends StackPane{
 		this.getChildren().add(2, wrap);
 	}
 	
+	/**
+	 * Simply clears the board if passed "null."
+	 * Throws an IllegalArgumentException if the preset has the wrong size.
+	 * 
+	 * Does not throw an exception if the board has too many/too few kings, that will get
+	 * detected the next time "prepare move" is called. 
+	 * @param preset
+	 */
 	private void setupPiecesFromPreset(BoardPreset preset) {
+		if(preset == null) {
+			clearPieces();
+			return;
+		}
+		else if(preset.getBoardSize() != BOARD_SIZE) {
+			throw new IllegalArgumentException("Board preset has the wrong size. Is " + preset.getBoardSize() +
+					", should be " + BOARD_SIZE);
+		}
 		clearPieces(); //this sets all values in kingLocations to -1.
+		
 		for(int i = 0; i < BOARD_SIZE; i++) {
 			for(int j = 0; j < BOARD_SIZE; j++) {
 				board[i][j].setPiece(Piece.forName(preset.getPieceNameAt(i, j)));
@@ -1104,28 +1111,15 @@ public class Board extends StackPane{
 							kingLocations[0][0] = i;
 							kingLocations[0][1] = j;
 						}
-						else {
-							throw new IllegalArgumentException("Preset has too many white kings!");
-						}
 					}
 					else {
 						if(kingLocations[1][0] == -1) {
 							kingLocations[1][0] = i;
 							kingLocations[1][1] = j;
 						}
-						else {
-							throw new IllegalArgumentException("Preset has too many black kings!");
-						}
 					}
 				}
 			}
-		}
-		
-		if(kingLocations[0][0] == -1) {
-			throw new IllegalArgumentException("Preset doesn't have a white king!");
-		}
-		if(kingLocations[1][0] == -1) {
-			throw new IllegalArgumentException("Preset doesn't have a black king!");
 		}
 	}
 
@@ -1139,7 +1133,9 @@ public class Board extends StackPane{
 	}
 
 	/**
-	 * Precondition: {@code kingLocations} holds accurate values.
+	 * Precondition: {@code kingLocations} holds accurate values if there is only 1 white and 1 black king on
+	 * the board. If there are too many kings on the board, that will get detected regardless of kingLocations
+	 * and endGameWithMessage(String) will be called.
 	 * 
 	 * BLOCKS until it is done.
 	 * If it needs to be called from FX Thread, it Should ONLY be called through MovePreparer.prepare().
@@ -1408,7 +1404,8 @@ public class Board extends StackPane{
 		}
 		else if(action instanceof LegalOtherMoveAndCapture) {
 			LegalOtherMoveAndCapture a = (LegalOtherMoveAndCapture) action;
-			result = tryMoveForLegalityMNC(a.startRow(), a.startCol(), a.destRow(), a.destCol());
+			System.out.println("LEGAL OTHER: " + a);
+			result = tryMoveForLegalityMNC(p.getColor(), a.startRow(), a.startCol(), a.destRow(), a.destCol());
 		}
 		else if(action instanceof LegalMulti) {
 			result = tryMultiForLegality(startRow, startCol, (LegalMulti) action);
@@ -1419,40 +1416,45 @@ public class Board extends StackPane{
 		else {
 			result = tryMoveForLegalityNonKing(startRow, startCol, action);
 		}
-		
+		/*
 		if(!result) {
 			System.out.printf("Invalidated (%d,%d) -> %s%n", startRow, startCol, action.toString());
 		}
+		*/
 		return result;
 	}
 	
-	boolean tryMoveForLegalityMNC(int startRow, int startCol, int destRow, int destCol) {
+	boolean tryMoveForLegalityMNC(boolean actingColor, int startRow, int startCol, int destRow, int destCol) {
 		Piece p = getPieceAt(startRow, startCol);
 		if(p == null) {
 			throw new IllegalArgumentException("cannot move a nonexistent piece. (startRow, startCol) represents an empty square.");
 		}
 		else if(p instanceof King) {
-			return tryMoveForLegalityMNCKing(startRow, startCol, destRow, destCol);
+			return tryMoveForLegalityMNCKing(actingColor, startRow, startCol, destRow, destCol);
 		}
 		else {
-			return tryMoveForLegalityMNCNonKing(startRow, startCol, destRow, destCol);
+			return tryMoveForLegalityMNCNonKing(actingColor, startRow, startCol, destRow, destCol);
 		}
 	}
 	
-	private boolean tryMoveForLegalityMNCNonKing(int startRow, int startCol, int destRow, int destCol) {
+	private boolean tryMoveForLegalityMNCNonKing(boolean actingColor, int startRow, int startCol, int destRow, int destCol) {
+		
 		Piece p = getPieceAt(startRow, startCol);
 		Piece onTile = getPieceAt(destRow, destCol);
-		int[] kingSpot = p.getColor() == Piece.WHITE ? kingLocations[0] : kingLocations[1];
-		boolean attackingColor = p.getColor() == Piece.WHITE ? Piece.BLACK : Piece.WHITE;
+		int[] kingSpot = actingColor == Piece.WHITE ? kingLocations[0] : kingLocations[1];
+		boolean attackingColor = actingColor == Piece.WHITE ? Piece.BLACK : Piece.WHITE;
+		
+		boolean pieceMovingColor = p.getColor();
 		
 		board[startRow][startCol].currentPiece = null;
 		board[destRow][destCol].currentPiece = p;
 		boolean result = true;
-		
 		outer:
 		for(int i = 0; i < BOARD_SIZE; i++) {
 			for(int j = 0; j < BOARD_SIZE; j++) {
-				if(i == destRow && j == destCol) continue;
+				//the check for "pieceMovingColor == attackingColor" ensures that the piece doesn't get skipped
+				//if it could still potentially check the opponent's king.
+				if(i == destRow && j == destCol && pieceMovingColor == actingColor) continue;
 				Piece o = getPieceAt(i, j);
 				if(	/*if this breaks down, it's because I removed the condition "!(o instanceof King)*/
 					o != null && o.getColor() == attackingColor &&
@@ -1469,15 +1471,38 @@ public class Board extends StackPane{
 		return result;
 	}
 	
-	private boolean tryMoveForLegalityMNCKing(int startRow, int startCol, int destRow, int destCol) {
+	private boolean tryMoveForLegalityMNCKing(boolean actingColor, int startRow, int startCol, int destRow, int destCol) {
 		Piece p = getPieceAt(startRow, startCol);
 		Piece onTile = getPieceAt(destRow, destCol);
-		boolean attackingColor = p.getColor() == Piece.WHITE ? Piece.BLACK : Piece.WHITE;
+		boolean pieceMovingColor = p.getColor();
+		boolean attackingColor = actingColor == Piece.WHITE ? Piece.BLACK : Piece.WHITE;
 
 		board[startRow][startCol].currentPiece = null;
 		board[destRow][destCol].currentPiece = p;
 		boolean result = true;
 		
+		final int[] mustNotBeCheckable;
+		if(pieceMovingColor == actingColor) {
+			/* *
+			 * For example, if a white king is moving and it's white's turn, the piece that must
+			 * not be checkable at the end is the white king - whose location is (destRow,destCol)
+			 * during this method. Same thing for black
+			 * 
+			 * This will account for most of the calls to this method.
+			 */
+			mustNotBeCheckable = new int[] {destRow, destCol};
+		}
+		else {
+			/* *
+			 * However, if, for example, a black king is moving but it's white's turn
+			 * (aka actingColor == Piece.WHITE), then the tile that must not be checkable
+			 * is the CURRENT location of the white king.
+			 * 
+			 * This else block will only be entered if this method was called because of an
+			 * OtherMoveAndCapture.
+			 */
+			mustNotBeCheckable = actingColor == Piece.WHITE ? kingLocations[0] : kingLocations[1];
+		}
 		outer:
 		for(int i = 0; i < BOARD_SIZE; i++) {
 			for(int j = 0; j < BOARD_SIZE; j++) {
@@ -1485,7 +1510,7 @@ public class Board extends StackPane{
 				Piece o = getPieceAt(i, j);
 				if(	
 					o != null && o.getColor() == attackingColor &&
-					o.canCheck(Board.this, i, j, destRow, destCol)) {
+					o.canCheck(Board.this, i, j, mustNotBeCheckable[0], mustNotBeCheckable[1])) {
 					result = false;
 					break outer;
 				}
@@ -1508,15 +1533,16 @@ public class Board extends StackPane{
 	 * @return
 	 */
 	private boolean tryMoveForLegalityNonKing(int startRow, int startCol, LegalAction action) {
+		Piece p = getPieceAt(startRow, startCol);
 		if(action instanceof LegalMoveAndCapture) {
-			return tryMoveForLegalityMNCNonKing(startRow, startCol, action.destRow(), action.destCol());
+			return tryMoveForLegalityMNCNonKing(p.getColor(), startRow, startCol, action.destRow(), action.destCol());
 		}
 		else if(action instanceof LegalOtherMoveAndCapture) {
 			LegalOtherMoveAndCapture act = (LegalOtherMoveAndCapture) action;
-			return tryMoveForLegalityMNCNonKing(act.startRow(), act.startCol(), act.destRow(), act.destCol());
+			return tryMoveForLegalityMNC(p.getColor(), act.startRow(), act.startCol(), act.destRow(), act.destCol());
 		}
 		int destRow = action.destRow(), destCol = action.destCol();
-		Piece p = getPieceAt(startRow, startCol);
+		
 		if(p instanceof King) {
 			throw new IllegalArgumentException("Piece on startRow/startCol is a king");
 		}
@@ -1524,6 +1550,7 @@ public class Board extends StackPane{
 		int[] kingSpot = p.getColor() == Piece.WHITE ? kingLocations[0] : kingLocations[1];
 		boolean myColor = p.getColor();
 		boolean attackingColor = myColor == Piece.WHITE ? Piece.BLACK : Piece.WHITE;
+		
 		
 		if(action instanceof LegalCapture) {
 			board[destRow][destCol].currentPiece = null;
@@ -1552,8 +1579,14 @@ public class Board extends StackPane{
 			LegalPromotion pro = (LegalPromotion) action;
 			
 			boolean anyValid = false;
+			piece_list_loop:
 			for(Iterator<String> itr = pro.getOptions().iterator(); itr.hasNext();) {
-				board[startRow][startCol].currentPiece = Piece.forName(itr.next(), myColor);
+				String pieceName = itr.next();
+				if(!Piece.isNameOfPiece(pieceName)) {
+					itr.remove();
+					continue piece_list_loop;
+				}
+				board[startRow][startCol].currentPiece = Piece.forName(pieceName, myColor);
 				boolean result = true;
 				outer:
 				for(int i = 0; i < BOARD_SIZE; i++) {
@@ -1587,10 +1620,15 @@ public class Board extends StackPane{
 		}
 		else if(action instanceof LegalSummon) {
 			LegalSummon sum = (LegalSummon) action;
-			
 			boolean anyValid = false;
+			piece_list_loop:
 			for(Iterator<String> itr = sum.getOptions().iterator(); itr.hasNext();) {
-				board[destRow][destCol].currentPiece = Piece.forName(itr.next(), myColor);
+				String pieceName = itr.next();
+				if(!Piece.isNameOfPiece(pieceName)) {
+					itr.remove();
+					continue piece_list_loop;
+				}
+				board[destRow][destCol].currentPiece = Piece.forName(pieceName, myColor);
 				boolean result = true;
 				outer:
 				for(int i = 0; i < BOARD_SIZE; i++) {
@@ -1877,8 +1915,8 @@ public class Board extends StackPane{
 				currentlySelectedTile.setHighlighted(false);
 				currentlySelectedTile = null;
 			}
-			setupPiecesFromPreset(preset);
-			Board.this.turn = preset.getTurn();
+			setupPiecesFromPreset(preset); //this will just clear the board if preset is null - no null check needed.
+			Board.this.turn = preset == null ? Piece.WHITE : preset.getTurn();
 			Board.this.log.clear();
 			moveNumber = 1;
 			playNumber = 1;

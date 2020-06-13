@@ -1,10 +1,26 @@
 *.main-menu-box{
-	-fx-spacing: 10;
+	-fx-spacing: 15;
 	-fx-alignment: center;	
 }
 
 *.main-menu-button{
-	-fx-background-color: yellow;
-	-fx-border-color: orange;
-	-fx-border-weight: 10;
+	-fx-background-insets: 0;
+	-fx-padding: 0;
+	-fx-background-color: #ffff00ff;
+	-fx-border-color: #ffa200ff;
+	-fx-border-width: 10;
+	-fx-border-radius: 12 12 12 12;
+	-fx-background-radius: 20 20 20 20;
+	-fx-font-size: 16pt;
+    -fx-font-weight: 500;
+    -fx-font-style: normal; 
+    -fx-font-family: "Gill Sans MT";
+}
+
+
+
+*.main-menu-button:hover{
+	-fx-border-color: #ffb200ff;
+	-fx-scale-x: 1.05;
+	-fx-scale-y: 1.05;
 }

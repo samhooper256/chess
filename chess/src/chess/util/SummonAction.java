@@ -13,11 +13,6 @@ import chess.base.Board;
 import chess.base.LegalAction;
 import chess.base.LegalSummon;
 import chess.base.Piece;
-import chess.util.MoveAndCaptureAction.LineMoveAndCaptureAction;
-import chess.util.MoveAndCaptureAction.RadiusMoveAndCaptureAction;
-import chess.util.MoveAndCaptureAction.RelativeMoveAndCaptureAction;
-import chess.util.MoveAndCaptureAction.RelativeLineMoveAndCaptureAction;
-import chess.util.MoveAndCaptureAction.RelativeSegmentMoveAndCaptureAction;
 
 public abstract class SummonAction extends Action{
 	/**
@@ -42,13 +37,13 @@ public abstract class SummonAction extends Action{
 		return new LineSummonAction(dr, dc, ops, cons);
 	}
 	
-	@User(params={"relative start row", "relative start column", "delta row", "delta column", "summon options"})
+	@User(params={"relative start row", "relative start column", "delta row", "delta column", "requires start to be on board", "summon options"})
 	public static RelativeLineSummonAction relLine(int relStartRow, int relStartCol, int dr, int dc,
-			ArrayList<String> ops, Condition... cons) {
+			boolean requiresOnBoardStart, ArrayList<String> ops, Condition... cons) {
 		if(ops.size() == 0) {
 			throw new IllegalArgumentException("A promotion action must have at least one option (options.size() == 0)");
 		}
-		return new RelativeLineSummonAction(relStartRow, relStartCol, dr, dc, ops, cons);
+		return new RelativeLineSummonAction(relStartRow, relStartCol, dr, dc, requiresOnBoardStart, ops, cons);
 	}
 	
 	@User(params={"relative start row", "relative start column", "delta row", "delta column", "segment length", "requires start to be on board", "summon options"})
@@ -94,6 +89,15 @@ public abstract class SummonAction extends Action{
 		 * 
 		 */
 		private static final long serialVersionUID = 525503007331799059L;
+		private static Method CREATION_METHOD;
+		static {
+			try {
+				CREATION_METHOD = SummonAction.class.getMethod("relative", int.class, int.class, ArrayList.class, Condition[].class);
+			} catch (NoSuchMethodException | SecurityException e) {
+				e.printStackTrace();
+				System.exit(-1);
+			}
+		}
 		public final int relRow;
 		public final int relCol;
 		
@@ -108,8 +112,13 @@ public abstract class SummonAction extends Action{
 			return "Relative";
 		}
 		
-		public static Method getCreationMethod() throws NoSuchMethodException, SecurityException {
-			return SummonAction.class.getMethod("relative", int.class, int.class, ArrayList.class, Condition[].class);
+		@Override
+		public Method getMethod() {
+			return CREATION_METHOD;
+		}
+		
+		public static Method getCreationMethod() {
+			return CREATION_METHOD;
 		}
 
 		@Override
@@ -137,6 +146,15 @@ public abstract class SummonAction extends Action{
 		 * 
 		 */
 		private static final long serialVersionUID = 6964271500790227250L;
+		private static Method CREATION_METHOD;
+		static {
+			try {
+				CREATION_METHOD = SummonAction.class.getMethod("line", int.class, int.class, ArrayList.class, Condition[].class);
+			} catch (NoSuchMethodException | SecurityException e) {
+				e.printStackTrace();
+				System.exit(-1);
+			}
+		}
 		public final int deltaRow, deltaCol;
 		private ArrayList<Condition> stopConditions;
 		
@@ -157,8 +175,13 @@ public abstract class SummonAction extends Action{
 			return "Line";
 		}
 		
-		public static Method getCreationMethod() throws NoSuchMethodException, SecurityException {
-			return SummonAction.class.getMethod("line", int.class, int.class, ArrayList.class, Condition[].class);
+		@Override
+		public Method getMethod() {
+			return CREATION_METHOD;
+		}
+		
+		public static Method getCreationMethod() {
+			return CREATION_METHOD;
 		}
 		
 		@Override
@@ -196,15 +219,17 @@ public abstract class SummonAction extends Action{
 		 * 
 		 */
 		private static final long serialVersionUID = 3665438309855629292L;
+		private static Method CREATION_METHOD;
+		static {
+			try {
+				CREATION_METHOD = SummonAction.class.getMethod("relLine", int.class, int.class, int.class, int.class, boolean.class, ArrayList.class, Condition[].class);
+			} catch (NoSuchMethodException | SecurityException e) {
+				e.printStackTrace();
+				System.exit(-1);
+			}
+		}
 		public final int relStartRow, relStartCol;
 		public final boolean requiresOnBoardStart;
-		
-		public RelativeLineSummonAction(int relsr, int relsc, int dr, int dc, ArrayList<String> options, Condition... cons) {
-			super(dr, dc, options, cons);
-			relStartRow = relsr;
-			relStartCol = relsc;
-			requiresOnBoardStart = false;
-		}
 		
 		public RelativeLineSummonAction(int relsr, int relsc, int dr, int dc, boolean onBoardStart,
 				ArrayList<String> options, Condition... cons) {
@@ -223,8 +248,13 @@ public abstract class SummonAction extends Action{
 			return "Relative Line";
 		}
 		
-		public static Method getCreationMethod() throws NoSuchMethodException, SecurityException {
-			return SummonAction.class.getMethod("relLine", int.class, int.class, int.class, int.class, ArrayList.class, Condition[].class);
+		@Override
+		public Method getMethod() {
+			return CREATION_METHOD;
+		}
+		
+		public static Method getCreationMethod() {
+			return CREATION_METHOD;
 		}
 		
 		/*
@@ -283,6 +313,15 @@ public abstract class SummonAction extends Action{
 		 * 
 		 */
 		private static final long serialVersionUID = 4828990037209511659L;
+		private static Method CREATION_METHOD;
+		static {
+			try {
+				CREATION_METHOD = SummonAction.class.getMethod("segment", int.class, int.class, int.class, int.class, int.class, boolean.class, ArrayList.class, Condition[].class);
+			} catch (NoSuchMethodException | SecurityException e) {
+				e.printStackTrace();
+				System.exit(-1);
+			}
+		}
 		public final int relStartRow, relStartCol, deltaRow, deltaCol, length;
 		public final boolean requiresOnBoardStart;
 		private ArrayList<Condition> stopConditions;
@@ -311,8 +350,13 @@ public abstract class SummonAction extends Action{
 			return "Relative Segment";
 		}
 		
-		public static Method getCreationMethod() throws NoSuchMethodException, SecurityException {
-			return SummonAction.class.getMethod("segment", int.class, int.class, int.class, int.class, int.class, boolean.class, ArrayList.class, Condition[].class);
+		@Override
+		public Method getMethod() {
+			return CREATION_METHOD;
+		}
+		
+		public static Method getCreationMethod() {
+			return CREATION_METHOD;
 		}
 		
 		@Override
@@ -384,6 +428,15 @@ public abstract class SummonAction extends Action{
 		 * 
 		 */
 		private static final long serialVersionUID = 1707015099806534041L;
+		private static Method CREATION_METHOD;
+		static {
+			try {
+				CREATION_METHOD = SummonAction.class.getMethod("radius", int.class, boolean.class, boolean.class, ArrayList.class, Condition[].class);
+			} catch (NoSuchMethodException | SecurityException e) {
+				e.printStackTrace();
+				System.exit(-1);
+			}
+		}
 		public final int radius;
 		public final boolean fill;
 		public final boolean includeSelf;
@@ -404,8 +457,13 @@ public abstract class SummonAction extends Action{
 			return "Radius";
 		}
 		
-		public static Method getCreationMethod() throws NoSuchMethodException, SecurityException {
-			return SummonAction.class.getMethod("radius", int.class, boolean.class, boolean.class, ArrayList.class, Condition[].class);
+		@Override
+		public Method getMethod() {
+			return CREATION_METHOD;
+		}
+		
+		public static Method getCreationMethod() {
+			return CREATION_METHOD;
 		}
 		
 		@Override

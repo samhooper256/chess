@@ -149,3 +149,20 @@ ConditionUtilFlowPane{
 *.multi-condition-part > *.multi-condition-part > *.multi-condition-part > *.multi-condition-part{
 	-fx-background-color: rgb(73, 174, 204);
 }
+
+*.insert-image-box{
+	-fx-border-color: rgb(117, 117, 117);
+	-fx-border-width: 2;
+	-fx-border-style: dashed;
+}
+*.delete-button{
+	-fx-background-color: transparent;
+	-fx-border-width: 1px;
+	-fx-border-color: #b00000;
+	-fx-border-radius: 6;
+	-fx-text-fill: #b00000;
+}
+
+*.final-menu-item *.label{
+	-fx-text-fill: #00ff00;
+}

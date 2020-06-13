@@ -1,13 +1,11 @@
 package chess.base;
 
-import chess.util.Condition;
 import javafx.application.Application;
 import javafx.geometry.Rectangle2D;
 import javafx.scene.Scene;
 import javafx.stage.Screen;
 import javafx.stage.Stage;
 
-//TODO DELETE UNUSED IMPORTS (chess.util.*)
 /* *
  * @author Sam Hooper
  */
@@ -19,7 +17,6 @@ public class Main extends Application{
 	public static final double WIDTH, HEIGHT;
 	public static Scene scene;
 	static {
-		
 		Rectangle2D screenSize = Screen.getPrimary().getBounds();
 		WIDTH = screenSize.getWidth();
 		HEIGHT = screenSize.getHeight();
@@ -28,6 +25,7 @@ public class Main extends Application{
 	public void start(Stage primaryStage) throws Exception {
 		BoardSelect.make();
 		PresetCreation.make();
+		Settings.make();
 		scene = MainMenu.make();
 		scene.getStylesheets().add(Main.class.getResource("style.css").toExternalForm());
 		primaryStage.setMinHeight(400);

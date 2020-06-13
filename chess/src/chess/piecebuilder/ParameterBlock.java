@@ -4,13 +4,10 @@ import java.lang.reflect.Method;
 
 import chess.util.BooleanPath;
 import chess.util.InputVerification;
-import chess.util.IntTextField;
 import chess.util.IntegerPath;
 import javafx.collections.ObservableList;
 import javafx.geometry.Pos;
 import javafx.scene.Node;
-import javafx.scene.control.CheckBox;
-import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
 
 public class ParameterBlock extends VBox implements Buildable<Object[]>, InputVerification{

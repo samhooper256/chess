@@ -12,7 +12,6 @@ import java.util.Set;
 import chess.base.Board;
 import chess.base.LegalAction;
 import chess.base.LegalCapture;
-import chess.base.LegalCapture;
 import chess.base.Piece;
 
 public abstract class CaptureAction extends chess.util.Action{
@@ -37,7 +36,7 @@ public abstract class CaptureAction extends chess.util.Action{
 		return new RelativeLineCaptureAction(relStartRow, relStartCol, dr, dc, requiresOnBoardStart, cons);
 	}
 	
-	@User(params={"relative start row", "relative start column", "delta row", "delta column", "length", "segment length", "requires start to be on board"})
+	@User(params={"relative start row", "relative start column", "delta row", "delta column", "length", "requires start to be on board"})
 	public static RelativeSegmentCaptureAction segment(int relStartRow, int relStartCol, int dr, int dc, int length,
 			boolean requiresOnBoardStart, Condition... cons) {
 		return new RelativeSegmentCaptureAction(relStartRow, relStartCol, dr, dc, length, requiresOnBoardStart, cons);
@@ -70,6 +69,16 @@ public abstract class CaptureAction extends chess.util.Action{
 		 * 
 		 */
 		private static final long serialVersionUID = 8353535313029856877L;
+		private static Method CREATION_METHOD;
+		static {
+			try {
+				CREATION_METHOD = CaptureAction.class.getMethod("relative", int.class, int.class, Condition[].class);
+			} catch (NoSuchMethodException | SecurityException e) {
+				e.printStackTrace();
+				System.exit(-1);
+			}
+		}
+		
 		public final int relRow, relCol;
 		public RelativeCaptureAction(int relRow, int relCol, Condition... cons) {
 			this.relRow = relRow;
@@ -81,8 +90,13 @@ public abstract class CaptureAction extends chess.util.Action{
 			return "Relative";
 		}
 		
-		public static Method getCreationMethod() throws NoSuchMethodException, SecurityException {
-			return CaptureAction.class.getMethod("relative", int.class, int.class, Condition[].class);
+		@Override
+		public Method getMethod() {
+			return CREATION_METHOD;
+		}
+		
+		public static Method getCreationMethod() {
+			return CREATION_METHOD;
 		}
 		
 		@Override
@@ -112,6 +126,16 @@ public abstract class CaptureAction extends chess.util.Action{
 		/**
 		 * 
 		 */
+		private static Method CREATION_METHOD;
+		static {
+			try {
+				CREATION_METHOD = CaptureAction.class.getMethod("line", int.class, int.class, Condition[].class);
+			} catch (NoSuchMethodException | SecurityException e) {
+				e.printStackTrace();
+				System.exit(-1);
+			}
+		}
+		
 		private static final long serialVersionUID = 6584141374081901533L;
 		public final int deltaRow, deltaCol;
 		private ArrayList<Condition> stopConditions;
@@ -128,8 +152,13 @@ public abstract class CaptureAction extends chess.util.Action{
 			return (LineCaptureAction) LineAction.super.stops(cons);
 		}
 		
-		public static Method getCreationMethod() throws NoSuchMethodException, SecurityException {
-			return CaptureAction.class.getMethod("line", int.class, int.class, Condition[].class);
+		@Override
+		public Method getMethod() {
+			return CREATION_METHOD;
+		}
+		
+		public static Method getCreationMethod() {
+			return CREATION_METHOD;
 		}
 		
 		public static String getVariant() {
@@ -174,6 +203,15 @@ public abstract class CaptureAction extends chess.util.Action{
 		 * 
 		 */
 		private static final long serialVersionUID = -7904039124287966499L;
+		private static Method CREATION_METHOD;
+		static {
+			try {
+				CREATION_METHOD = CaptureAction.class.getMethod("relLine", int.class, int.class, int.class, int.class, boolean.class, Condition[].class);
+			} catch (NoSuchMethodException | SecurityException e) {
+				e.printStackTrace();
+				System.exit(-1);
+			}
+		}
 		public final int relStartRow, relStartCol;
 		public final boolean requiresOnBoardStart;
 		
@@ -184,8 +222,13 @@ public abstract class CaptureAction extends chess.util.Action{
 			requiresOnBoardStart = onBoardStart;
 		}
 		
-		public static Method getCreationMethod() throws NoSuchMethodException, SecurityException {
-			return CaptureAction.class.getMethod("relLine", int.class, int.class, int.class, int.class, boolean.class, Condition[].class);
+		@Override
+		public Method getMethod() {
+			return CREATION_METHOD;
+		}
+
+		public static Method getCreationMethod() {
+			return CREATION_METHOD;
 		}
 		
 		@Override
@@ -253,6 +296,15 @@ public abstract class CaptureAction extends chess.util.Action{
 		 * 
 		 */
 		private static final long serialVersionUID = 7121333223961890443L;
+		private static Method CREATION_METHOD;
+		static {
+			try {
+				CREATION_METHOD = CaptureAction.class.getMethod("segment", int.class, int.class, int.class, int.class, int.class, boolean.class, Condition[].class);
+			} catch (NoSuchMethodException | SecurityException e) {
+				e.printStackTrace();
+				System.exit(-1);
+			}
+		}
 		public final int relStartRow, relStartCol, deltaRow, deltaCol, length;
 		public final boolean requiresOnBoardStart;
 		private ArrayList<Condition> stopConditions;
@@ -272,8 +324,13 @@ public abstract class CaptureAction extends chess.util.Action{
 			this.addAllConditions(cons);
 		}
 		
-		public static Method getCreationMethod() throws NoSuchMethodException, SecurityException {
-			return CaptureAction.class.getMethod("segment", int.class, int.class, int.class, int.class, int.class, boolean.class, Condition[].class);
+		@Override
+		public Method getMethod() {
+			return CREATION_METHOD;
+		}
+
+		public static Method getCreationMethod() {
+			return CREATION_METHOD;
 		}
 		
 		public RelativeSegmentCaptureAction stops(Condition... cons) {
@@ -352,6 +409,15 @@ public abstract class CaptureAction extends chess.util.Action{
 		 * 
 		 */
 		private static final long serialVersionUID = -4480635918843039304L;
+		private static Method CREATION_METHOD;
+		static {
+			try {
+				CREATION_METHOD = CaptureAction.class.getMethod("radius", int.class, boolean.class, boolean.class, Condition[].class);
+			} catch (NoSuchMethodException | SecurityException e) {
+				e.printStackTrace();
+				System.exit(-1);
+			}
+		}
 		public final int radius;
 		public final boolean includeSelf;
 		public final boolean fill;
@@ -370,8 +436,13 @@ public abstract class CaptureAction extends chess.util.Action{
 			return "Radius";
 		}
 		
-		public static Method getCreationMethod() throws NoSuchMethodException, SecurityException {
-			return CaptureAction.class.getMethod("radius", int.class, boolean.class, boolean.class, Condition[].class);
+		@Override
+		public Method getMethod() {
+			return CREATION_METHOD;
+		}
+
+		public static Method getCreationMethod() {
+			return CREATION_METHOD;
 		}
 		
 		@Override

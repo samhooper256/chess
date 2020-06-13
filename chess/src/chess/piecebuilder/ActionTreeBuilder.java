@@ -12,43 +12,25 @@ import java.util.List;
 
 import chess.util.Action;
 import chess.util.ActionTree;
-import chess.util.ActionTree.Choke;
-import chess.util.MoveAndCaptureAction.RadiusMoveAndCaptureAction;
 import chess.util.Condition;
 import chess.util.InputVerification;
-import chess.util.MoveAndCaptureAction;
 import chess.util.MultiAction;
-import chess.util.RelativeJumpAction;
 import chess.util.StoppableAction;
 import chess.util.SubMulti;
 import chess.util.User;
 import javafx.collections.ObservableList;
 import javafx.geometry.Insets;
-import javafx.geometry.Pos;
 import javafx.scene.Node;
 import javafx.scene.control.Button;
-import javafx.scene.control.CheckBox;
-import javafx.scene.control.Label;
 import javafx.scene.control.Menu;
 import javafx.scene.control.MenuButton;
 import javafx.scene.control.MenuItem;
 import javafx.scene.control.ScrollPane;
-import javafx.scene.control.TextField;
 import javafx.scene.control.TitledPane;
-import javafx.scene.layout.AnchorPane;
-import javafx.scene.layout.Border;
-import javafx.scene.layout.BorderPane;
-import javafx.scene.layout.BorderStroke;
-import javafx.scene.layout.BorderStrokeStyle;
-import javafx.scene.layout.BorderWidths;
-import javafx.scene.layout.CornerRadii;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Pane;
 import javafx.scene.layout.StackPane;
-import javafx.scene.layout.TilePane;
 import javafx.scene.layout.VBox;
-import javafx.scene.paint.Color;
-import javafx.scene.shape.Circle;
 
 public class ActionTreeBuilder extends StackPane implements InputVerification, Buildable<ActionTree>{
 	private static List<Class<? extends Action>> actionTypes = Action.getImmediateSubtypes();
@@ -108,35 +90,23 @@ public class ActionTreeBuilder extends StackPane implements InputVerification, B
 	
 	private ActionTP loadActionTP(ActionTree.Node actionNode) {
 		Action a = actionNode.getAction();
-		//System.out.println("Loading action to ActionTP:"+a);
 		Class<? extends Action> clazz = a.getClass();
-		String title = "???";
+		String title = "<Failed to load action name>";
 		try {
-			title = 
-				(String) clazz.getMethod("getVariant").invoke(null) + " " +
-				(String) clazz.getMethod("getActionName").invoke(null);
-		} catch (IllegalAccessException | IllegalArgumentException | InvocationTargetException | NoSuchMethodException
-				| SecurityException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+			title = clazz.getMethod("getVariant").invoke(null) + " " +
+					clazz.getMethod("getActionName").invoke(null);
 		}
-		ActionTP tp = null;
-		try {
-			if(a instanceof MultiAction) {
-				tp = new MultiActionTP(title, (Method) clazz.getMethod("getCreationMethod").invoke(null));
-			}
-			else {
-				tp = new ActionTP(title, (Method) clazz.getMethod("getCreationMethod").invoke(null), ActionTree.supportsChildren(a));
-			}
-		} catch (IllegalAccessException | IllegalArgumentException | InvocationTargetException
-				| NoSuchMethodException | SecurityException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+		catch(Throwable t) {
+			t.printStackTrace();
 		}
-		if(tp == null) {
-			System.err.println("Trouble loading creation method from class: " + clazz + " (action="+a+")");
-			return null;
+		final ActionTP tp;
+		if(a instanceof MultiAction) {
+			tp = new MultiActionTP(title, a.getMethod());
 		}
+		else {
+			tp = new ActionTP(title, a.getMethod(), ActionTree.supportsChildren(a));
+		}
+		
 		Object[] reconstructionParams = a.getReconstructionParameters();
 		//System.out.println("recon params = " + Arrays.toString(reconstructionParams));
 		ObservableList<Node> tpChildren = tp.vBox.getChildren();
@@ -226,7 +196,6 @@ public class ActionTreeBuilder extends StackPane implements InputVerification, B
 				subActionTypes = (List<Class<? extends Action>>) actionType.getMethod("getImmediateSubtypes").invoke(null);
 			} catch (IllegalAccessException | IllegalArgumentException | InvocationTargetException
 					| NoSuchMethodException | SecurityException e) {
-				// TODO Auto-generated catch block
 				e.printStackTrace();
 			}
 			MenuItem mi = null;
@@ -238,7 +207,6 @@ public class ActionTreeBuilder extends StackPane implements InputVerification, B
 					actionVariant = (String) subActionType.getMethod("getVariant").invoke(null);
 				} catch (IllegalAccessException | IllegalArgumentException | InvocationTargetException
 						| NoSuchMethodException | SecurityException e) {
-					// TODO Auto-generated catch block
 					e.printStackTrace();
 				}
 				MenuItem subMi = new MenuItem(actionVariant);
@@ -257,7 +225,6 @@ public class ActionTreeBuilder extends StackPane implements InputVerification, B
 				(String) clazz.getMethod("getActionName").invoke(null);
 		} catch (IllegalAccessException | IllegalArgumentException | InvocationTargetException | NoSuchMethodException
 				| SecurityException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 		
@@ -266,7 +233,6 @@ public class ActionTreeBuilder extends StackPane implements InputVerification, B
 			creationMethod = (Method) clazz.getMethod("getCreationMethod").invoke(null);
 		} catch (IllegalAccessException | IllegalArgumentException | InvocationTargetException | NoSuchMethodException
 				| SecurityException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 		ActionTP newActionTP;
@@ -334,16 +300,10 @@ public class ActionTreeBuilder extends StackPane implements InputVerification, B
 			this.setContent(vBox);
 			vBox.setPadding(new Insets(10,0,10,10));
 			this.creationMethod = creationMethod;
-			Annotation userAnnotation = creationMethod.getAnnotation(User.class);
+			User userAnnotation = creationMethod.getAnnotation(User.class);
 			paramNames = null;
 			params = creationMethod.getParameters();
-			try {
-				paramNames = (String[]) userAnnotation.annotationType().getMethod("params").invoke(userAnnotation);
-			} catch (IllegalAccessException | IllegalArgumentException | InvocationTargetException | NoSuchMethodException
-					| SecurityException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			}
+			paramNames = userAnnotation.params();
 			
 			for(int i = 0; i < params.length; i++) {
 				Parameter p = params[i];
@@ -388,8 +348,7 @@ public class ActionTreeBuilder extends StackPane implements InputVerification, B
 			}
 			
 			deleteActionButton = new Button("Delete Action");
-			deleteActionButton.setStyle("-fx-background-color: transparent; -fx-border-width: 1px; -fx-border-color: #b00000;"
-					+ "-fx-border-radius: 6; -fx-text-fill: #b00000;"); //TODO Put this in CSS (and add hover effect)
+			deleteActionButton.getStyleClass().add("delete-button");
 			deleteActionButton.setOnMouseClicked(mouseEvent -> {
 				((Pane) ActionTP.this.getParent()).getChildren().remove(ActionTP.this);
 			});
@@ -411,10 +370,6 @@ public class ActionTreeBuilder extends StackPane implements InputVerification, B
 				}
 			}
 			return result;
-		}
-		
-		public Method getCreationMethod() {
-			return creationMethod;
 		}
 		
 		@Override
@@ -450,7 +405,6 @@ public class ActionTreeBuilder extends StackPane implements InputVerification, B
 					apIndex++;
 				}
 			}
-			//TODO : CONDITIONS
 			if(apIndex == actualParams.length - 1) {
 				actualParams[apIndex] = new Condition[0];
 			}
@@ -461,7 +415,6 @@ public class ActionTreeBuilder extends StackPane implements InputVerification, B
 			try {
 				action = (Action) creationMethod.invoke(null, actualParams);
 			} catch (IllegalAccessException | IllegalArgumentException | InvocationTargetException e) {
-				// TODO Auto-generated catch block
 				e.printStackTrace();
 			}
 			action.addAllConditions(conditionPane.build());
@@ -484,8 +437,7 @@ public class ActionTreeBuilder extends StackPane implements InputVerification, B
 			conditionTP = new ConditionTP();
 			childTP = new ChildTP();
 			deleteChokeButton = new Button("Delete Bottleneck");
-			deleteChokeButton.setStyle("-fx-background-color: transparent; -fx-border-width: 1px; -fx-border-color: #b00000;"
-					+ "-fx-border-radius: 6; -fx-text-fill: #b00000;"); //TODO Put this in CSS (and add hover effect)
+			deleteChokeButton.getStyleClass().add("delete-button");
 			deleteChokeButton.setOnMouseClicked(mouseEvent -> {
 				((Pane) ChokeTP.this.getParent()).getChildren().remove(ChokeTP.this);
 			});
@@ -502,7 +454,6 @@ public class ActionTreeBuilder extends StackPane implements InputVerification, B
 
 		@Override
 		public boolean verifyInput() {
-			//TODO - does this need more work?
 			return conditionTP.verifyInput() & childTP.verifyInput(); //single & on purpose
 		}
 		

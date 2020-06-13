@@ -1,6 +1,5 @@
 package chess.util;
 
-import java.lang.reflect.Member;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
 

@@ -1,45 +1,33 @@
 package chess.base;
 
 import java.util.ArrayList;
-import java.util.Collection;
 
-import chess.piecebuilder.IntInputHBox;
 import javafx.animation.Animation;
 import javafx.animation.Interpolator;
 import javafx.animation.ParallelTransition;
 import javafx.animation.TranslateTransition;
-import javafx.application.Application;
 import javafx.beans.binding.Bindings;
 import javafx.beans.binding.DoubleBinding;
 import javafx.beans.value.ChangeListener;
 import javafx.beans.value.ObservableValue;
-import javafx.collections.ObservableList;
-import javafx.concurrent.Service;
-import javafx.concurrent.Task;
-import javafx.geometry.Pos;
-import javafx.geometry.Rectangle2D;
-import javafx.scene.Node;
 import javafx.scene.Scene;
 import javafx.scene.control.Button;
-import javafx.scene.control.Label;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.layout.ColumnConstraints;
 import javafx.scene.layout.GridPane;
-import javafx.scene.layout.HBox;
 import javafx.scene.layout.Pane;
 import javafx.scene.layout.RowConstraints;
 import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
-import javafx.scene.paint.Color;
-import javafx.scene.shape.Rectangle;
-import javafx.stage.Modality;
-import javafx.stage.Screen;
 import javafx.stage.Stage;
-import javafx.stage.StageStyle;
 import javafx.util.Duration;
 
 public class MainMenu extends StackPane{
+	public static final Image LOGO;
+	static {
+		LOGO = new Image(MainMenu.class.getResourceAsStream("/resources/logo4.png")); 
+	}
 	public static synchronized Scene make() {
 		if(instance != null) {
 			throw new UnsupportedOperationException("Cannot have more than one instance of MainMenu");
@@ -61,6 +49,7 @@ public class MainMenu extends StackPane{
 	private Scene scene;
 	private GamePanel gamePanel;
 	private MenuTransitionHandler mth;
+	private ImageView logoImageView;
 	
 	private MainMenu() {
 		scene = new Scene(this, Main.WIDTH, Main.HEIGHT);
@@ -70,17 +59,25 @@ public class MainMenu extends StackPane{
 		gamePanel = new GamePanel();
 		pieceImages = Piece.getImagesOfAllPieces();
 		
-		DoubleBinding buttonWidth = MainMenu.this.widthProperty().divide(6);
-		mth = new MenuTransitionHandler(pane);
 		Button newBoardButton = new Button("New Board");
-		newBoardButton.prefWidthProperty().bind(buttonWidth);
-		newBoardButton.getStyleClass().add("main-menu-button");
 		Button settingsButton = new Button("Settings");
+		Button quitButton = new Button("Quit");
+		
+		DoubleBinding buttonWidth = (DoubleBinding) Bindings.max(200, MainMenu.this.widthProperty().divide(6));
+		DoubleBinding buttonHeight = MainMenu.this.heightProperty().divide(14);
+		mth = new MenuTransitionHandler(pane);
+		
+		newBoardButton.prefWidthProperty().bind(buttonWidth);
+		newBoardButton.prefHeightProperty().bind(buttonHeight);
+		newBoardButton.getStyleClass().add("main-menu-button");
+		
 		settingsButton.getStyleClass().add("main-menu-button");
 		settingsButton.prefWidthProperty().bind(buttonWidth);
-		Button quitButton = new Button("Quit");
+		settingsButton.prefHeightProperty().bind(buttonHeight);
+		
 		quitButton.getStyleClass().add("main-menu-button");
 		quitButton.prefWidthProperty().bind(buttonWidth);
+		quitButton.prefHeightProperty().bind(buttonHeight);
 		newBoardButton.setOnAction(actionEvent -> {
 			Object selection = BoardSelect.getBoardSelection();
 			if(selection instanceof Integer) {
@@ -101,7 +98,11 @@ public class MainMenu extends StackPane{
 		quitButton.setOnAction(actionEvent -> {
 			((Stage) quitButton.getScene().getWindow()).close();
 		});
-		VBox vBox = new VBox(newBoardButton, settingsButton, quitButton);
+		
+		logoImageView = new ImageView(LOGO);
+		logoImageView.setPreserveRatio(true);
+		logoImageView.fitHeightProperty().bind(MainMenu.this.heightProperty().divide(4));
+		VBox vBox = new VBox(logoImageView, newBoardButton, settingsButton, quitButton);
 		vBox.getStyleClass().add("main-menu-box");
 		this.getChildren().add(vBox);
 		mth.start();

@@ -74,6 +74,9 @@
 }
 
 #popup-message{
+	-fx-text-alignment: center;
+	-fx-wrap-text: true;
+	-fx-padding: 10;
     -fx-font-size: 12pt;
     -fx-font-weight: 400;
     -fx-font-style: normal;
@@ -147,7 +150,6 @@
     -fx-font-style: normal; 
     -fx-font-family: "Gill Sans MT";
 }
-
 *.piece-builder-button:hover{
     -fx-background-color: rgba(255, 153, 0, 0.65);
 }
@@ -168,6 +170,7 @@
 
 *.reset-board-button{
 	-fx-text-alignment: center;
+	-fx-wrap-text: true;
 	-fx-background-color: rgba(255, 0, 0, 0.25);
     -fx-font-size: 12pt;
     -fx-font-weight: 400;
@@ -181,6 +184,7 @@
 
 *.mode-button{
 	-fx-text-alignment: center;
+	-fx-wrap-text: true;
 	-fx-background-color: rgba(255, 0, 255, 0.25);
     -fx-font-size: 12pt;
     -fx-font-weight: 400;

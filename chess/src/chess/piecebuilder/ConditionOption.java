@@ -2,7 +2,7 @@ package chess.piecebuilder;
 
 import javafx.scene.control.MenuItem;
 
-public abstract class ConditionOption extends MenuItem{
+public abstract class ConditionOption extends MenuItem {
 	protected static volatile boolean updatesAllowed = true;
 	public static void setUpdatesAllowed(boolean newUpdatesAllowed) {
 		updatesAllowed = newUpdatesAllowed;

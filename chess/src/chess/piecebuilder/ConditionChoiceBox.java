@@ -22,14 +22,14 @@ public class ConditionChoiceBox extends ChoiceBox<ConditionOption>{
 	    });
 	}
 	
-	/* *
+	/**
 	 * PRECONDITION: m has an AFC annotation.
 	 */
 	public void addMethod(Method m) {
 		this.getItems().add(new MethodConditionOption(this, m));
 	}
 	
-	/* *
+	/**
 	 * PRECONDITION: m has an AFC annotation.
 	 */
 	public void addMethod(String name, Method m) {

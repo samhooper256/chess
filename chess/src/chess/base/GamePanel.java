@@ -8,15 +8,12 @@ import chess.piecebuilder.PieceBuilder;
 import javafx.beans.binding.Bindings;
 import javafx.beans.binding.NumberBinding;
 import javafx.event.EventHandler;
-import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.SnapshotParameters;
 import javafx.scene.control.Button;
-import javafx.scene.control.CheckBox;
 import javafx.scene.control.Control;
 import javafx.scene.control.Label;
 import javafx.scene.control.ScrollPane;
-import javafx.scene.control.TextField;
 import javafx.scene.control.Tooltip;
 import javafx.scene.effect.ColorAdjust;
 import javafx.scene.image.Image;
@@ -26,12 +23,9 @@ import javafx.scene.input.Dragboard;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.input.TransferMode;
 import javafx.scene.layout.AnchorPane;
-import javafx.scene.layout.ColumnConstraints;
-import javafx.scene.layout.GridPane;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Pane;
 import javafx.scene.layout.Priority;
-import javafx.scene.layout.RowConstraints;
 import javafx.scene.layout.StackPane;
 import javafx.scene.layout.TilePane;
 import javafx.scene.layout.VBox;
@@ -305,18 +299,6 @@ public class GamePanel extends StackPane{
 		FREEPLAY, PLAY;
 	}
 	
-	public void changeMode(Mode mode) {
-		if(mode == Mode.FREEPLAY) {
-			
-		}
-		else if(mode == Mode.PLAY) {
-			
-		}
-		else {
-			throw new IllegalArgumentException(mode + " is not supported");
-		}
-	}
-	
 	private void setToFreeplay() {
 		piecePicker.getChildren().clear();
 		Collection<Piece> pieceInstances = Piece.getInstancesOfAllPieces();
@@ -420,18 +402,6 @@ public class GamePanel extends StackPane{
 	        	GamePanel.this.finishDrag();
 	        });
 		};
-	}
-	
-	private static boolean isInteger(String s, int radix) {
-	    if(s.isEmpty()) return false;
-	    for(int i = 0; i < s.length(); i++) {
-	        if(i == 0 && s.charAt(i) == '-') {
-	            if(s.length() == 1) return false;
-	            else continue;
-	        }
-	        if(Character.digit(s.charAt(i),radix) < 0) return false;
-	    }
-	    return true;
 	}
 
 	public void saveBoardAsPreset() {

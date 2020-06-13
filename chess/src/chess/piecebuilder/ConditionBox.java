@@ -3,20 +3,16 @@ package chess.piecebuilder;
 import java.lang.reflect.Field;
 import java.lang.reflect.Member;
 import java.lang.reflect.Method;
-import java.lang.reflect.Modifier;
 import java.util.List;
 import java.util.Set;
 
 import chess.util.AFC;
-import chess.util.BooleanPath;
 import chess.util.CombinerCondition;
 import chess.util.Condition;
 import chess.util.ConditionClass;
 import chess.util.DoublePathed;
 import chess.util.InputVerification;
-import chess.util.IntegerPath;
 import chess.util.NOTCondition;
-import chess.util.ObjectPath;
 import chess.util.PathBase;
 import chess.util.PathedWith;
 import chess.util.SinglePathed;
@@ -28,12 +24,10 @@ import javafx.scene.Node;
 import javafx.scene.control.CheckBox;
 import javafx.scene.control.ChoiceBox;
 import javafx.scene.control.Label;
-import javafx.scene.input.DragEvent;
 import javafx.scene.input.Dragboard;
 import javafx.scene.input.TransferMode;
 import javafx.scene.layout.FlowPane;
 import javafx.scene.layout.HBox;
-import javafx.scene.layout.Pane;
 import javafx.scene.layout.VBox;
 import javafx.util.StringConverter;
 
@@ -44,10 +38,10 @@ public class ConditionBox extends VBox implements InputVerification, MultiCondit
 
 		@Override
 		public String toString(Member member) {
-			if(member instanceof Field) {
+			if(member instanceof Field && ((Field) member).isAnnotationPresent(AFC.class)) {
 				return ((Field) member).getAnnotation(AFC.class).name();
 			}
-			else if(member instanceof Method) {
+			else if(member instanceof Method && ((Method) member).isAnnotationPresent(AFC.class)) {
 				return ((Method) member).getAnnotation(AFC.class).name();
 			}
 			else {
@@ -201,7 +195,6 @@ public class ConditionBox extends VBox implements InputVerification, MultiCondit
 			try {
 				cond = (Condition) premadeConditionBox.getValue().get(null);
 			} catch (IllegalAccessException e) {
-				// TODO Auto-generated catch block
 				e.printStackTrace();
 			}
 		}
@@ -253,7 +246,6 @@ public class ConditionBox extends VBox implements InputVerification, MultiCondit
 						break;
 					}
 				} catch (IllegalArgumentException | IllegalAccessException e) {
-					// TODO Auto-generated catch block
 					e.printStackTrace();
 					break;
 				}
@@ -273,10 +265,14 @@ public class ConditionBox extends VBox implements InputVerification, MultiCondit
 			return part;
 		}
 		else if(con instanceof CombinerCondition) {
-			return new MultiConditionBox(
+			MultiConditionBox multiCB = new MultiConditionBox(
+					con.getCreationMethod(),
 				(Node & MultiConditionPart) ConditionBox.reconstruct(((CombinerCondition) con).get1()),
 				(Node & MultiConditionPart) ConditionBox.reconstruct(((CombinerCondition) con).get2())
 			);
+			
+			return multiCB;
+			
 		}
 		else {
 			ConditionBox conditionBox = new ConditionBox();
@@ -291,6 +287,7 @@ public class ConditionBox extends VBox implements InputVerification, MultiCondit
 				PathBuilder builder1 = PathBuilder.reconstruct(path1);
 				BuildFinisher finisher = BuildFinisher.reconstruct(builder1, creationMethod);
 				ccb.getChildren().addAll(builder1, finisher);
+				ccb.buildFinisher = finisher;
 				return conditionBox;
 			}
 			else if(con instanceof DoublePathed) {
@@ -299,7 +296,7 @@ public class ConditionBox extends VBox implements InputVerification, MultiCondit
 				PathBuilder builder1 = PathBuilder.reconstruct(path1);
 				BuildFinisher finisher = BuildFinisher.reconstruct(builder1, creationMethod);
 				PathBuilder builder2 = PathBuilder.reconstruct(path2);
-				
+				ccb.buildFinisher = finisher;
 				ccb.getChildren().addAll(builder1, finisher, builder2);
 				return conditionBox;
 			}
@@ -320,6 +317,7 @@ public class ConditionBox extends VBox implements InputVerification, MultiCondit
 				else {
 					throw new UnsupportedOperationException("Cannot reconstruct PathWith with generic type: " + with.getClass());
 				}
+				ccb.buildFinisher = finisher;
 				ccb.getChildren().addAll(builder1, finisher, part2);
 				return conditionBox;
 			}

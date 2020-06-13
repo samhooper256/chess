@@ -5,7 +5,6 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
@@ -14,9 +13,6 @@ import chess.base.LegalAction;
 import chess.base.LegalMulti;
 import chess.base.Piece;
 import chess.piecebuilder.Pair;
-import chess.util.SummonAction.LineSummonAction;
-import chess.util.SummonAction.RadiusSummonAction;
-import chess.util.SummonAction.RelativeSummonAction;
 
 public abstract class MultiAction extends chess.util.Action{
 	
@@ -117,6 +113,15 @@ public abstract class MultiAction extends chess.util.Action{
 		 * 
 		 */
 		private static final long serialVersionUID = 7365243869927755382L;
+		private static Method CREATION_METHOD;
+		static {
+			try {
+				CREATION_METHOD = MultiAction.class.getMethod("relative", int.class, int.class, Condition[].class);
+			} catch (NoSuchMethodException | SecurityException e) {
+				e.printStackTrace();
+				System.exit(-1);
+			}
+		}
 		public final int relRow, relCol;
 		RelativeMultiAction(int relRow, int relCol, Condition... cons) {
 			this.actions = new ArrayList<>();
@@ -130,8 +135,13 @@ public abstract class MultiAction extends chess.util.Action{
 			return "Relative";
 		}
 		
-		public static Method getCreationMethod() throws NoSuchMethodException, SecurityException {
-			return MultiAction.class.getMethod("relative", int.class, int.class, Condition[].class);
+		@Override
+		public Method getMethod() {
+			return CREATION_METHOD;
+		}
+
+		public static Method getCreationMethod() {
+			return CREATION_METHOD;
 		}
 		
 		@Override

@@ -21,11 +21,11 @@ public class MethodConditionOption extends ConditionOption{
 		Pane pb = super.choiceBox.nodeToAddTo;
 		if(	pb instanceof BooleanPathBuilder && 
 			(afc.returnType() == boolean.class || afc.returnType() == Void.class && m.getReturnType() == boolean.class)) {
-			//TODO Green text for booleans
+			this.getStyleClass().add("final-menu-item");
 		}
 		if(	pb instanceof BooleanPathBuilder && 
 			(afc.returnType() == int.class || afc.returnType() == Void.class && m.getReturnType() == int.class)) {
-			//TODO Green text for ints
+			this.getStyleClass().add("final-menu-item");
 		}
 		customName = null;
 	}
@@ -35,7 +35,7 @@ public class MethodConditionOption extends ConditionOption{
 		this.method = m;
 		this.afc = method.getAnnotation(AFC.class);
 		if(afc.returnType() != Void.class && m.getReturnType() == boolean.class) {
-			//TODO Green text for booleans
+			this.getStyleClass().add("final-menu-item");
 		}
 		customName = name;
 	}
@@ -58,11 +58,10 @@ public class MethodConditionOption extends ConditionOption{
 			children.add(pBlock);
 		}
 		if(pb instanceof BooleanPathBuilder && returnType == boolean.class) {
-			//TODO Do something?
+			this.getStyleClass().add("final-menu-item");
 		}
 		else if(pb instanceof IntegerPathBuilder && returnType == int.class) {
-			//TODO Maybe support Integer.class as well?
-			//TODO Do something?
+			this.getStyleClass().add("final-menu-item");
 		}
 		else {
 			ConditionChoiceBox newCB = getNextCB(returnType);
@@ -95,8 +94,7 @@ public class MethodConditionOption extends ConditionOption{
 						}
 					}
 					else if(pb instanceof ObjectPathBuilder) {
-						if(!nextReturnType.isPrimitive()) { 
-							//TODO Maybe the "anything path" should allow for anything? even primitives?
+						if(!nextReturnType.isPrimitive()) {
 							newCB.addMethod(m);
 						}
 					}

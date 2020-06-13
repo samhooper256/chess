@@ -10,9 +10,6 @@ import java.util.Set;
 import chess.base.Board;
 import chess.base.LegalAction;
 import chess.base.LegalPromotion;
-import chess.util.SummonAction.LineSummonAction;
-import chess.util.SummonAction.RadiusSummonAction;
-import chess.util.SummonAction.RelativeSummonAction;
 
 public abstract class PromotionAction extends Action{
 	
@@ -46,21 +43,36 @@ public abstract class PromotionAction extends Action{
 		return "On Start";
 	}
 	
+	ArrayList<String> options;
+	
 	public static class ConcretePromotionAction extends PromotionAction{
 		
 		/**
 		 * 
 		 */
 		private static final long serialVersionUID = -3377596962210324410L;
-		public final ArrayList<String> options;
+		private static Method CREATION_METHOD;
+		static {
+			try {
+				CREATION_METHOD = PromotionAction.class.getMethod("withOptions", ArrayList.class, Condition[].class);
+			} catch (NoSuchMethodException | SecurityException e) {
+				e.printStackTrace();
+				System.exit(-1);
+			}
+		}
 		
 		private ConcretePromotionAction(ArrayList<String> options, Condition... cons) {
 			this.options = options;
 			this.addAllConditions(cons);
 		}
 		
-		public static Method getCreationMethod() throws NoSuchMethodException, SecurityException {
-			return PromotionAction.class.getMethod("withOptions", ArrayList.class, Condition[].class);
+		@Override
+		public Method getMethod() {
+			return CREATION_METHOD;
+		}
+
+		public static Method getCreationMethod() {
+			return CREATION_METHOD;
 		}
 
 		@Override

@@ -70,6 +70,15 @@ public abstract class MoveAndCaptureAction extends chess.util.Action{
 		 * 
 		 */
 		private static final long serialVersionUID = -7727897891431792350L;
+		private static Method CREATION_METHOD;
+		static {
+			try {
+				CREATION_METHOD = MoveAndCaptureAction.class.getMethod("relative", int.class, int.class, Condition[].class);
+			} catch (NoSuchMethodException | SecurityException e) {
+				e.printStackTrace();
+				System.exit(-1);
+			}
+		}
 		public final int relRow, relCol;
 		public RelativeMoveAndCaptureAction(int relRow, int relCol, Condition... cons) {
 			this.relRow = relRow;
@@ -81,8 +90,13 @@ public abstract class MoveAndCaptureAction extends chess.util.Action{
 			return "Relative";
 		}
 		
-		public static Method getCreationMethod() throws NoSuchMethodException, SecurityException {
-			return MoveAndCaptureAction.class.getMethod("relative", int.class, int.class, Condition[].class);
+		@Override
+		public Method getMethod() {
+			return CREATION_METHOD;
+		}
+
+		public static Method getCreationMethod() {
+			return CREATION_METHOD;
 		}
 		
 		@Override
@@ -112,6 +126,15 @@ public abstract class MoveAndCaptureAction extends chess.util.Action{
 		 * 
 		 */
 		private static final long serialVersionUID = 3123733457832673828L;
+		private static Method CREATION_METHOD;
+		static {
+			try {
+				CREATION_METHOD = MoveAndCaptureAction.class.getMethod("line", int.class, int.class, Condition[].class);
+			} catch (NoSuchMethodException | SecurityException e) {
+				e.printStackTrace();
+				System.exit(-1);
+			}
+		}
 		public final int deltaRow, deltaCol;
 		private ArrayList<Condition> stopConditions;
 		
@@ -122,8 +145,13 @@ public abstract class MoveAndCaptureAction extends chess.util.Action{
 			this.addAllConditions(cons);
 		}
 		
-		public static Method getCreationMethod() throws NoSuchMethodException, SecurityException {
-			return MoveAndCaptureAction.class.getMethod("line", int.class, int.class, Condition[].class);
+		@Override
+		public Method getMethod() {
+			return CREATION_METHOD;
+		}
+
+		public static Method getCreationMethod() {
+			return CREATION_METHOD;
 		}
 		
 		@Override
@@ -135,9 +163,9 @@ public abstract class MoveAndCaptureAction extends chess.util.Action{
 			return "Line";
 		}
 		
-		/*
+		/**
 		 * Important: Stop conditions are checked AFTER the conditions for adding a legal move. Thus,
-		 * the first destination that meets the stop conditions WILL BE ADDED.
+		 * the first destination that meets the stop conditions WILL BE ADDED as the last legal move.
 		 * */
 		@Override
 		public Set<? extends LegalAction> getLegals(Board b, int startRow, int startCol) {
@@ -173,6 +201,15 @@ public abstract class MoveAndCaptureAction extends chess.util.Action{
 		 * 
 		 */
 		private static final long serialVersionUID = 976011474500244109L;
+		private static Method CREATION_METHOD;
+		static {
+			try {
+				CREATION_METHOD = MoveAndCaptureAction.class.getMethod("relLine", int.class, int.class, int.class, int.class, boolean.class, Condition[].class);
+			} catch (NoSuchMethodException | SecurityException e) {
+				e.printStackTrace();
+				System.exit(-1);
+			}
+		}
 		public final int relStartRow, relStartCol;
 		public final boolean requiresOnBoardStart;
 		
@@ -183,8 +220,13 @@ public abstract class MoveAndCaptureAction extends chess.util.Action{
 			requiresOnBoardStart = onBoardStart;
 		}
 		
-		public static Method getCreationMethod() throws NoSuchMethodException, SecurityException {
-			return MoveAndCaptureAction.class.getMethod("relLine", int.class, int.class, int.class, int.class, boolean.class, Condition[].class);
+		@Override
+		public Method getMethod() {
+			return CREATION_METHOD;
+		}
+
+		public static Method getCreationMethod() {
+			return CREATION_METHOD;
 		}
 		
 		@Override
@@ -251,6 +293,15 @@ public abstract class MoveAndCaptureAction extends chess.util.Action{
 		 * 
 		 */
 		private static final long serialVersionUID = 8208817534795868704L;
+		private static Method CREATION_METHOD;
+		static {
+			try {
+				CREATION_METHOD = MoveAndCaptureAction.class.getMethod("segment", int.class, int.class, int.class, int.class, int.class, boolean.class, Condition[].class);
+			} catch (NoSuchMethodException | SecurityException e) {
+				e.printStackTrace();
+				System.exit(-1);
+			}
+		}
 		public final int relStartRow, relStartCol, deltaRow, deltaCol, length;
 		public final boolean requiresOnBoardStart;
 		private ArrayList<Condition> stopConditions;
@@ -278,8 +329,13 @@ public abstract class MoveAndCaptureAction extends chess.util.Action{
 			return "Relative Segment";
 		}
 		
-		public static Method getCreationMethod() throws NoSuchMethodException, SecurityException {
-			return MoveAndCaptureAction.class.getMethod("segment", int.class, int.class, int.class, int.class, int.class, boolean.class, Condition[].class);
+		@Override
+		public Method getMethod() {
+			return CREATION_METHOD;
+		}
+
+		public static Method getCreationMethod() {
+			return CREATION_METHOD;
 		}
 		
 		@Override
@@ -350,6 +406,15 @@ public abstract class MoveAndCaptureAction extends chess.util.Action{
 		 * 
 		 */
 		private static final long serialVersionUID = 325912317449977068L;
+		private static Method CREATION_METHOD;
+		static {
+			try {
+				CREATION_METHOD = MoveAndCaptureAction.class.getMethod("radius", int.class, boolean.class, boolean.class, Condition[].class);
+			} catch (NoSuchMethodException | SecurityException e) {
+				e.printStackTrace();
+				System.exit(-1);
+			}
+		}
 		public final int radius;
 		public final boolean includeSelf;
 		public final boolean fill;
@@ -367,9 +432,13 @@ public abstract class MoveAndCaptureAction extends chess.util.Action{
 		public static String getVariant() {
 			return "Radius";
 		}
-		
-		public static Method getCreationMethod() throws NoSuchMethodException, SecurityException {
-			return MoveAndCaptureAction.class.getMethod("radius", int.class, boolean.class, boolean.class, Condition[].class);
+		@Override
+		public Method getMethod() {
+			return CREATION_METHOD;
+		}
+
+		public static Method getCreationMethod() {
+			return CREATION_METHOD;
 		}
 		
 		@Override

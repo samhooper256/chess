@@ -5,15 +5,12 @@ import java.util.Arrays;
 import java.util.Set;
 
 import chess.util.ActionTree;
-import chess.util.CaptureAction;
 import chess.util.Condition;
 import chess.util.Flag;
 import chess.util.IntegerPath;
 import chess.util.MoveAndCaptureAction;
 import chess.util.MultiAction;
-import chess.util.PromotionAction;
 import chess.util.SubMulti;
-import chess.util.SummonAction;
 import javafx.scene.image.Image;
 
 /* *
@@ -84,7 +81,6 @@ public class Pawn extends Piece{
 				)
 			);
 		} catch (NoSuchMethodException | SecurityException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 			System.exit(-1);
 		}

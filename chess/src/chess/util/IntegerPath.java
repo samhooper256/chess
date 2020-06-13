@@ -1,11 +1,9 @@
 package chess.util;
 
-import java.lang.reflect.Member;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
 
 import chess.base.Board;
-import chess.base.Board.Tile;
 
 public class IntegerPath extends PathBase{
 	

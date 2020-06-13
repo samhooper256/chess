@@ -9,7 +9,6 @@ import chess.util.Condition;
 import chess.util.Flag;
 import chess.util.MoveAndCaptureAction;
 import chess.util.MultiAction;
-import chess.util.OtherMoveAndCaptureAction;
 import chess.util.SubMulti;
 import javafx.scene.image.Image;
 

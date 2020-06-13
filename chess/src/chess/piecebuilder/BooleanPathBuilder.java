@@ -6,20 +6,14 @@ import java.util.Arrays;
 import java.util.Iterator;
 import java.util.List;
 
-import chess.util.AFC;
 import chess.util.BooleanPath;
 import chess.util.Condition;
 import chess.util.ConditionBuilder;
 import chess.util.InputVerification;
 import chess.util.MethodAccess;
-import chess.util.PathBase;
 import chess.util.RelativeTile;
 import javafx.collections.ObservableList;
 import javafx.scene.Node;
-import javafx.scene.Parent;
-import javafx.scene.control.Label;
-import javafx.scene.layout.FlowPane;
-import javafx.scene.layout.Pane;
 
 public class BooleanPathBuilder extends PathBuilder{
 	public BooleanPathBuilder() {
@@ -50,18 +44,16 @@ public class BooleanPathBuilder extends PathBuilder{
 			throw new IllegalArgumentException(onChoiceBoxValue.getClass() + " is not a support ConditionOption type");
 		}
 		
-		//TODO support onstartrelative and ondestrelative
-		
 		ObservableList<Node> children = this.getChildren();
 		int index = children.indexOf(onChoiceBox);
 		Object[] onParams;
 		if(children.get(index + 1) instanceof ParameterBlock) {
-			System.out.println("next to on WAS paramblock");
+			//System.out.println("next to on WAS paramblock");
 			onParams = ((ParameterBlock) children.get(index + 1)).build();
 			index++;
 		}
 		else {
-			System.out.println("next to on was NOT paramblock");
+			//System.out.println("next to on was NOT paramblock");
 			onParams = new Object[0];
 		}
 		System.out.println("onParams="+Arrays.deepToString(onParams));
@@ -94,7 +86,6 @@ public class BooleanPathBuilder extends PathBuilder{
 		return conditionBuilder.toBooleanPath();
 		
 		} catch (IllegalAccessException | IllegalArgumentException | InvocationTargetException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 		throw new IllegalArgumentException("Unknown Error ( see stack trace )");
@@ -150,7 +141,6 @@ public class BooleanPathBuilder extends PathBuilder{
 	}
 	
 	public static BooleanPathBuilder reconstruct(BooleanPath path) {
-		//TODO Very similar code to IntegerPath#reconstruct
 		System.out.println("*****RECREATING:"+path);
 		BooleanPathBuilder builder = new BooleanPathBuilder();
 		ObservableList<Node> children = builder.getChildren();
@@ -197,7 +187,6 @@ public class BooleanPathBuilder extends PathBuilder{
 			try {
 				maMethod = ma.getMethod();
 			} catch (NoSuchMethodException | SecurityException | ClassNotFoundException e) {
-				// TODO Auto-generated catch block
 				e.printStackTrace();
 				break OUTER;
 			}

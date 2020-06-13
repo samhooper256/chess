@@ -10,11 +10,9 @@ import chess.util.ConditionBuilder;
 import chess.util.InputVerification;
 import chess.util.MethodAccess;
 import chess.util.ObjectPath;
-import chess.util.PathBase;
 import chess.util.RelativeTile;
 import javafx.collections.ObservableList;
 import javafx.scene.Node;
-import javafx.scene.layout.Pane;
 
 public class ObjectPathBuilder extends PathBuilder{
 
@@ -135,7 +133,6 @@ public class ObjectPathBuilder extends PathBuilder{
 			return conditionBuilder.toObjectPath();
 			
 		} catch (IllegalAccessException | IllegalArgumentException | InvocationTargetException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 		throw new IllegalArgumentException("Unknown Error ( see stack trace )");
@@ -179,7 +176,6 @@ public class ObjectPathBuilder extends PathBuilder{
 			try {
 				maMethod = ma.getMethod();
 			} catch (NoSuchMethodException | SecurityException | ClassNotFoundException e) {
-				// TODO Auto-generated catch block
 				e.printStackTrace();
 				break OUTER;
 			}

@@ -10,17 +10,14 @@ import javafx.scene.control.Label;
 import javafx.scene.input.Dragboard;
 import javafx.scene.input.TransferMode;
 import javafx.scene.layout.BorderPane;
-import javafx.scene.layout.Pane;
 
 public class DropPathPane extends BorderPane implements InputVerification {
 	private Label label;
 	private String pathType;
-	private boolean addFinsiher;
 	private boolean pathHasBeenDropped;
 	public DropPathPane(boolean addFinisher) {
 		super();
 		this.pathHasBeenDropped = false;
-		this.addFinsiher = addFinisher;
 		this.label = new Label("Drop Any Path");
 		this.pathType = null;
 		this.getStyleClass().add("drop-path-pane");

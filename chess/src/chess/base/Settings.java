@@ -1,9 +1,7 @@
 package chess.base;
 
 import chess.piecebuilder.IntInputHBox;
-import javafx.geometry.Insets;
 import javafx.geometry.Pos;
-import javafx.scene.Scene;
 import javafx.scene.control.Button;
 import javafx.scene.control.CheckBox;
 import javafx.scene.control.Label;
@@ -18,7 +16,6 @@ import javafx.scene.layout.RowConstraints;
 import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
 import javafx.scene.paint.Color;
-import javafx.stage.Stage;
 
 public class Settings extends StackPane{
 	
@@ -46,11 +43,13 @@ public class Settings extends StackPane{
 	private Button saveAsPresetButton;
 	
 	/////////////////////
-	private static int moveRule;
-	private static boolean autoFlip, insufficientMaterial, moveRuleEnabled;
+	private static volatile int moveRule;
+	private static volatile boolean autoFlip, insufficientMaterial, moveRuleEnabled;
 	
 	public static synchronized void make() {
-		instance = new Settings();
+		if(instance == null) {
+			instance = new Settings();
+		}
 	}
 	
 	private Settings() {
@@ -94,7 +93,7 @@ public class Settings extends StackPane{
 		moveRuleCheckBox = new CheckBox();
 		moveRuleCheckBox.setSelected(true);
 		moveRuleTextField = new TextField("50");
-		moveRuleTextField.prefWidthProperty().bind(settingsStackPane.widthProperty().divide(16));
+		moveRuleTextField.setPrefWidth(50);
 		moveRuleLabel = new Label("move rule");
 		moveRuleHBox = new HBox(5, moveRuleCheckBox, moveRuleTextField, moveRuleLabel);
 		moveRuleHBox.setAlignment(Pos.CENTER_LEFT);
@@ -136,7 +135,7 @@ public class Settings extends StackPane{
 		errorMessage.setTextFill(Color.RED);
 		lowerBox = new HBox();
 		lowerBox.getStyleClass().add("settings-lower-box");
-		lowerBox.getChildren().addAll(errorMessage, backToMainButton, cancelButton, applyButton); //TODO put "error message" somewhere
+		lowerBox.getChildren().addAll(errorMessage, backToMainButton, cancelButton, applyButton);
 		gridPane.add(lowerBox, 0, 1);
 		
 		darken = new ColorAdjust();

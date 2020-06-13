@@ -14,17 +14,16 @@ public class PieceData implements Serializable{
 
 	public void setWhiteImageURIString(String whiteImageURIString) {
 		if(whiteImageURIString == null) {
-			whiteImageURIString = null;
 			whiteImage = PieceBuilder.WHITE_DEFAULT_IMAGE;
 			return;
 		}
 		this.whiteImageURIString = whiteImageURIString;
 		try {
-			whiteImage = new Image(whiteImageURIString, 240, 240, false, true);
+			whiteImage = new Image(whiteImageURIString, PieceBuilder.IMAGE_SIZE, PieceBuilder.IMAGE_SIZE, false, true);
 		}
 		catch(Throwable t) {
 			System.err.println("Failed to load image from URI="+whiteImageURIString);
-			whiteImage = PieceBuilder.WHITE_DEFAULT_IMAGE;
+			whiteImage = PieceBuilder.ERROR_LOADING_IMAGE;
 		}
 	}
 
@@ -34,17 +33,16 @@ public class PieceData implements Serializable{
 
 	public void setBlackImageURIString(String blackImageURIString) {
 		if(blackImageURIString == null) {
-			blackImageURIString = null;
 			blackImage = PieceBuilder.BLACK_DEFAULT_IMAGE;
 			return;
 		}
 		this.blackImageURIString = blackImageURIString;
 		try {
-			blackImage = new Image(blackImageURIString, 240, 240, false, true);
+			blackImage = new Image(blackImageURIString, PieceBuilder.IMAGE_SIZE, PieceBuilder.IMAGE_SIZE, false, true);
 		}
 		catch(Throwable t) {
 			System.err.println("Failed to load image from URI="+blackImageURIString);
-			blackImage = PieceBuilder.BLACK_DEFAULT_IMAGE;
+			blackImage = PieceBuilder.ERROR_LOADING_IMAGE;
 		}
 	}
 
@@ -80,11 +78,11 @@ public class PieceData implements Serializable{
 				}
 				else {
 					try {
-						whiteImage = new Image(whiteImageURIString, 240, 240, false, true);
+						whiteImage = new Image(whiteImageURIString, PieceBuilder.IMAGE_SIZE, PieceBuilder.IMAGE_SIZE, false, true);
 					}
 					catch(Throwable t) {
 						System.err.println("Failed to load image from URI="+whiteImageURIString);
-						whiteImage = PieceBuilder.WHITE_DEFAULT_IMAGE; //TODO maybe return an "error" image instead of the default one?
+						whiteImage = PieceBuilder.ERROR_LOADING_IMAGE;
 					}
 				}
 			}
@@ -97,11 +95,11 @@ public class PieceData implements Serializable{
 				}
 				else {
 					try {
-						blackImage = new Image(blackImageURIString, 240, 240, false, true);
+						blackImage = new Image(blackImageURIString, PieceBuilder.IMAGE_SIZE, PieceBuilder.IMAGE_SIZE, false, true);
 					}
 					catch(Throwable t) {
 						System.err.println("Failed to load image from URI="+blackImageURIString);
-						blackImage = PieceBuilder.BLACK_DEFAULT_IMAGE;
+						blackImage = PieceBuilder.ERROR_LOADING_IMAGE;
 					}
 				}
 			}
@@ -145,11 +143,11 @@ public class PieceData implements Serializable{
 		}
 		else {
 			try {
-				whiteImage = new Image(whiteImageURIString, 240, 240, false, true);
+				whiteImage = new Image(whiteImageURIString, PieceBuilder.IMAGE_SIZE, PieceBuilder.IMAGE_SIZE, false, true);
 			}
 			catch(Throwable t) {
 				System.err.println("Failed to load image from URI="+whiteImageURIString);
-				whiteImage = PieceBuilder.WHITE_DEFAULT_IMAGE;
+				whiteImage = PieceBuilder.ERROR_LOADING_IMAGE;
 			}
 		}
 		if(blackImageURIString == null) {
@@ -157,11 +155,11 @@ public class PieceData implements Serializable{
 		}
 		else {
 			try {
-				blackImage = new Image(blackImageURIString, 240, 240, false, true);
+				blackImage = new Image(blackImageURIString, PieceBuilder.IMAGE_SIZE, PieceBuilder.IMAGE_SIZE, false, true);
 			}
 			catch(Throwable t) {
 				System.err.println("Failed to load image from URI="+blackImageURIString);
-				blackImage = PieceBuilder.BLACK_DEFAULT_IMAGE;
+				blackImage = PieceBuilder.ERROR_LOADING_IMAGE;
 			}
 		}
 	}

@@ -1,7 +1,6 @@
 package chess.util;
 
 import java.io.Serializable;
-import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -104,15 +103,17 @@ public abstract class Action implements Serializable {
 	public abstract Object[] getReconstructionParameters();
 	
 	public static String getActionName() {
-		return "???";
+		return "<UNKNOWN ACTION NAME>";
 	}
 	
 	public static String getVariant() {
-		return "";
+		return "<UNKNOWN ACTION VARIANT>";
 	}
 	
 	@Override
 	public String toString() {
 		return String.format("[%s@%d:conditions=%s]", getClass().getName(), hashCode(), getConditions());
 	}
+	
+	public abstract java.lang.reflect.Method getMethod();
 }

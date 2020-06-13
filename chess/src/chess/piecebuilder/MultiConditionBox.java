@@ -1,31 +1,22 @@
 package chess.piecebuilder;
 
-import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
-import java.lang.reflect.Member;
 import java.lang.reflect.Method;
 import java.util.Set;
 
-import chess.util.AFC;
 import chess.util.Condition;
 import chess.util.ConditionCombiner;
 import chess.util.InputVerification;
-import javafx.collections.ObservableList;
 import javafx.scene.Node;
-import javafx.scene.Parent;
-import javafx.scene.control.Button;
 import javafx.scene.control.ChoiceBox;
-import javafx.scene.input.DragEvent;
 import javafx.scene.input.Dragboard;
 import javafx.scene.input.TransferMode;
 import javafx.scene.layout.Pane;
-import javafx.scene.layout.Region;
 import javafx.scene.layout.VBox;
 import javafx.util.StringConverter;
 
 public class MultiConditionBox extends VBox implements MultiConditionPart{
 	private ChoiceBox<Method> choiceBox;
-	private ConditionBoxWrap conditionBoxWrap;
 	private static final StringConverter<Method> methodStringConverter = new StringConverter<>() {
 
 		@Override
@@ -40,7 +31,6 @@ public class MultiConditionBox extends VBox implements MultiConditionPart{
 	};
 	
 	{
-		//TODO COde from this line to *** is the exact same as in CustomConditionBox - fix?
 		this.setOnDragOver(dragEvent -> {
 			//System.out.println("MultiConditionBox drag over");
 			Dragboard db = dragEvent.getDragboard();
@@ -90,12 +80,12 @@ public class MultiConditionBox extends VBox implements MultiConditionPart{
 		//System.out.println("\tfinally, my ntad's children (after ntad.getChildren().add(mcp1index, this)): " + nodeToAddTo.getChildren());
 		System.out.println("created: " +this );
 	}
-	public <T extends Node & MultiConditionPart> MultiConditionBox(T first, T second) {
+	public <T extends Node & MultiConditionPart> MultiConditionBox(Method modifierMethod, T first, T second) {
 		this.setFillWidth(true);
 		choiceBox = new ChoiceBox<>();
 		choiceBox.getItems().addAll(Condition.postConstructionModifierMethods);
 		choiceBox.setConverter(methodStringConverter);
-		choiceBox.setValue(Condition.postConstructionModifierMethods[0]);
+		choiceBox.setValue(modifierMethod);
 		this.getChildren().addAll((Node) first, choiceBox, (Node) second);
 	}
 	@Override
@@ -107,9 +97,9 @@ public class MultiConditionBox extends VBox implements MultiConditionPart{
 	@Override
 	public Condition build() {
 		try {
-			return (Condition) choiceBox.getValue().invoke(null, ((Buildable<Condition>) getChildren().get(0)).build(), ((Buildable<Condition>) getChildren().get(0)).build());
+			return (Condition) choiceBox.getValue().invoke(null, ((Buildable<Condition>) getChildren().get(0)).build(),
+					((Buildable<Condition>) getChildren().get(2)).build());
 		} catch (IllegalAccessException | IllegalArgumentException | InvocationTargetException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 		throw new IllegalArgumentException("Unkown error");

@@ -3,9 +3,7 @@ package chess.piecebuilder;
 import chess.util.Condition;
 import chess.util.InputVerification;
 import javafx.scene.Node;
-import javafx.scene.Parent;
 import javafx.scene.control.Button;
-import javafx.scene.control.Label;
 import javafx.scene.layout.Pane;
 import javafx.scene.layout.VBox;
 
@@ -30,8 +28,7 @@ public class ConditionBoxWrap extends VBox implements InputVerification, Buildab
 		esvBox.setFillWidth(true);
 		esvBox.getChildren().add((Node) (part));
 		deleteConditionButton = new Button("Delete Condition");
-		deleteConditionButton.setStyle("-fx-background-color: transparent; -fx-border-width: 1px; -fx-border-color: #b00000;"
-				+ "-fx-border-radius: 6; -fx-text-fill: #b00000;"); //TODO Put this in CSS (and add hover effect)
+		deleteConditionButton.getStyleClass().add("delete-button");
 		deleteConditionButton.setOnMouseClicked(mouseEvent -> {
 			((Pane) getParent()).getChildren().remove(this);
 		});

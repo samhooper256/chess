@@ -212,5 +212,14 @@ public abstract class Piece {
 		default : return CustomPiece.getDataFor(name);
 		}
 	}
+	
+	//used to clean up data from custom pieces who try to promote/summon to a piece the user deleted.
+	public static void removeNonExistentPieces(ArrayList<String> pieces) {
+		for(int i = pieces.size(); i >= 0; i--) {
+			if(!isNameOfPiece(pieces.get(i))) {
+				pieces.remove(i);
+			}
+		}
+	}
 }
 

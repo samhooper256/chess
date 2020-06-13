@@ -19,6 +19,10 @@ import java.util.List;
  * @author 	Sam Hooper
  */
 public class BoardPreset implements Serializable{
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = 4593977848666590475L;
 	private static ArrayList<BoardPreset> presets;
 	private final int size;
 	private boolean turn;
@@ -95,10 +99,6 @@ public class BoardPreset implements Serializable{
 		this.size = size;
 		turn = Piece.WHITE;
 		pieceNames = new String[this.size][this.size];
-	}
-	
-	private BoardPreset(String name, Board b) {
-		this(name, b.getTurn(), b);
 	}
 	
 	private BoardPreset(String name, boolean turn, Board b) {

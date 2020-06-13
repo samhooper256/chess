@@ -1,16 +1,11 @@
 package chess.base;
 
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Set;
 
 import chess.util.ActionTree;
 import chess.util.Condition;
-import chess.util.Flag;
 import chess.util.MoveAndCaptureAction;
-import chess.util.MultiAction;
-import chess.util.PromotionAction;
-import chess.util.SubMulti;
 import javafx.scene.image.Image;
 
 /* *
@@ -33,11 +28,7 @@ public class Rook extends Piece {
 				new ActionTree.Node(MoveAndCaptureAction.line(-1, 0, Condition.EOE).stops(Condition.POD)),
 				new ActionTree.Node(MoveAndCaptureAction.line(1, 0, Condition.EOE).stops(Condition.POD)),
 				new ActionTree.Node(MoveAndCaptureAction.line(0, -1, Condition.EOE).stops(Condition.POD)),
-				new ActionTree.Node(MoveAndCaptureAction.line(0, 1, Condition.EOE).stops(Condition.POD)),
-				new ActionTree.Node(MultiAction.relative(-1, 1)
-						.addAction(SubMulti.capRel(Flag.DESTINATION,0,0), false)
-						.addAction(SubMulti.promo(new ArrayList<>(Arrays.asList("Queen")), Condition.SIE), false)
-				)
+				new ActionTree.Node(MoveAndCaptureAction.line(0, 1, Condition.EOE).stops(Condition.POD))
 			))
 		);
 		data.setPointValue(5);

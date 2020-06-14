@@ -65,8 +65,7 @@ public class LegalPromotion extends LegalAction{
 		handleHelper = false;
 	}
 
-	@Override
-	public Shape getIndicator(int size) {
+	public static Shape getIndicator(int size) {
 		Circle indicator = new Circle(size);
 		indicator.getStyleClass().add("promotion");
 		return indicator;

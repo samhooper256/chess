@@ -58,7 +58,10 @@
 	-fx-border-radius: 0 0 10 10;
 }
 
-
+*.preset-grid-pane{
+	-fx-hgap: 10;
+	-fx-vgap: 10;
+}
 
 *.popup-button {
     -fx-font-size: 11pt;

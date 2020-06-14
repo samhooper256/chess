@@ -34,7 +34,9 @@ public abstract class LegalAction {
 	 */
 	public abstract void handle(int startRow, int startCol, Board b);
 	
-	public abstract Shape getIndicator(int size);
+	public static Shape getIndicator(int size) {
+		throw new IllegalArgumentException("this method must be overridden");
+	}
 	
 	public abstract String getName();
 	

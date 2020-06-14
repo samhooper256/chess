@@ -9,6 +9,7 @@ import java.util.Set;
 
 import chess.base.Board;
 import chess.base.LegalAction;
+import chess.base.LegalCapture;
 import chess.base.LegalPromotion;
 
 public abstract class PromotionAction extends Action{
@@ -41,6 +42,10 @@ public abstract class PromotionAction extends Action{
 	
 	public static String getVariant() {
 		return "On Start";
+	}
+	
+	public static Class<? extends LegalAction> correspondingLegal(){
+		return LegalPromotion.class;
 	}
 	
 	ArrayList<String> options;

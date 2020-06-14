@@ -10,6 +10,7 @@ import java.util.Set;
 
 import chess.base.Board;
 import chess.base.LegalAction;
+import chess.base.LegalCapture;
 import chess.base.LegalMulti;
 import chess.base.Piece;
 import chess.piecebuilder.Pair;
@@ -59,6 +60,10 @@ public abstract class MultiAction extends chess.util.Action{
 	
 	public static String getActionName() {
 		return "Multi";
+	}
+	
+	public static Class<? extends LegalAction> correspondingLegal(){
+		return LegalMulti.class;
 	}
 	
 	/* 

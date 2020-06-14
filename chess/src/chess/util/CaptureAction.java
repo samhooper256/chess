@@ -51,6 +51,10 @@ public abstract class CaptureAction extends chess.util.Action{
 		return "Capture";
 	}
 	
+	public static Class<? extends LegalAction> correspondingLegal(){
+		return LegalCapture.class;
+	}
+	
 	private static List<Class<? extends Action>> immediateSubtypes = 
 			Collections.unmodifiableList(Arrays.asList(
 					RelativeCaptureAction.class,

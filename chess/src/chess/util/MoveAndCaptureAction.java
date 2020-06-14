@@ -11,6 +11,7 @@ import java.util.Set;
 
 import chess.base.Board;
 import chess.base.LegalAction;
+import chess.base.LegalCapture;
 import chess.base.LegalMoveAndCapture;
 import chess.base.Piece;
 
@@ -63,6 +64,10 @@ public abstract class MoveAndCaptureAction extends chess.util.Action{
 	
 	public static String getActionName() {
 		return "Move And Capture";
+	}
+	
+	public static Class<? extends LegalAction> correspondingLegal(){
+		return LegalMoveAndCapture.class;
 	}
 	
 	public static class RelativeMoveAndCaptureAction extends MoveAndCaptureAction implements RelativeJumpAction{

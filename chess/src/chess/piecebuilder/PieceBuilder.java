@@ -171,7 +171,8 @@ public class PieceBuilder extends Stage implements InputVerification{
 		setupMenuBar();
 		outermostVBox.getChildren().addAll(menuBar, outerStackPane);
 		scene = new Scene(outermostVBox, 600, 400);
-		scene.getStylesheets().add(PieceBuilder.class.getResource("piecebuilderstyle.css").toExternalForm());
+		scene.getStylesheets().addAll(PieceBuilder.class.getResource("/resources/style.css").toExternalForm(),
+				PieceBuilder.class.getResource("piecebuilderstyle.css").toExternalForm());
 		
 		gridPane = new GridPane();
 		RowConstraints row1 = new RowConstraints();

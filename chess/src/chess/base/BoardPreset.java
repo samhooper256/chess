@@ -65,6 +65,10 @@ public class BoardPreset implements Serializable{
 		}
 	}
 	
+	void setName(String newName) {
+		this.name = newName;
+	}
+	
 	public static void savePresets() {
 		File dir = new File("userpresets");
 		File f = new File("userpresets/presets.dat");
@@ -94,6 +98,9 @@ public class BoardPreset implements Serializable{
 		}
 	}
 	
+	public static boolean deletePreset(BoardPreset preset) {
+		return presets.remove(preset);
+	}
 	public BoardPreset(String name, int size) {
 		this.name = name;
 		this.size = size;
@@ -153,7 +160,7 @@ public class BoardPreset implements Serializable{
 		presets.add(newPreset);
 	}
 	
-	public static List<BoardPreset> getPresets() {
+	public static ArrayList<BoardPreset> getPresets() {
 		return presets;
 	}
 	

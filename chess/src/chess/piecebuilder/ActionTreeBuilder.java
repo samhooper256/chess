@@ -1,6 +1,5 @@
 package chess.piecebuilder;
 
-import java.lang.annotation.Annotation;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.lang.reflect.Parameter;
@@ -10,6 +9,7 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
 
+import chess.base.LegalAction;
 import chess.util.Action;
 import chess.util.ActionTree;
 import chess.util.Condition;
@@ -33,6 +33,7 @@ import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
 import javafx.scene.paint.Color;
 import javafx.scene.shape.Circle;
+import javafx.scene.shape.Shape;
 
 public class ActionTreeBuilder extends StackPane implements InputVerification, Buildable<ActionTree>{
 	private static List<Class<? extends Action>> actionTypes = Action.getImmediateSubtypes();
@@ -201,8 +202,24 @@ public class ActionTreeBuilder extends StackPane implements InputVerification, B
 				e.printStackTrace();
 			}
 			MenuItem mi = new Menu(actionName);
-			Circle graphic = new Circle(8);
-			graphic.setFill(Color.GREEN);
+			Shape graphic = null;
+			try {
+				graphic = (Shape) ((Class<? extends LegalAction>) actionType.getMethod("correspondingLegal").invoke(null))
+						.getMethod("getIndicator", int.class).invoke(null, 8);
+			} catch (IllegalAccessException | IllegalArgumentException | InvocationTargetException
+					| NoSuchMethodException | SecurityException e1) {
+				// TODO Auto-generated catch block
+				e1.printStackTrace();
+			}
+			if(graphic == null) {
+				System.err.println("Couldn't get graphic");
+				graphic = new Circle(8);
+				graphic.setFill(Color.MAGENTA);
+			}
+			else {
+				System.out.println("graphic good");
+				System.out.println(graphic.getFill());
+			}
 			mi.setGraphic(graphic);
 			ObservableList<MenuItem> subItems = ((Menu) mi).getItems();
 			for(Class<? extends Action> subActionType : subActionTypes) {

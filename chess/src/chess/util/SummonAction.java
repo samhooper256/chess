@@ -11,6 +11,7 @@ import java.util.Set;
 
 import chess.base.Board;
 import chess.base.LegalAction;
+import chess.base.LegalCapture;
 import chess.base.LegalSummon;
 import chess.base.Piece;
 
@@ -78,6 +79,10 @@ public abstract class SummonAction extends Action{
 	
 	public static String getActionName() {
 		return "Summon";
+	}
+	
+	public static Class<? extends LegalAction> correspondingLegal(){
+		return LegalSummon.class;
 	}
 	
 	protected SummonAction(ArrayList<String> ops) {

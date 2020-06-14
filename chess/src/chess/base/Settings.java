@@ -1,7 +1,11 @@
 package chess.base;
 
+import java.util.ArrayList;
+
 import chess.piecebuilder.IntInputHBox;
+import javafx.collections.ObservableList;
 import javafx.geometry.Pos;
+import javafx.scene.Node;
 import javafx.scene.control.Button;
 import javafx.scene.control.CheckBox;
 import javafx.scene.control.Label;
@@ -25,7 +29,8 @@ public class Settings extends StackPane{
 	ColorAdjust darken;
 	private GridPane gridPane;
 	private ScrollPane scroll;
-	private VBox vBox;
+	private VBox mainVBox;
+	private PresetManager presetManager;
 	private HBox lowerBox;
 	private Label errorMessage;
 	/** Auto-flip Setting */
@@ -39,8 +44,7 @@ public class Settings extends StackPane{
 	private Label moveRuleLabel;
 	private StackPane settingsStackPane;
 	
-	private Button changeBoardButton;
-	private Button saveAsPresetButton;
+	private Button managePresetsButton, changeBoardButton, saveAsPresetButton;
 	
 	/////////////////////
 	private static volatile int moveRule;
@@ -70,9 +74,9 @@ public class Settings extends StackPane{
 		col1.setPercentWidth(100);
 		gridPane.getColumnConstraints().add(col1);
 		
-		vBox = new VBox();
-		vBox.getStyleClass().add("settings-upper-box");
-		scroll = new ScrollPane(vBox);
+		mainVBox = new VBox();
+		mainVBox.getStyleClass().add("settings-upper-box");
+		scroll = new ScrollPane(mainVBox);
 		scroll.getStyleClass().add("settings-scroll-pane");
 		gridPane.add(scroll, 0, 0);
 		
@@ -100,6 +104,19 @@ public class Settings extends StackPane{
 		moveRule = 50;
 		moveRuleEnabled = true;
 		
+		presetManager = new PresetManager();
+		/*
+		Button managePresetsBackButton = new Button("Back to Settings");
+		managePresetsBackButton.setOnAction(actionEvent -> {
+			scroll.setContent(mainVBox);
+		});
+		presetManager.getChildren().add(managePresetsBackButton);
+		*/
+		managePresetsButton = new Button("Manage Presets");
+		managePresetsButton.setOnAction(actionEvent -> {
+			presetManager.updatePresets();
+			scroll.setContent(presetManager);
+		});
 		
 		changeBoardButton = new Button("Change board");
 		changeBoardButton.setOnAction(actionEvent -> {
@@ -113,8 +130,8 @@ public class Settings extends StackPane{
 				((GamePanel) currentlyOpenedOn).saveBoardAsPreset();
 			}
 		});
-		vBox.getChildren().addAll(autoFlipCheckBox, insufficientMaterialCheckBox, moveRuleHBox, 
-				changeBoardButton, saveAsPresetButton);
+		mainVBox.getChildren().addAll(autoFlipCheckBox, insufficientMaterialCheckBox, moveRuleHBox, 
+				managePresetsButton, changeBoardButton, saveAsPresetButton);
 		
 		Button cancelButton = new Button("Cancel");
 		cancelButton.setOnAction(actionEvent -> this.closeWithoutApplying());
@@ -143,6 +160,112 @@ public class Settings extends StackPane{
 		
 		settingsStackPane.getChildren().add(gridPane);
 		this.getChildren().add(settingsStackPane);
+	}
+	
+	class PresetManager extends VBox{
+		private Label presetHeaderLabel;
+		public PresetManager() {
+			super();
+			presetHeaderLabel = new Label("Presets");
+			presetGrid = new GridPane();
+			presetGrid.getStyleClass().add("preset-grid-pane");
+			presetGrid.setHgap(10);
+			presetGrid.setVgap(10);
+			this.getStyleClass().add("settings-upper-box");
+			updatePresets();
+			this.getChildren().addAll(presetHeaderLabel, presetGrid);
+		}
+		
+		private GridPane presetGrid;
+		
+		public void updatePresets() {
+			presetGrid.getChildren().clear();
+			ArrayList<BoardPreset> presets = BoardPreset.getPresets();
+			presetHeaderLabel.setText("Presets (" + (presets.size() < 100 ? presets.size() : "99+") +")");
+			for(int i = 0; i < presets.size(); i++) {
+				BoardPreset preset = presets.get(i);
+				presetGrid.add(new Label(preset.getName()), 0, i);
+				presetGrid.add(new PresetHBox(preset), 1, i);
+				
+			}
+		}
+		
+		class PresetHBox extends HBox {
+			private static final int SPACING = 10;
+			private BoardPreset preset;
+			public PresetHBox(BoardPreset pre) {
+				super(SPACING);
+				this.preset = pre;
+				this.setAlignment(Pos.CENTER_LEFT);
+				Button renameButton = new Button("Rename");
+				Button renameConfirmButton = new Button("Confirm");
+				Button deleteButton = new Button("Delete");
+				renameButton.setOnAction(actionEvent -> {
+					ObservableList<Node> children = PresetHBox.this.getChildren();
+					children.clear();
+					children.add(renameConfirmButton);
+					int rowIndex = GridPane.getRowIndex(PresetHBox.this);
+					removeNodeFromGridPane(presetGrid, 0, rowIndex);
+					presetGrid.add(new TextField(), 0, rowIndex);
+				});
+				renameConfirmButton.setOnAction(actionEvent -> {
+					ObservableList<Node> children = PresetHBox.this.getChildren();
+					int rowIndex = GridPane.getRowIndex(PresetHBox.this);
+					TextField tf = (TextField) getNodeFromGridPane(presetGrid, 0, rowIndex);
+					String newPresetName = tf.getText();
+					preset.setName(newPresetName);
+					if(newPresetName == null || newPresetName.isBlank()) {
+						children.add(new Label("Must not be empty."));
+					}
+					else {
+						children.clear();
+						children.addAll(renameButton, deleteButton);
+						presetGrid.getChildren().remove(tf);
+						presetGrid.add(new Label(newPresetName), 0, rowIndex);
+					}
+				});
+				deleteButton.setOnAction(actionEvent ->{
+					int rowIndex = GridPane.getRowIndex(PresetHBox.this);
+					ObservableList<Node> gridChildren = presetGrid.getChildren();
+					final int presetGridIndex = gridChildren.indexOf(PresetHBox.this);
+					removeNodeFromGridPane(presetGrid, 0, rowIndex);
+					removeNodeFromGridPane(presetGrid, 1, rowIndex);
+					
+					System.out.println("PresetHBox.this = " + PresetHBox.this);
+					System.out.println("gridChildren = " + gridChildren);
+					
+					System.out.println("presetGridIndex = " + presetGridIndex);
+					for(int i = presetGridIndex - 1; i < gridChildren.size(); i++) {
+						Node child = gridChildren.get(i);
+						int childRow = GridPane.getRowIndex(child);
+						if(childRow > rowIndex) {
+							GridPane.setConstraints(child, GridPane.getColumnIndex(child), childRow - 1);
+						}
+					}
+					
+					BoardPreset.deletePreset(preset);
+				});
+				this.getChildren().addAll(renameButton, deleteButton);
+			}
+		}
+		
+		private void removeNodeFromGridPane(GridPane gridPane, int col, int row) {
+			ObservableList<Node> children = gridPane.getChildren();
+			for (Node node : children) {
+		        if (GridPane.getColumnIndex(node) == col && GridPane.getRowIndex(node) == row) {
+		            children.remove(node);
+		            return;
+		        }
+		    }
+		}
+		private Node getNodeFromGridPane(GridPane gridPane, int col, int row) {
+		    for (Node node : gridPane.getChildren()) {
+		        if (GridPane.getColumnIndex(node) == col && GridPane.getRowIndex(node) == row) {
+		            return node;
+		        }
+		    }
+		    return null;
+		}
 	}
 	
 	private boolean applySettings() {
@@ -193,6 +316,7 @@ public class Settings extends StackPane{
 			instance.changeBoardButton.setDisable(true);
 			instance.saveAsPresetButton.setDisable(true);
 		}
+		instance.scroll.setContent(instance.mainVBox);
 		stackPane.getChildren().add(instance);
 	}
 	

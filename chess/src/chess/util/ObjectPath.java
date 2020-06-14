@@ -33,8 +33,8 @@ public static final Method[] creationMethods;
 			creationMethods[4] = ObjectPath.class.getMethod("instanceOf", Class.class);
 			creationMethods[5] = ObjectPath.class.getMethod("isPiece", String.class);
 		} catch (NoSuchMethodException | SecurityException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
+			System.exit(-1);
 		}
 	}
 	

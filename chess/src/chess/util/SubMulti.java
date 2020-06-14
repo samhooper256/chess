@@ -107,6 +107,10 @@ public abstract class SubMulti extends Action{
 			return subMultiCreationMethods[0];
 		}
 		
+		public static Class<? extends LegalAction> correspondingLegal(){
+			return LegalMoveAndCapture.class;
+		}
+		
 		public Set<? extends LegalAction> getLegals(Board b, int startRow, int startCol, int destRow, int destCol) {
 			int m = b.getPieceAt(startRow, startCol).getColor() == Piece.WHITE ? 1 : -1;
 			int row, col;
@@ -194,6 +198,10 @@ public abstract class SubMulti extends Action{
 			return subMultiCreationMethods[1];
 		}
 		
+		public static Class<? extends LegalAction> correspondingLegal(){
+			return LegalOtherMoveAndCapture.class;
+		}
+		
 		@Override
 		public Object[] getReconstructionParameters() {
 			return new Object[] {relativeTo, otherRelStartRow, otherRelStartCol, otherRelDestRow, otherRelDestCol};
@@ -243,6 +251,10 @@ public abstract class SubMulti extends Action{
 		
 		public static Method getCreationMethod() {
 			return subMultiCreationMethods[2];
+		}
+		
+		public static Class<? extends LegalAction> correspondingLegal(){
+			return LegalCapture.class;
 		}
 		
 		@Override
@@ -346,6 +358,10 @@ public abstract class SubMulti extends Action{
 			return subMultiCreationMethods[3];
 		}
 		
+		public static Class<? extends LegalAction> correspondingLegal(){
+			return LegalCapture.class;
+		}
+		
 		@Override
 		public Object[] getReconstructionParameters() {
 			return new Object[] {relativeTo, radius, fill, includeSelf};
@@ -379,6 +395,10 @@ public abstract class SubMulti extends Action{
 		
 		public static Method getCreationMethod() {
 			return subMultiCreationMethods[4];
+		}
+		
+		public static Class<? extends LegalAction> correspondingLegal(){
+			return LegalPromotion.class;
 		}
 		
 		@Override
@@ -432,6 +452,10 @@ public abstract class SubMulti extends Action{
 		
 		public static Method getCreationMethod() {
 			return subMultiCreationMethods[5];
+		}
+		
+		public static Class<? extends LegalAction> correspondingLegal(){
+			return LegalSummon.class;
 		}
 		
 		@Override
@@ -535,6 +559,10 @@ public abstract class SubMulti extends Action{
 		
 		public static Method getCreationMethod() {
 			return subMultiCreationMethods[6];
+		}
+		
+		public static Class<? extends LegalAction> correspondingLegal(){
+			return LegalSummon.class;
 		}
 		
 		@Override

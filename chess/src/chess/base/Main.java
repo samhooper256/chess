@@ -27,7 +27,7 @@ public class Main extends Application{
 		PresetCreation.make();
 		Settings.make();
 		scene = MainMenu.make();
-		scene.getStylesheets().add(Main.class.getResource("style.css").toExternalForm());
+		scene.getStylesheets().add(Main.class.getResource("/resources/style.css").toExternalForm());
 		primaryStage.setMinHeight(400);
 		primaryStage.minWidthProperty().bind(primaryStage.heightProperty().multiply(1.5));
 		primaryStage.setTitle("chess++");

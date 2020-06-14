@@ -349,7 +349,7 @@ public class GamePanel extends StackPane{
 		VBox.setVgrow(board, Priority.ALWAYS);
 		boardBox.getChildren().clear();
 		boardBox.getChildren().add(0, board);
-		
+		turnLabel.setText(newBoard.getTurn() == Piece.WHITE ? WHITE_TO_MOVE_TEXT : BLACK_TO_MOVE_TEXT);
 		
 	}
 	

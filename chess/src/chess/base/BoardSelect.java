@@ -67,7 +67,7 @@ class BoardSelect extends Stage{
 		
 		VBox vBox = new VBox(intBox, orLabel, bottomHBox, buttonBox, errorMessage);
 		Scene scene = new Scene(vBox);
-		scene.getStylesheets().add(BoardSelect.class.getResource("popupstyle.css").toExternalForm());
+		scene.getStylesheets().add(BoardSelect.class.getResource(Main.RESOURCES_PREFIX + "popupstyle.css").toExternalForm());
 		this.setScene(scene);
 		this.sizeToScene();
 	}

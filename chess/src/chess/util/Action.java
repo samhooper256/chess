@@ -116,8 +116,4 @@ public abstract class Action implements Serializable {
 	}
 	
 	public abstract java.lang.reflect.Method getMethod();
-	
-	public static Class<? extends LegalAction> correspondingLegal(){
-		throw new IllegalArgumentException("this method must be overridden");
-	}
 }

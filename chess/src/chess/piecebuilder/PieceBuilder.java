@@ -11,6 +11,7 @@ import java.util.List;
 
 import chess.base.CustomPiece;
 import chess.base.GamePanel;
+import chess.base.Main;
 import chess.base.Piece;
 import chess.base.PieceData;
 import chess.base.WrappedImageView;
@@ -57,18 +58,18 @@ public class PieceBuilder extends Stage implements InputVerification{
 	public static final Image RELATIVE, LINE, RELATIVE_LINE, RELATIVE_SEGMENT, RADIUS, ON_START;
 	
 	static {
-		WHITE_DEFAULT_IMAGE = new Image(PieceBuilder.class.getResourceAsStream(WHITE_DEFAULT_URI = "/resources/white_default_image.png"),
+		WHITE_DEFAULT_IMAGE = new Image(PieceBuilder.class.getResourceAsStream(WHITE_DEFAULT_URI = (Main.RESOURCES_PREFIX + "white_default_image.png")),
 				IMAGE_SIZE, IMAGE_SIZE, false, true);
-		BLACK_DEFAULT_IMAGE = new Image(PieceBuilder.class.getResourceAsStream(BLACK_DEFAULT_URI = "/resources/black_default_image.png"),
+		BLACK_DEFAULT_IMAGE = new Image(PieceBuilder.class.getResourceAsStream(BLACK_DEFAULT_URI = (Main.RESOURCES_PREFIX + "black_default_image.png")),
 				IMAGE_SIZE, IMAGE_SIZE, false, true);
-		ERROR_LOADING_IMAGE = new Image(PieceBuilder.class.getResourceAsStream("/resources/errorloading.png"),
+		ERROR_LOADING_IMAGE = new Image(PieceBuilder.class.getResourceAsStream(Main.RESOURCES_PREFIX + "errorloading.png"),
 				IMAGE_SIZE, IMAGE_SIZE, false, true);
-		RELATIVE = new Image(PieceBuilder.class.getResourceAsStream("/resources/relative_icon.png"), 16, 16, false, true);
-		LINE = new Image(PieceBuilder.class.getResourceAsStream("/resources/line_icon.png"), 16, 16, false, true);
-		RELATIVE_LINE = new Image(PieceBuilder.class.getResourceAsStream("/resources/relative_line_icon.png"), 16, 16, false, true);
-		RELATIVE_SEGMENT = new Image(PieceBuilder.class.getResourceAsStream("/resources/relative_segment_icon.png"), 16, 16, false, true);
-		RADIUS = new Image(PieceBuilder.class.getResourceAsStream("/resources/radius_icon.png"), 16, 16, false, true);
-		ON_START = new Image(PieceBuilder.class.getResourceAsStream("/resources/on_start_icon.png"), 16, 16, false, true);
+		RELATIVE = new Image(PieceBuilder.class.getResourceAsStream(Main.RESOURCES_PREFIX + "relative_icon.png"), 16, 16, false, true);
+		LINE = new Image(PieceBuilder.class.getResourceAsStream(Main.RESOURCES_PREFIX + "line_icon.png"), 16, 16, false, true);
+		RELATIVE_LINE = new Image(PieceBuilder.class.getResourceAsStream(Main.RESOURCES_PREFIX + "relative_line_icon.png"), 16, 16, false, true);
+		RELATIVE_SEGMENT = new Image(PieceBuilder.class.getResourceAsStream(Main.RESOURCES_PREFIX + "relative_segment_icon.png"), 16, 16, false, true);
+		RADIUS = new Image(PieceBuilder.class.getResourceAsStream(Main.RESOURCES_PREFIX + "radius_icon.png"), 16, 16, false, true);
+		ON_START = new Image(PieceBuilder.class.getResourceAsStream(Main.RESOURCES_PREFIX + "on_start_icon.png"), 16, 16, false, true);
 		try {
 			new File("userpieces").createNewFile();
 		} catch (IOException e) {
@@ -178,8 +179,8 @@ public class PieceBuilder extends Stage implements InputVerification{
 		setupMenuBar();
 		outermostVBox.getChildren().addAll(menuBar, outerStackPane);
 		scene = new Scene(outermostVBox, 600, 400);
-		scene.getStylesheets().addAll(PieceBuilder.class.getResource("/resources/style.css").toExternalForm(),
-				PieceBuilder.class.getResource("piecebuilderstyle.css").toExternalForm());
+		scene.getStylesheets().addAll(PieceBuilder.class.getResource(Main.RESOURCES_PREFIX + "style.css").toExternalForm(),
+				PieceBuilder.class.getResource(Main.RESOURCES_PREFIX + "piecebuilderstyle.css").toExternalForm());
 		
 		gridPane = new GridPane();
 		RowConstraints row1 = new RowConstraints();
@@ -615,10 +616,9 @@ public class PieceBuilder extends Stage implements InputVerification{
 		currentData.setTree(actionTreeBuilder.build());
 		currentData.setPointValue(5);
 		
-		File file = new File("userpieces/" + currentData.getName() + ".dat");
+		File file = new File(Main.PIECES_FOLDER, currentData.getName() + ".dat");
 		boolean error = false;
 		try {
-			file.createNewFile();
 			FileWriter temp = new FileWriter(file, false);
 			temp.flush();
 			temp.close();
@@ -631,8 +631,8 @@ public class PieceBuilder extends Stage implements InputVerification{
 			error = true;
 			e.printStackTrace();
 		}
-		CustomPiece.updatePieceData(currentData);
 		if(!error) {
+			CustomPiece.updatePieceData(currentData);
 			successPopup.setMessage("\"" + currentData.getName() + "\" saved successfully.");
 			successPopup.show();
 		}
@@ -657,7 +657,8 @@ public class PieceBuilder extends Stage implements InputVerification{
 		pieceData.setTree(actionTreeBuilder.build());
 		pieceData.setPointValue(5);
 		
-		File file = new File("userpieces/" + pieceData.getName() + ".dat");
+		File file = new File(Main.PIECES_FOLDER, pieceData.getName() + ".dat");
+		boolean error = false;
 		try {
 			file.createNewFile();
 			FileWriter temp = new FileWriter(file, false);
@@ -669,15 +670,16 @@ public class PieceBuilder extends Stage implements InputVerification{
 			oos.flush();
 			oos.close();
 		} catch (IOException e) {
-			// TODO Auto-generated catch block
+			error = true;
 			e.printStackTrace();
 		}
-		
-		CustomPiece.defineNewPiece(pieceData);
-		successPopup.setMessage("Piece \"" + pieceData.getName() + "\" created successfully.");
-		successPopup.show();
-		PieceBuilder.reset();
-		currentData = pieceData;
+		if(!error) {
+			CustomPiece.defineNewPiece(pieceData);
+			successPopup.setMessage("Piece \"" + pieceData.getName() + "\" created successfully.");
+			successPopup.show();
+			PieceBuilder.reset();
+			currentData = pieceData;
+		}
 	}
 	
 	/**

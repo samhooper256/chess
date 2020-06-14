@@ -33,10 +33,8 @@ public abstract class LegalAction {
 	 * This method SHOULD BLOCK until the effect of this action is visible to the user.
 	 */
 	public abstract void handle(int startRow, int startCol, Board b);
-	
-	public static Shape getIndicator(int size) {
-		throw new IllegalArgumentException("this method must be overridden");
-	}
+
+	public abstract Shape indicator(int size);
 	
 	public abstract String getName();
 	

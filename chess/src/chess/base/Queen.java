@@ -19,8 +19,8 @@ public class Queen extends Piece {
 	private static final PieceData data;
 	
 	static {
-		BLACK_IMAGE = new Image(Piece.class.getResourceAsStream("/resources/queen_black.png"));
-		WHITE_IMAGE = new Image(Piece.class.getResourceAsStream("/resources/queen_white.png"));
+		BLACK_IMAGE = new Image(Piece.class.getResourceAsStream(Main.RESOURCES_PREFIX + "queen_black.png"));
+		WHITE_IMAGE = new Image(Piece.class.getResourceAsStream(Main.RESOURCES_PREFIX + "queen_white.png"));
 		
 		data = new PieceData("Queen", WHITE_IMAGE, BLACK_IMAGE);
 		data.setTree(

@@ -63,7 +63,12 @@ public class LegalSummon extends LegalAction{
 		}
 		handleHelper = false;
 	}
-
+	
+	@Override
+	public Shape indicator(int size) {
+		return LegalSummon.getIndicator(size);
+	}
+	
 	public static Shape getIndicator(int size) {
 		Circle indicator = new Circle(size);
 		indicator.getStyleClass().add("summon");

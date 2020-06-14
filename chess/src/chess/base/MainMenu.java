@@ -28,7 +28,7 @@ import javafx.util.Duration;
 public class MainMenu extends StackPane{
 	public static final Image LOGO;
 	static {
-		LOGO = new Image(MainMenu.class.getResourceAsStream("/resources/logo4.png")); 
+		LOGO = new Image(MainMenu.class.getResourceAsStream(Main.RESOURCES_PREFIX + "logo4.png")); 
 	}
 	public static synchronized Scene make() {
 		if(instance != null) {
@@ -45,7 +45,7 @@ public class MainMenu extends StackPane{
 	}
 	
 	
-	private static final File instructionsFile = new File("src/resources/instructions.html");
+	private static final File instructionsFile = new File(Main.RESOURCES_PREFIX + "instructions.html");
 	private static MainMenu instance;
 	private static ArrayList<Image> pieceImages;
 	private Scene scene;
@@ -55,7 +55,7 @@ public class MainMenu extends StackPane{
 	
 	private MainMenu() {
 		scene = new Scene(this, Main.WIDTH, Main.HEIGHT);
-		scene.getStylesheets().add(MainMenu.class.getResource("mainmenu.css").toExternalForm());
+		scene.getStylesheets().add(MainMenu.class.getResource(Main.RESOURCES_PREFIX + "mainmenu.css").toExternalForm());
 		Pane pane = new Pane();
 		this.getChildren().add(pane);
 		gamePanel = new GamePanel();

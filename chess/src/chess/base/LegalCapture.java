@@ -52,7 +52,12 @@ public class LegalCapture extends LegalAction{
 		}
 		handleHelper = false;
 	}
-
+	
+	@Override
+	public Shape indicator(int size) {
+		return LegalCapture.getIndicator(size);
+	}
+	
 	public static Shape getIndicator(int size) {
 		Circle indicator = new Circle(size);
 		indicator.getStyleClass().add("capture");

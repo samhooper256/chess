@@ -19,8 +19,8 @@ public class Bishop extends Piece {
 	
 	static {
 		
-		BLACK_IMAGE = new Image(Piece.class.getResourceAsStream("/resources/bishop_black.png"));
-		WHITE_IMAGE = new Image(Piece.class.getResourceAsStream("/resources/bishop_white.png"));
+		BLACK_IMAGE = new Image(Piece.class.getResourceAsStream(Main.RESOURCES_PREFIX + "bishop_black.png"));
+		WHITE_IMAGE = new Image(Piece.class.getResourceAsStream(Main.RESOURCES_PREFIX + "bishop_white.png"));
 		data = new PieceData("Bishop", WHITE_IMAGE, BLACK_IMAGE);
 		data.setTree(
 		new ActionTree(Arrays.asList(

@@ -2,8 +2,10 @@ package chess.base;
 
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.ObjectInputStream;
+import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -58,14 +60,26 @@ public class CustomPiece extends Piece{
 	}
 	
 	private static void loadPieceData() {
-		File userpieces = new File("userpieces");
-		for(File datFile : userpieces.listFiles()) {
-			ObjectInputStream ois = null;
+		for(File f : Main.PIECES_FOLDER.listFiles()) {
+			FileInputStream fis = null;
 			try {
-				ois = new ObjectInputStream(new FileInputStream(datFile));
-				Object readObject = ois.readObject();
-				if(readObject instanceof PieceData) {
-					PieceData data = (PieceData) readObject;
+				fis = new FileInputStream(f);
+			} catch (FileNotFoundException e1) {
+				e1.printStackTrace();
+				continue;
+			}
+			try {
+				if(fis == null || fis.available() == 0) {
+					continue;
+				}
+			} catch (IOException e1) {
+				e1.printStackTrace();
+				continue;
+			}
+			try(ObjectInputStream ois = new ObjectInputStream(fis)){
+				Object obj = ois.readObject();
+				if(obj instanceof PieceData) {
+					PieceData data = (PieceData) obj;
 					data.updateImages();
 					CustomPiece.defineNewPiece(data);
 				}

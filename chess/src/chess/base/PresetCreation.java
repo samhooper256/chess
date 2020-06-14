@@ -68,7 +68,7 @@ public class PresetCreation extends Stage{
 		VBox vBox = new VBox(topHBox, bottomHBox, buttonBox, errorMessage);
 		vBox.setAlignment(Pos.CENTER);
 		Scene scene = new Scene(vBox);
-		scene.getStylesheets().add(PresetCreation.class.getResource("popupstyle.css").toExternalForm());
+		scene.getStylesheets().add(PresetCreation.class.getResource(Main.RESOURCES_PREFIX + "popupstyle.css").toExternalForm());
 		this.setScene(scene);
 	}
 	

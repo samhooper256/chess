@@ -56,7 +56,12 @@ public class LegalMoveAndCapture extends LegalAction{
 		}
 		handleHelper = false;
 	}
-
+	
+	@Override
+	public Shape indicator(int size) {
+		return LegalMoveAndCapture.getIndicator(size);
+	}
+	
 	public static Shape getIndicator(int size) {
 		Circle indicator = new Circle(size);
 		indicator.getStyleClass().add("move-and-capture");

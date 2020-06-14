@@ -20,8 +20,8 @@ public class Knight extends Piece{
 
 	private static PieceData data;
 	static {
-		BLACK_IMAGE = new Image(Piece.class.getResourceAsStream("/resources/knight_black.png"));
-		WHITE_IMAGE = new Image(Piece.class.getResourceAsStream("/resources/knight_white.png"));
+		BLACK_IMAGE = new Image(Piece.class.getResourceAsStream(Main.RESOURCES_PREFIX + "knight_black.png"));
+		WHITE_IMAGE = new Image(Piece.class.getResourceAsStream(Main.RESOURCES_PREFIX + "knight_white.png"));
 		data = new PieceData("Knight", WHITE_IMAGE, BLACK_IMAGE);
 		moveA = 1;
 		moveB = 2;

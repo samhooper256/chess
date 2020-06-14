@@ -19,8 +19,8 @@ public class Rook extends Piece {
 	private static final PieceData data;
 	
 	static {
-		BLACK_IMAGE = new Image(Piece.class.getResourceAsStream("/resources/rook_black.png"));
-		WHITE_IMAGE = new Image(Piece.class.getResourceAsStream("/resources/rook_white.png"));
+		BLACK_IMAGE = new Image(Piece.class.getResourceAsStream(Main.RESOURCES_PREFIX + "rook_black.png"));
+		WHITE_IMAGE = new Image(Piece.class.getResourceAsStream(Main.RESOURCES_PREFIX + "rook_white.png"));
 		
 		data = new PieceData("Rook", WHITE_IMAGE, BLACK_IMAGE);
 		data.setTree(

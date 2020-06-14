@@ -40,7 +40,12 @@ public class LegalMulti extends LegalAction{
 			actions.get(i).handle(startRow, startCol, b);
 		}
 	}
-
+	
+	@Override
+	public Shape indicator(int size) {
+		return LegalMulti.getIndicator(size);
+	}
+	
 	public static Shape getIndicator(int size) {
 		Circle indicator = new Circle(size);
 		indicator.getStyleClass().add("multi");

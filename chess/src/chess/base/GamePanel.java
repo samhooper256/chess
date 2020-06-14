@@ -136,9 +136,9 @@ public class GamePanel extends StackPane{
 	    boardWrap.setAlignment(Pos.CENTER_RIGHT);
 	    turnWrap.maxHeightProperty().bind(boardBox.heightProperty().divide(16));
 	    boardWrap.maxHeightProperty().bind(boardBox.heightProperty().divide(16));
-	    ImageView flipTurnImage = new WrappedImageView(new Image(GamePanel.class.getResourceAsStream("/resources/flip_turn.png")));
+	    ImageView flipTurnImage = new WrappedImageView(new Image(GamePanel.class.getResourceAsStream(Main.RESOURCES_PREFIX + "flip_turn.png")));
 	    flipTurnImage.setPreserveRatio(true);
-	    ImageView flipBoardImage = new WrappedImageView(new Image(GamePanel.class.getResourceAsStream("/resources/flip_board.png")));
+	    ImageView flipBoardImage = new WrappedImageView(new Image(GamePanel.class.getResourceAsStream(Main.RESOURCES_PREFIX + "flip_board.png")));
 	    flipBoardImage.setPreserveRatio(true);
 	    flipTurnImage.setPickOnBounds(true);
 	    flipBoardImage.setPickOnBounds(true);
@@ -165,7 +165,7 @@ public class GamePanel extends StackPane{
         Tooltip.install(flipTurnImage, new Tooltip("Flip Turn"));
         Tooltip.install(flipBoardImage, new Tooltip("Flip Board"));
         
-        ImageView settingsWheel = new ImageView(new Image(GamePanel.class.getResourceAsStream("/resources/settings_wheel.png")));
+        ImageView settingsWheel = new ImageView(new Image(GamePanel.class.getResourceAsStream(Main.RESOURCES_PREFIX + "settings_wheel.png")));
         settingsWheel.setPreserveRatio(true);
         settingsWheel.fitHeightProperty().bind(boardBox.heightProperty().divide(16));
         settingsWheel.setPickOnBounds(true);
@@ -177,7 +177,7 @@ public class GamePanel extends StackPane{
         settingsWheel.setOnMouseEntered(x -> settingsWheel.setEffect(ca));
         settingsWheel.setOnMouseExited(x -> settingsWheel.setEffect(null));
         
-        cancelPieceIcon = new ImageView(new Image(GamePanel.class.getResourceAsStream("/resources/cancel.png")));
+        cancelPieceIcon = new ImageView(new Image(GamePanel.class.getResourceAsStream(Main.RESOURCES_PREFIX + "cancel.png")));
         cancelPieceIcon.setPreserveRatio(true);
         cancelPieceIcon.fitHeightProperty().bind(boardBox.heightProperty().divide(12));
         cancelPieceIcon.setPickOnBounds(true);

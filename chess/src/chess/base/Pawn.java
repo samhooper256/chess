@@ -23,8 +23,8 @@ public class Pawn extends Piece{
 	
 	private static final PieceData data;
 	static {
-		BLACK_IMAGE = new Image(Piece.class.getResourceAsStream("/resources/pawn_black.png"));
-		WHITE_IMAGE = new Image(Piece.class.getResourceAsStream("/resources/pawn_white.png"));
+		BLACK_IMAGE = new Image(Piece.class.getResourceAsStream(Main.RESOURCES_PREFIX + "pawn_black.png"));
+		WHITE_IMAGE = new Image(Piece.class.getResourceAsStream(Main.RESOURCES_PREFIX + "pawn_white.png"));
 		data = new PieceData("Pawn", WHITE_IMAGE, BLACK_IMAGE);
 		try {
 			data.setTree(

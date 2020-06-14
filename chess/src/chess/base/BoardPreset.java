@@ -31,30 +31,20 @@ public class BoardPreset implements Serializable{
 	
 	static {
 		try {
-			File dir = new File("userpresets");
-			if(dir.exists()) {
-				File[] files = dir.listFiles();
-				if(files.length == 0) {
-					File f = new File("userpresets/presets.dat");
-					f.createNewFile();
-				}
-				else {
-					if(files[0].length() == 0) {
-						presets = new ArrayList<>();
-					}
-					else {
-						FileInputStream fis = new FileInputStream(files[0]);
-						try(ObjectInputStream input = new ObjectInputStream(fis)){
-							Object obj = input.readObject();
-							presets = ((ArrayList<BoardPreset>) obj);
-						}
-					}
-					
-				}
+			File f = new File(Main.USER_FOLDER, "presets.dat");
+			if(f.createNewFile()) {
+				presets = new ArrayList<>();
 			}
 			else {
-				dir.mkdir();
-				new File("userpresets/presets.dat").createNewFile();
+				FileInputStream fis = new FileInputStream(f);
+				if(fis.available() != 0) {
+					ObjectInputStream input = new ObjectInputStream(fis);
+					Object obj = input.readObject();
+					presets = ((ArrayList<BoardPreset>) obj);
+				}
+				else {
+					presets = new ArrayList<>();
+				}
 			}
 		}
 		catch(Throwable t) {
@@ -70,16 +60,13 @@ public class BoardPreset implements Serializable{
 	}
 	
 	public static void savePresets() {
-		File dir = new File("userpresets");
-		File f = new File("userpresets/presets.dat");
+		File f = new File(Main.USER_FOLDER, "presets.dat");
 		try {
-			dir.createNewFile();
 			f.createNewFile();
 		} catch (IOException e) {
 			e.printStackTrace();
 			return;
 		}
-		
 		
 		try {
 			FileWriter temp = new FileWriter(f, false);
@@ -89,6 +76,7 @@ public class BoardPreset implements Serializable{
 			try(ObjectOutputStream oos = new ObjectOutputStream(fos)){
 				oos.writeObject(presets);
 				oos.flush();
+				oos.close();
 			}
 			catch(Exception e) {
 				e.printStackTrace();

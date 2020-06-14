@@ -5,6 +5,7 @@ module chess {
 
 	opens chess.base;
 	opens chess.util;
+	opens chess.piecebuilder;
 	
 	requires javafx.base;
 	requires javafx.controls;

@@ -767,7 +767,7 @@ public class Board extends StackPane{
 		private void showLegalIndicators() {
 			colorBox.removeAllIndicators();
 			for(LegalAction la : legalMovesShowing) {
-				colorBox.addIndicatorWithoutRefreshing(la.getIndicator(8));
+				colorBox.addIndicatorWithoutRefreshing(la.indicator(8));
 			}
 			colorBox.refresh();
 			isShowingLegal = true;

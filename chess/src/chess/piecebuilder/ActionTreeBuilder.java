@@ -31,6 +31,8 @@ import javafx.scene.layout.HBox;
 import javafx.scene.layout.Pane;
 import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
+import javafx.scene.paint.Color;
+import javafx.scene.shape.Circle;
 
 public class ActionTreeBuilder extends StackPane implements InputVerification, Buildable<ActionTree>{
 	private static List<Class<? extends Action>> actionTypes = Action.getImmediateSubtypes();
@@ -198,8 +200,10 @@ public class ActionTreeBuilder extends StackPane implements InputVerification, B
 					| NoSuchMethodException | SecurityException e) {
 				e.printStackTrace();
 			}
-			MenuItem mi = null;
-			mi = new Menu(actionName);
+			MenuItem mi = new Menu(actionName);
+			Circle graphic = new Circle(8);
+			graphic.setFill(Color.GREEN);
+			mi.setGraphic(graphic);
 			ObservableList<MenuItem> subItems = ((Menu) mi).getItems();
 			for(Class<? extends Action> subActionType : subActionTypes) {
 				String actionVariant = null;

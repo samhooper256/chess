@@ -235,20 +235,25 @@ public class ConditionBox extends VBox implements InputVerification, MultiCondit
 	}
 	
 	public static MultiConditionPart reconstruct(Condition con) {
-		System.out.println("reconstructin con:"+con);
-		if(con.isPremade()) {
+		System.out.println("reconstructing con:"+con);
+		if(con instanceof Condition.Premade) {
 			ConditionBox conditionBox = new ConditionBox();
 			conditionBox.box1.getSelectionModel().select("Premade");
+			boolean wasSelected = false; //TODO delete this at some point. It is only for debugging.
 			for(Field f : conditionBox.premadeConditionBox.getItems()) {
 				try {
-					if(f.get(null) == con) {
-						conditionBox.premadeConditionBox.getSelectionModel().select(f);
+					if(con.equals(f.get(null))) {
+						conditionBox.premadeConditionBox.getSelectionModel().select(f); //TODO this doesn't work - maybe it's static so doesnt get synchronizd?
+						wasSelected = true;
 						break;
 					}
 				} catch (IllegalArgumentException | IllegalAccessException e) {
 					e.printStackTrace();
 					break;
 				}
+			}
+			if(!wasSelected) {
+				System.err.println("COULD NOT FIND PREMADE CONDITION");
 			}
 			conditionBox.defaultValueChoiceBox.getSelectionModel().select(con.getDefault());
 			return conditionBox;

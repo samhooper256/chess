@@ -45,6 +45,91 @@ public abstract class Condition implements Serializable{
 	 */
 	private static final long serialVersionUID = -2544194942472379599L;
 
+	
+	/////////////////////////////////////////////////////////////////////////////
+	/* Common Conditions have been made as public static final variables below.*/
+	/* ALL OF THESE CONDITIONS COULD BE MADE ON THEIR OWN. They provide no new */
+	/* functionality, although they are more efficient than ones created by    */
+	/* hand.																   */
+	/////////////////////////////////////////////////////////////////////////////
+	
+	/*EOE = "Enemy or Empty." Standard MoveAndCapture and Capture condition.
+	 * Destination tile must be either empty or have a piece of the opposite color.*/
+	@AFC(name="Destination is empty or has an enemy")
+	public static final Condition EOE = new Premade("EOE", Condition.or(
+		Condition.onDest().call("isEmpty").toBooleanPath().toCondition(),
+		Condition.onDest().call("getPiece").call("getColor").toBooleanPath().isEnemy()
+	));
+	
+	/*POD = "Piece on Destination." Evals to true if there is a piece of any color on the destination.*/
+	@AFC(name="Piece on destination")
+	public static final Condition POD = new Premade("POD", Condition.onDest().call("getPiece").toObjectPath().isNotNull());
+	
+	/* *
+	 * POS = "Piece on Start". Evals to true if there is a piece of any color on the start tile.
+	 * This condition is only useful for OtherMoveAndCaptures - for all other actions, there is
+	 * guaranteed to be a piece on the start.
+	 */
+	@AFC(name="Piece on start")
+	public static final Condition POS = new Premade("POS", Condition.onSelf().toObjectPath().isNotNull());
+	
+	/*DIE = "Destination is Empty." Evals to true if there is NOT a piece of any color on the destination.
+	 * It is the inverse of POD. It has a very nice acronym :) */
+	@AFC(name="Destination is empty")
+	public static final Condition DIE = new Premade("DIE", Condition.onDest().call("getPiece").toObjectPath().isNull());
+	
+	/* *
+	 * SIE = "Start is Empty." For the same reason as POS, this is only useful for
+	 * OtherMoveAndCaptures.
+	 */
+	@AFC(name="Start is empty")
+	public static final Condition SIE = new Premade("SIE", Condition.onSelf().toObjectPath().isNull());
+	
+	/*EOD = "Enemy on Destination." Evals to true if there is a piece of the opposite color on the destination.*/
+	@AFC(name="Enemy on destination")
+	public static final Condition EOD = new Premade("EOD", Condition.onDest().call("getPiece").call("getColor").toBooleanPath().isEnemy());
+	
+	/*TOD = "Teammate on Destination." Evals to true if there is a piece of the same color on the destination.*/
+	@AFC(name="Teammate on destination")
+	public static final Condition TOD = new Premade("TOD", Condition.onDest().call("getPiece").call("getColor").toBooleanPath().isAlly());
+	
+	public static class Premade extends Condition{
+		/**
+		 * 
+		 */
+		private static final long serialVersionUID = -3595801537160397839L;
+		String name;
+		Condition condition;
+		private Premade(String initName, Condition c){
+			this.name = initName;
+			condition = c;
+		}
+		@Override
+		boolean eval(Board b, int startRow, int startCol, int destRow, int destCol) {
+			return condition.eval(b, startRow, startCol, destRow, destCol);
+		}
+		@Override
+		public Method getCreationMethod() {
+			return condition.getCreationMethod();
+		}
+		
+		@Override
+		public boolean equals(Object o) {
+			if(o instanceof Premade) {
+				return name.equals(((Premade) o).name);
+			}
+			return false;
+		}
+		
+		@Override
+		public int hashCode() {
+			return name.hashCode();
+		}
+	}
+	//////////////////////////////
+	/* End of common conditions */
+	//////////////////////////////
+	
 	public static final Method[] postConstructionModifierMethods;
 	public static final Method[] afcOnMethods;
 	static {
@@ -69,71 +154,17 @@ public abstract class Condition implements Serializable{
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
-		
+		System.out.println("EOE = " + EOE);
+		System.out.println("POD = " + POD);
+		System.out.println("POS = " + POS);
+		System.out.println("DIE = " + DIE);
+		System.out.println("SIE = " + SIE);
+		System.out.println("EOD = " + EOD);
+		System.out.println("TOD = " + TOD);
 	}
-	/////////////////////////////////////////////////////////////////////////////
-	/* Common Conditions have been made as public static final variables below.*/
-	/* ALL OF THESE CONDITIONS COULD BE MADE ON THEIR OWN. They provide no new */
-	/* functionality, although they are more efficient than ones created by    */
-	/* hand.																   */
-	/////////////////////////////////////////////////////////////////////////////
-	
-	/*EOE = "Enemy or Empty." Standard MoveAndCapture and Capture condition.
-	 * Destination tile must be either empty or have a piece of the opposite color.*/
-	@AFC(name="Destination is empty or has an enemy")
-	public static final Condition EOE = Condition.or(
-			Condition.onDest().call("isEmpty").toBooleanPath().toCondition(),
-			Condition.onDest().call("getPiece").call("getColor").toBooleanPath().isEnemy()
-	);
-	
-	/*POD = "Piece on Destination." Evals to true if there is a piece of any color on the destination.*/
-	@AFC(name="Piece on destination")
-	public static final Condition POD = Condition.onDest().call("getPiece").toObjectPath().isNotNull();
-	
-	/* *
-	 * POS = "Piece on Start". Evals to true if there is a piece of any color on the start tile.
-	 * This condition is only useful for OtherMoveAndCaptures - for all other actions, there is
-	 * guaranteed to be a piece on the start.
-	 */
-	@AFC(name="Piece on start")
-	public static final Condition POS = Condition.onSelf().toObjectPath().isNotNull();
-	
-	/*DIE = "Destination is Empty." Evals to true if there is NOT a piece of any color on the destination.
-	 * It is the inverse of POD. It has a very nice acronym :) */
-	@AFC(name="Destination is empty")
-	public static final Condition DIE = Condition.onDest().call("getPiece").toObjectPath().isNull();
-	
-	/* *
-	 * SIE = "Start is Empty." For the same reason as POS, this is only useful for
-	 * OtherMoveAndCaptures.
-	 */
-	@AFC(name="Start is empty")
-	public static final Condition SIE = Condition.onSelf().toObjectPath().isNull();
-	
-	/*EOD = "Enemy on Destination." Evals to true if there is a piece of the opposite color on the destination.*/
-	@AFC(name="Enemy on destination")
-	public static final Condition EOD = Condition.onDest().call("getPiece").call("getColor").toBooleanPath().isEnemy();
-	
-	/*TOD = "Teammate on Destination." Evals to true if there is a piece of the same color on the destination.*/
-	@AFC(name="Teammate on destination")
-	public static final Condition TOD = Condition.onDest().call("getPiece").call("getColor").toBooleanPath().isAlly();
-	
-	static {
-		EOE.setIsPremade(true);
-		POD.setIsPremade(true);
-		POS.setIsPremade(true);
-		DIE.setIsPremade(true);
-		SIE.setIsPremade(true);
-		EOD.setIsPremade(true);
-		TOD.setIsPremade(true);
-	}
-	//////////////////////////////
-	/* End of common conditions */
-	//////////////////////////////
 	
 	//this will be returned if evaluating the condition throws an exception.
 	boolean defaultValue;
-	private boolean isPremade;
 	
 	public boolean getDefault() { return defaultValue; }
 	
@@ -141,15 +172,6 @@ public abstract class Condition implements Serializable{
 		this.defaultValue = newDV;
 	}
 	
-	public boolean isPremade() {
-		return isPremade;
-	}
-	
-	
-	
-	private void setIsPremade(boolean newIsPremade) {
-		this.isPremade = newIsPremade;
-	}
 	/* *
 	 * THIS CONDITION MUST ONLY BE USED ON KINGS,
 	 * or paradoxical loops (StackOverflow Errors) will occur.
@@ -285,7 +307,7 @@ public abstract class Condition implements Serializable{
 	
 	@Override
 	public String toString() {
-		return "[Condition@" + hashCode() + ":isPremade="+isPremade+"]";
+		return "[Condition@" + hashCode() + ":instanceof Premade?="+(this instanceof Premade)+"]";
 	}
 	
 	public static Method getOnMethodFromBase(Object base) {

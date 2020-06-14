@@ -54,6 +54,7 @@ public class PieceBuilder extends Stage implements InputVerification{
 	public static final Image WHITE_DEFAULT_IMAGE, BLACK_DEFAULT_IMAGE, ERROR_LOADING_IMAGE;
 	public static final String WHITE_DEFAULT_URI, BLACK_DEFAULT_URI;
 	public static final int IMAGE_SIZE = 240;
+	public static final Image RELATIVE, LINE, RELATIVE_LINE, RELATIVE_SEGMENT, RADIUS, ON_START;
 	
 	static {
 		WHITE_DEFAULT_IMAGE = new Image(PieceBuilder.class.getResourceAsStream(WHITE_DEFAULT_URI = "/resources/white_default_image.png"),
@@ -62,6 +63,12 @@ public class PieceBuilder extends Stage implements InputVerification{
 				IMAGE_SIZE, IMAGE_SIZE, false, true);
 		ERROR_LOADING_IMAGE = new Image(PieceBuilder.class.getResourceAsStream("/resources/errorloading.png"),
 				IMAGE_SIZE, IMAGE_SIZE, false, true);
+		RELATIVE = new Image(PieceBuilder.class.getResourceAsStream("/resources/relative_icon.png"), 16, 16, false, true);
+		LINE = new Image(PieceBuilder.class.getResourceAsStream("/resources/line_icon.png"), 16, 16, false, true);
+		RELATIVE_LINE = new Image(PieceBuilder.class.getResourceAsStream("/resources/relative_line_icon.png"), 16, 16, false, true);
+		RELATIVE_SEGMENT = new Image(PieceBuilder.class.getResourceAsStream("/resources/relative_segment_icon.png"), 16, 16, false, true);
+		RADIUS = new Image(PieceBuilder.class.getResourceAsStream("/resources/radius_icon.png"), 16, 16, false, true);
+		ON_START = new Image(PieceBuilder.class.getResourceAsStream("/resources/on_start_icon.png"), 16, 16, false, true);
 		try {
 			new File("userpieces").createNewFile();
 		} catch (IOException e) {

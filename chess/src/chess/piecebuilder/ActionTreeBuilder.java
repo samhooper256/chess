@@ -27,6 +27,8 @@ import javafx.scene.control.MenuButton;
 import javafx.scene.control.MenuItem;
 import javafx.scene.control.ScrollPane;
 import javafx.scene.control.TitledPane;
+import javafx.scene.image.Image;
+import javafx.scene.image.ImageView;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Pane;
 import javafx.scene.layout.StackPane;
@@ -231,10 +233,27 @@ public class ActionTreeBuilder extends StackPane implements InputVerification, B
 					e.printStackTrace();
 				}
 				MenuItem subMi = new MenuItem(actionVariant);
+				Image icon = getVariantIcon(actionVariant);
+				subMi.setGraphic(new ImageView(icon));
 				subMi.setOnAction(actionEvent -> addActionTo(whereToAddActionTPs, subActionType, button, childrenPossible));
 				subItems.add(subMi);
 			}
 			items.add(mi);
+		}
+	}
+	
+	private Image getVariantIcon(String variant) {
+		if(variant == null) {
+			return null;
+		}
+		switch(variant) {
+		case "Relative" : return PieceBuilder.RELATIVE;
+		case "Line" : return PieceBuilder.LINE;
+		case "Relative Line" : return PieceBuilder.RELATIVE_LINE;
+		case "Relative Segment" : return PieceBuilder.RELATIVE_SEGMENT;
+		case "Radius" : return PieceBuilder.RADIUS;
+		case "On Start" : return PieceBuilder.ON_START;
+		default: return null;
 		}
 	}
 	

@@ -8,5 +8,6 @@ module chess {
 	
 	requires javafx.base;
 	requires javafx.controls;
+	requires javafx.web;
 	requires transitive javafx.graphics;
 }

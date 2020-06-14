@@ -1,5 +1,6 @@
 package chess.base;
 
+import java.io.File;
 import java.util.ArrayList;
 
 import javafx.animation.Animation;
@@ -20,6 +21,7 @@ import javafx.scene.layout.Pane;
 import javafx.scene.layout.RowConstraints;
 import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
+import javafx.scene.web.WebView;
 import javafx.stage.Stage;
 import javafx.util.Duration;
 
@@ -43,7 +45,7 @@ public class MainMenu extends StackPane{
 	}
 	
 	
-	
+	private static final File instructionsFile = new File("src/resources/instructions.html");
 	private static MainMenu instance;
 	private static ArrayList<Image> pieceImages;
 	private Scene scene;
@@ -61,6 +63,7 @@ public class MainMenu extends StackPane{
 		
 		Button newBoardButton = new Button("New Board");
 		Button settingsButton = new Button("Settings");
+		Button instructionsButton = new Button("Instructions");
 		Button quitButton = new Button("Quit");
 		
 		DoubleBinding buttonWidth = (DoubleBinding) Bindings.max(200, MainMenu.this.widthProperty().divide(6));
@@ -74,6 +77,10 @@ public class MainMenu extends StackPane{
 		settingsButton.getStyleClass().add("main-menu-button");
 		settingsButton.prefWidthProperty().bind(buttonWidth);
 		settingsButton.prefHeightProperty().bind(buttonHeight);
+		
+		instructionsButton.getStyleClass().add("main-menu-button");
+		instructionsButton.prefWidthProperty().bind(buttonWidth);
+		instructionsButton.prefHeightProperty().bind(buttonHeight);
 		
 		quitButton.getStyleClass().add("main-menu-button");
 		quitButton.prefWidthProperty().bind(buttonWidth);
@@ -92,6 +99,20 @@ public class MainMenu extends StackPane{
 			}
 			
 		});
+		
+		class InstructionsStage extends Stage{
+			public InstructionsStage() {
+				super();
+				WebView webView = new WebView();
+				webView.getEngine().load(instructionsFile.toURI().toString());
+				StackPane sp = new StackPane(webView);
+				InstructionsStage.this.setScene(new Scene(sp, 800, 600));
+			}
+		}
+		InstructionsStage instructionsStage = new InstructionsStage();
+		instructionsButton.setOnAction(actionEvent -> {
+			instructionsStage.show();
+		});
 		settingsButton.setOnAction(actionEvent -> {
 			Settings.openOn(MainMenu.this, true, 0.4, 0.4);
 		});
@@ -102,7 +123,7 @@ public class MainMenu extends StackPane{
 		logoImageView = new ImageView(LOGO);
 		logoImageView.setPreserveRatio(true);
 		logoImageView.fitHeightProperty().bind(MainMenu.this.heightProperty().divide(4));
-		VBox vBox = new VBox(logoImageView, newBoardButton, settingsButton, quitButton);
+		VBox vBox = new VBox(logoImageView, newBoardButton, instructionsButton, settingsButton, quitButton);
 		vBox.getStyleClass().add("main-menu-box");
 		this.getChildren().add(vBox);
 		mth.start();

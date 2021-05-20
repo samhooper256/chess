@@ -1,3 +1,4 @@
+![chesslogo](https://user-images.githubusercontent.com/60260374/119058505-214e2580-b994-11eb-8758-ad9fe33ecfb8.PNG)
 # chess++
 A chess app that allows for the creation of totally custom pieces.
 

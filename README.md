@@ -1,7 +1,7 @@
 # chess++
 A chess app that allows for the creation of totally custom pieces.
 
-The following instructions also appear in the app:
+The following information also appear in the app:
 
 **Introduction**
 

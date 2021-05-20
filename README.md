@@ -1,6 +1,14 @@
-![chesslogo](https://user-images.githubusercontent.com/60260374/119058505-214e2580-b994-11eb-8758-ad9fe33ecfb8.PNG)
 # chess++
 A chess app that allows for the creation of totally custom pieces.
+
+Home Screen:
+![chesslogo](https://user-images.githubusercontent.com/60260374/119058505-214e2580-b994-11eb-8758-ad9fe33ecfb8.PNG)
+Piece Builder:
+![Piece Builder](https://user-images.githubusercontent.com/60260374/119059182-6d4d9a00-b995-11eb-8fab-9d9861fe5df3.PNG)
+Play Mode:
+![Play Mode](https://user-images.githubusercontent.com/60260374/119059198-72124e00-b995-11eb-8606-a0823ddb36b5.PNG)
+Freeplay Mode:
+![Freeplay Mode](https://user-images.githubusercontent.com/60260374/119059204-776f9880-b995-11eb-80a0-46923703f6f3.PNG)
 
 The following information also appears in the app:
 
